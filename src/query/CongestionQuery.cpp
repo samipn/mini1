@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <unordered_map>
 
+#include "data_model/CommonCodes.hpp"
+
 namespace urbandrop {
 
 std::vector<const TrafficRecord*> CongestionQuery::FilterSpeedBelow(const TrafficDataset& dataset,
@@ -21,8 +23,12 @@ std::vector<const TrafficRecord*> CongestionQuery::FilterBoroughAndSpeedBelow(
     const std::string& borough,
     double threshold_mph) {
   std::vector<const TrafficRecord*> results;
+  const std::int16_t borough_code = ToInt(ParseBoroughCode(borough));
   for (const auto& record : dataset.Records()) {
-    if (record.borough == borough && record.speed_mph < threshold_mph) {
+    const bool borough_matches =
+        (borough_code >= 0 && record.borough_code == borough_code) ||
+        (borough_code < 0 && record.borough == borough);
+    if (borough_matches && record.speed_mph < threshold_mph) {
       results.push_back(&record);
     }
   }

@@ -1,9 +1,11 @@
 #include <chrono>
 #include <cstdint>
 #include <iostream>
+#include <numeric>
 #include <string>
 #include <vector>
 
+#include "benchmark/BenchmarkHarness.hpp"
 #include "data_model/BuildingRecord.hpp"
 #include "data_model/GarageRecord.hpp"
 #include "data_model/TrafficDataset.hpp"
@@ -21,7 +23,8 @@ using Clock = std::chrono::steady_clock;
 void PrintUsage() {
   std::cout
       << "Usage: run_serial --traffic <path> [--garages <path>] [--bes <path>] "
-         "[--progress-every <rows>] [--sample <count>] [--query <type>]\n"
+         "[--progress-every <rows>] [--sample <count>] [--query <type>] "
+         "[--benchmark-runs <n>] [--benchmark-out <path>]\n"
       << "\n"
       << "Query types and required params:\n"
       << "  speed_below            --threshold <mph>\n"
@@ -31,6 +34,12 @@ void PrintUsage() {
       << "  link_range             --link-start <id> --link-end <id>\n"
       << "  top_n_slowest          --top-n <n> [--min-link-samples <n>]\n"
       << "  summary                (no extra params)\n";
+  std::cout << "\nBenchmark mode options:\n"
+            << "  --benchmark-runs <n>      run ingest+query benchmark n times\n"
+            << "  --benchmark-out <path>    output CSV path (for example results/raw/serial.csv)\n"
+            << "  --benchmark-append        append to existing CSV instead of overwrite\n"
+            << "  --dataset-label <label>   metadata label for output rows\n"
+            << "  --expect-accepted <n>     fail if accepted row count differs from n\n";
 }
 
 bool ParseInt64(const std::string& value, std::int64_t* out) {
@@ -64,6 +73,12 @@ int main(int argc, char** argv) {
   std::size_t sample_count = 0;
   std::size_t top_n = 0;
   std::size_t min_link_samples = 1;
+  std::size_t benchmark_runs = 0;
+  bool benchmark_append = false;
+  std::string benchmark_out_csv;
+  std::string dataset_label;
+  std::size_t expected_accepted = 0;
+  bool has_expected_accepted = false;
 
   double threshold_mph = 0.0;
   bool has_threshold = false;
@@ -113,6 +128,17 @@ int main(int argc, char** argv) {
       top_n = static_cast<std::size_t>(std::stoull(argv[++i]));
     } else if (arg == "--min-link-samples" && i + 1 < argc) {
       min_link_samples = static_cast<std::size_t>(std::stoull(argv[++i]));
+    } else if (arg == "--benchmark-runs" && i + 1 < argc) {
+      benchmark_runs = static_cast<std::size_t>(std::stoull(argv[++i]));
+    } else if (arg == "--benchmark-out" && i + 1 < argc) {
+      benchmark_out_csv = argv[++i];
+    } else if (arg == "--benchmark-append") {
+      benchmark_append = true;
+    } else if (arg == "--dataset-label" && i + 1 < argc) {
+      dataset_label = argv[++i];
+    } else if (arg == "--expect-accepted" && i + 1 < argc) {
+      expected_accepted = static_cast<std::size_t>(std::stoull(argv[++i]));
+      has_expected_accepted = true;
     } else if (arg == "--help") {
       PrintUsage();
       return 0;
@@ -126,6 +152,66 @@ int main(int argc, char** argv) {
   if (traffic_csv.empty()) {
     PrintUsage();
     return 2;
+  }
+
+  if (benchmark_runs > 0) {
+    urbandrop::BenchmarkConfig config;
+    config.dataset_path = traffic_csv;
+    config.dataset_label = dataset_label;
+    config.query_type = query_type;
+    config.borough = borough;
+    config.threshold_mph = threshold_mph;
+    config.has_threshold = has_threshold;
+    config.start_epoch = start_epoch;
+    config.end_epoch = end_epoch;
+    config.has_start_epoch = has_start_epoch;
+    config.has_end_epoch = has_end_epoch;
+    config.link_id = link_id;
+    config.has_link_id = has_link_id;
+    config.link_start = link_start;
+    config.link_end = link_end;
+    config.has_link_start = has_link_start;
+    config.has_link_end = has_link_end;
+    config.top_n = top_n;
+    config.min_link_samples = min_link_samples;
+    config.runs = benchmark_runs;
+    config.output_csv_path = benchmark_out_csv;
+    config.append_output = benchmark_append;
+    config.enable_ingest_progress = false;
+    config.progress_every_rows = progress_every;
+    config.has_expected_accepted_rows = has_expected_accepted;
+    config.expected_accepted_rows = expected_accepted;
+
+    std::vector<urbandrop::BenchmarkRunResult> results;
+    std::string benchmark_error;
+    if (!urbandrop::BenchmarkHarness::RunSerial(config, &results, &benchmark_error)) {
+      std::cerr << "[benchmark] failed: " << benchmark_error << "\n";
+      return 1;
+    }
+
+    const double total_ingest = std::accumulate(
+        results.begin(), results.end(), 0.0, [](double sum, const urbandrop::BenchmarkRunResult& row) {
+          return sum + row.ingest_ms;
+        });
+    const double total_query = std::accumulate(
+        results.begin(), results.end(), 0.0, [](double sum, const urbandrop::BenchmarkRunResult& row) {
+          return sum + row.query_ms;
+        });
+    const double total_total = std::accumulate(
+        results.begin(), results.end(), 0.0, [](double sum, const urbandrop::BenchmarkRunResult& row) {
+          return sum + row.total_ms;
+        });
+    const double runs = static_cast<double>(results.size());
+
+    std::cout << "[benchmark] complete runs=" << results.size()
+              << " query_type=" << (query_type.empty() ? "ingest_only" : query_type) << "\n";
+    std::cout << "  avg_ingest_ms=" << (total_ingest / runs) << "\n";
+    std::cout << "  avg_query_ms=" << (total_query / runs) << "\n";
+    std::cout << "  avg_total_ms=" << (total_total / runs) << "\n";
+    if (!benchmark_out_csv.empty()) {
+      std::cout << "  output_csv=" << benchmark_out_csv << "\n";
+    }
+    return 0;
   }
 
   urbandrop::TrafficDataset dataset;
@@ -149,6 +235,11 @@ int main(int argc, char** argv) {
   std::cout << "  missing_timestamp=" << counters.missing_timestamp << "\n";
   std::cout << "  suspicious_speed=" << counters.suspicious_speed << "\n";
   std::cout << "  suspicious_travel_time=" << counters.suspicious_travel_time << "\n";
+  if (has_expected_accepted && counters.rows_accepted != expected_accepted) {
+    std::cerr << "[ingest] accepted row mismatch expected=" << expected_accepted
+              << " actual=" << counters.rows_accepted << "\n";
+    return 1;
+  }
 
   if (sample_count > 0) {
     std::cout << "[sample] showing up to " << sample_count << " accepted rows\n";

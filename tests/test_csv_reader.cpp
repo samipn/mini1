@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 
+#include "data_model/CommonCodes.hpp"
 #include "data_model/TrafficDataset.hpp"
 #include "io/CSVReader.hpp"
 
@@ -55,6 +56,13 @@ int main() {
 
   if (dataset.Records().at(1).link_name != "Atlantic, Ave") {
     std::cerr << "expected quoted comma field parsing to preserve link_name\n";
+    return EXIT_FAILURE;
+  }
+  if (dataset.Records().at(0).borough_code !=
+          urbandrop::ToInt(urbandrop::BoroughCode::kManhattan) ||
+      dataset.Records().at(1).borough_code !=
+          urbandrop::ToInt(urbandrop::BoroughCode::kBrooklyn)) {
+    std::cerr << "expected borough string to borough_code normalization\n";
     return EXIT_FAILURE;
   }
 
