@@ -11,6 +11,7 @@ struct TrafficRecord {
   double travel_time_seconds = 0.0;
   std::int64_t timestamp_epoch_seconds = 0;
   std::string borough;
+  std::int16_t borough_code = -1;
   std::string link_name;
 
   bool HasValidCoreFields() const;

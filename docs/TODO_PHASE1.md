@@ -174,25 +174,25 @@ By the end of Phase 1, the repository should contain:
 
 ### 7. Add Timing and Benchmark Harness
 #### Tasks
-- [ ] Create `BenchmarkHarness`
-- [ ] Measure:
-  - [ ] ingest time
-  - [ ] query time
-  - [ ] total runtime
-- [ ] Use consistent timing approach with `std::chrono`
-- [ ] Run each benchmark scenario at least 10 times
-- [ ] Save benchmark outputs to:
-  - [ ] `results/raw/`
-- [ ] Produce machine-readable output:
-  - [ ] CSV preferred
+- [x] Create `BenchmarkHarness`
+- [x] Measure:
+  - [x] ingest time
+  - [x] query time
+  - [x] total runtime
+- [x] Use consistent timing approach with `std::chrono`
+- [x] Run each benchmark scenario at least 10 times
+- [x] Save benchmark outputs to:
+  - [x] `results/raw/`
+- [x] Produce machine-readable output:
+  - [x] CSV preferred
   - [ ] JSON acceptable if easier
-- [ ] Include metadata in benchmark output:
-  - [ ] date/time
-  - [ ] binary name
-  - [ ] compiler if known
-  - [ ] dataset path or dataset label
-  - [ ] query type
-  - [ ] run number
+- [x] Include metadata in benchmark output:
+  - [x] date/time
+  - [x] binary name
+  - [x] compiler if known
+  - [x] dataset path or dataset label
+  - [x] query type
+  - [x] run number
 
 #### Deliverable
 - Repeated serial benchmark results stored on disk
@@ -207,7 +207,7 @@ By the end of Phase 1, the repository should contain:
 - [x] Detect missing or malformed timestamps
 - [x] Add sample record print mode for debugging
 - [x] Add counts for suspicious rows
-- [ ] Compare accepted row counts against expectations
+- [x] Compare accepted row counts against expectations
 
 #### Deliverable
 - Loader can identify dirty data instead of silently failing
@@ -221,9 +221,9 @@ By the end of Phase 1, the repository should contain:
   - [x] rejected-row logic
   - [x] timestamp handling
   - [x] fields ignored in baseline
-- [ ] Record failed attempts
-- [ ] Record performance surprises
-- [ ] Record dataset-specific issues
+- [x] Record failed attempts
+- [x] Record performance surprises
+- [x] Record dataset-specific issues
 
 #### Deliverable
 - Repo contains enough notes to support report writing later
@@ -232,16 +232,16 @@ By the end of Phase 1, the repository should contain:
 
 ### 10. Produce Baseline Benchmark Scenarios
 #### Minimum scenarios
-- [ ] Full dataset ingest only
-- [ ] Full dataset ingest + speed threshold query
-- [ ] Full dataset ingest + time window query
-- [ ] Full dataset ingest + borough + threshold query
-- [ ] Full dataset ingest + top-N slowest query
+- [x] Full dataset ingest only
+- [x] Full dataset ingest + speed threshold query
+- [x] Full dataset ingest + time window query
+- [x] Full dataset ingest + borough + threshold query
+- [x] Full dataset ingest + top-N slowest query
 
 #### Benchmark requirements
-- [ ] 10 or more runs per scenario
-- [ ] store raw outputs
-- [ ] compute average later or in helper script
+- [x] 10 or more runs per scenario
+- [x] store raw outputs
+- [x] compute average later or in helper script
 
 #### Deliverable
 - A reproducible serial baseline for later comparison
@@ -269,7 +269,7 @@ By the end of Phase 1, the repository should contain:
 - [x] `TrafficAggregator.hpp`
 
 ### `include/benchmark/`
-- [ ] `BenchmarkHarness.hpp`
+- [x] `BenchmarkHarness.hpp`
 
 ### `src/...`
 - [x] implement matching `.cpp` files for all of the above
@@ -278,59 +278,59 @@ By the end of Phase 1, the repository should contain:
 - [x] `run_serial.cpp`
 
 ### `scripts/`
-- [ ] `benchmark.sh`
-- [ ] optional helper for repeated serial runs
+- [x] `benchmark.sh`
+- [x] optional helper for repeated serial runs
 
 ---
 
 ## Suggested Phase 1 Milestones
 
 ### Milestone A — Build and Models
-- [ ] CMake works
-- [ ] core classes compile
-- [ ] placeholder executable runs
+- [x] CMake works
+- [x] core classes compile
+- [x] placeholder executable runs
 
 ### Milestone B — Ingestion
-- [ ] traffic dataset loads
-- [ ] row counts and validation work
-- [ ] summary logs print correctly
+- [x] traffic dataset loads
+- [x] row counts and validation work
+- [x] summary logs print correctly
 
 ### Milestone C — Query Layer
 - [x] time and threshold queries work
 - [x] outputs look correct on sample data
 
 ### Milestone D — Benchmark Baseline
-- [ ] serial timing is implemented
-- [ ] repeated runs complete
-- [ ] outputs saved in `results/raw`
+- [x] serial timing is implemented
+- [x] repeated runs complete
+- [x] outputs saved in `results/raw`
 
 ### Milestone E — Research Notes
-- [ ] assumptions documented
-- [ ] known issues documented
-- [ ] failed attempts recorded
+- [x] assumptions documented
+- [x] known issues documented
+- [x] failed attempts recorded
 
 ---
 
 ## Definition of Done for Phase 1
 Phase 1 is complete when all of the following are true:
 
-- [ ] The project builds cleanly
-- [ ] Traffic data can be ingested serially
+- [x] The project builds cleanly
+- [x] Traffic data can be ingested serially
 - [x] At least 3 useful query types are implemented
-- [ ] Serial benchmark runs execute repeatedly and save results
-- [ ] No threading or OpenMP is used
-- [ ] Notes exist to support the report
-- [ ] The codebase is clean enough to branch into Phase 2 parallelization
+- [x] Serial benchmark runs execute repeatedly and save results
+- [x] No threading or OpenMP is used
+- [x] Notes exist to support the report
+- [x] The codebase is clean enough to branch into Phase 2 parallelization
 
 ---
 
 ## Explicit Non-Goals for Phase 1
 Do not do these yet:
-- [ ] no multithreading
-- [ ] no OpenMP
-- [ ] no object-of-arrays rewrite
-- [ ] no aggressive micro-optimizations
-- [ ] no premature spatial indexing unless required for correctness
-- [ ] no Phase 2 or Phase 3 benchmarking claims
+- [x] no multithreading
+- [x] no OpenMP
+- [x] no object-of-arrays rewrite
+- [x] no aggressive micro-optimizations
+- [x] no premature spatial indexing unless required for correctness
+- [x] no Phase 2 or Phase 3 benchmarking claims
 
 ---

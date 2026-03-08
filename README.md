@@ -72,6 +72,32 @@ The NYCDOT traffic speed detector data includes average speed, travel time, link
 The garages dataset contains licensed garage and parking-lot records with address, borough, detail fields, and latitude/longitude coordinates, which makes it useful as a supporting infrastructure layer for later comparison against congestion hotspots.
 The Building Elevation and Subgrade dataset is also included by dataset title as a shared supporting layer for the UrbanDrop project.
 
+#### Garages Metadata Schema (21 Columns)
+
+| Column Name | Description | API Field Name | Data Type |
+| --- | --- | --- | --- |
+| License Number | An identification number issued to a business or individual when their license application is approved by DCWP. | `license_nbr` | Text |
+| Expiration Date | The date the license term expired or will expire. | `lic_expir_dd` | Floating Timestamp |
+| Initial Issuance Date | The date the license was originally issued. | `license_creation_date` | Floating Timestamp |
+| Business Name | The legal business name as filed with the New York State Secretary of State or County Clerk or, if an individual, the person’s first name and last name. | `business_name` | Text |
+| Building Number | The building number where the business is located. | `address_building` | Text |
+| Street1 | The name of the street where the business is located. | `address_street_name` | Text |
+| Street2 | The name of the cross street where the business is located. | `address_street_name_2` | Text |
+| City | The city where the business is located. | `address_city` | Text |
+| State | The state where the business is located. | `address_state` | Text |
+| ZIP Code | The ZIP Code where the business is located. | `address_zip` | Text |
+| Contact Phone | The phone number of the business contact. | `contact_phone` | Text |
+| Borough | The NYC Borough where the business is located. | `address_borough` | Text |
+| Details | Additional information about the license for certain business categories. | `detail` | Text |
+| NTA | The Neighborhood Tabulation Area where the business is located. | `nta` | Text |
+| Community Board | The NYC Community District where the business is located. | `community_board` | Text |
+| Council District | The NYC City Council District where the business is located. | `council_district` | Text |
+| BIN | The Building Identification Number where the business is located. | `bin` | Text |
+| BBL | The Borough-Block-Lot number where the business is located. | `bbl` | Text |
+| Census Tract (2010) | The 2010 Census Tract where the business is located. | `census_tract` | Text |
+| Latitude | The latitudinal coordinate where the business is located. | `latitude` | Number |
+| Longitude | The longitudinal coordinate where the business is located. | `longitude` | Number |
+
 ### Official Links
 - Active DCA-Licensed Garages and Parking Lots: <https://data.cityofnewyork.us/Business/Active-DCA-Licensed-Garages-and-Parking-Lots/a7m8-iids/about_data>
 - Building Elevation and Subgrade (BES): <https://data.cityofnewyork.us/City-Government/Building-Elevation-and-Subgrade-BES-/bsin-59hv/about_data>

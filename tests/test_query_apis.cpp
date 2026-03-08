@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "data_model/CommonCodes.hpp"
 #include "data_model/TrafficDataset.hpp"
 #include "query/CongestionQuery.hpp"
 #include "query/TimeWindowQuery.hpp"
@@ -21,6 +22,7 @@ void Add(urbandrop::TrafficDataset* dataset,
   r.travel_time_seconds = travel;
   r.timestamp_epoch_seconds = ts;
   r.borough = borough;
+  r.borough_code = urbandrop::ToInt(urbandrop::ParseBoroughCode(borough));
   dataset->AddRecord(r);
 }
 

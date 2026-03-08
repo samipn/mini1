@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "data_model/TrafficRecord.hpp"
+#include "data_model/CommonCodes.hpp"
 
 namespace urbandrop {
 namespace {
@@ -253,6 +254,7 @@ bool CSVReader::LoadTrafficCSV(const std::string& csv_path,
 
     if (has_col(borough_col)) {
       record.borough = fields[borough_col];
+      record.borough_code = ToInt(ParseBoroughCode(record.borough));
     }
     if (has_col(link_name_col)) {
       record.link_name = fields[link_name_col];
