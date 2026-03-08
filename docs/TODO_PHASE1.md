@@ -334,3 +334,286 @@ Do not do these yet:
 - [x] no Phase 2 or Phase 3 benchmarking claims
 
 ---
+
+## Phase 1 Baseline Subset Testing and Early Data Collection
+## Purpose
+These tasks are for **development-stage benchmarking on smaller subsets**, not the final full-dataset benchmark campaign.
+
+The goal is to:
+- verify correctness early,
+- establish repeatable benchmark workflows,
+- collect preliminary performance data,
+- and ensure the benchmark harness is stable before running the full dataset later.
+
+These tasks should be completed by the coding agent while implementing Phase 1.
+
+### Rules for This Section
+- Use **subset datasets only**
+- Do **not** treat these results as final project conclusions
+- Keep dataset slices reproducible
+- Keep benchmark commands and output formats stable across runs
+- Save all raw outputs for later comparison
+
+---
+
+### 11. Create Reproducible Subset Datasets
+#### Tasks
+- [ ] Add a script that creates reproducible subset files from the main traffic dataset
+- [ ] Support at least these subset sizes:
+  - [ ] small subset
+  - [ ] medium subset
+  - [ ] large-dev subset
+- [ ] Suggested targets:
+  - [ ] `10,000` rows
+  - [ ] `100,000` rows
+  - [ ] `1,000,000` rows
+- [ ] Preserve the original header row
+- [ ] Keep the subset generation deterministic
+- [ ] Save subset files under a predictable directory such as:
+  - [ ] `data/dev/`
+  - [ ] or `data/subsets/`
+- [ ] Log the source file and row counts used to create each subset
+
+#### Agent instructions
+- Implement a script such as:
+  - [ ] `scripts/make_subsets.sh`
+  - [ ] or `scripts/make_subsets.py`
+- The script should accept:
+  - [ ] input dataset path
+  - [ ] output directory
+  - [ ] requested subset sizes
+- The script should print progress and final file paths
+
+#### Deliverable
+- Reproducible subset datasets exist for early benchmark work
+
+---
+
+### 12. Add Sample Validation Runs on Subsets
+#### Tasks
+- [ ] Run the serial loader on the small subset
+- [ ] Run the serial loader on the medium subset
+- [ ] Run the serial loader on the large-dev subset
+- [ ] Record:
+  - [ ] rows read
+  - [ ] rows accepted
+  - [ ] rows rejected
+  - [ ] parse failures by type if available
+- [ ] Save validation summaries to:
+  - [ ] `results/raw/validation/`
+
+#### Agent instructions
+- Add a mode in `run_serial` or a helper script that prints a loader summary cleanly
+- Save the output to timestamped files
+- Do not overwrite earlier runs unless explicitly requested
+
+#### Deliverable
+- Baseline ingestion correctness is checked on multiple subset sizes
+
+---
+
+### 13. Add Early Benchmark Scenarios for Subset Datasets
+#### Tasks
+- [ ] Define a small set of repeatable Phase 1 subset benchmark scenarios
+- [ ] Use the same query definitions each time
+- [ ] Minimum subset scenarios:
+  - [ ] ingest only
+  - [ ] ingest + low-speed threshold query
+  - [ ] ingest + time-window query
+  - [ ] ingest + borough + threshold query if borough data is available
+  - [ ] ingest + top-N slowest query
+
+#### Suggested default development parameters
+- [ ] low-speed threshold:
+  - [ ] `8 mph` or another documented threshold
+- [ ] a fixed time window for repeatability
+- [ ] a fixed borough if used
+- [ ] a fixed top-N size such as:
+  - [ ] `10`
+  - [ ] or `100`
+
+#### Agent instructions
+- Create a benchmark scenario definition file if useful
+- Keep the scenario names stable
+- Use the same parameter values across subset benchmark runs unless a new experiment explicitly requires change
+
+#### Deliverable
+- A stable early benchmark set exists for subset-based development testing
+
+---
+
+### 14. Create a Repeatable Benchmark Runner for Subsets
+#### Tasks
+- [ ] Add a script that runs the Phase 1 subset benchmarks automatically
+- [ ] Support running the benchmark suite against:
+  - [ ] small subset
+  - [ ] medium subset
+  - [ ] large-dev subset
+- [ ] Support repeated runs per scenario
+- [ ] Save raw outputs to:
+  - [ ] `results/raw/phase1_dev/`
+- [ ] Save logs to:
+  - [ ] `results/raw/logs/`
+
+#### Agent instructions
+- Implement a script such as:
+  - [ ] `scripts/run_phase1_dev_benchmarks.sh`
+- The script should:
+  - [ ] accept a dataset path
+  - [ ] accept a repetition count
+  - [ ] run all selected benchmark scenarios
+  - [ ] save each run result in a machine-readable format
+  - [ ] print a concise summary to console
+- Keep this runner compatible with later reuse in other branches if possible
+
+#### Deliverable
+- A single command can run the subset benchmark suite and save outputs
+
+---
+
+### 15. Collect Preliminary Timing Data
+#### Tasks
+- [ ] Run each subset benchmark scenario at least:
+  - [ ] `3` times on the small subset
+  - [ ] `3` times on the medium subset
+  - [ ] `3` times on the large-dev subset
+- [ ] Record:
+  - [ ] ingest time
+  - [ ] query time
+  - [ ] total runtime
+  - [ ] records processed per second if available
+- [ ] Store each run separately before computing summaries
+
+#### Agent instructions
+- The coding agent should execute the benchmark runner after implementation changes that affect loading or query behavior
+- Save each batch with a clear label indicating:
+  - [ ] git branch
+  - [ ] commit hash if possible
+  - [ ] dataset subset size
+  - [ ] query scenario
+- Prefer CSV output for later aggregation
+
+#### Deliverable
+- Preliminary timing data exists for multiple subset sizes and benchmark scenarios
+
+---
+
+### 16. Generate Development Summary Tables
+#### Tasks
+- [ ] Add a small script to summarize raw subset benchmark results
+- [ ] Compute:
+  - [ ] mean runtime
+  - [ ] median runtime
+  - [ ] minimum runtime
+  - [ ] maximum runtime
+  - [ ] standard deviation if enough runs exist
+- [ ] Save summary tables to:
+  - [ ] `results/tables/phase1_dev/`
+
+#### Agent instructions
+- Implement a helper such as:
+  - [ ] `scripts/summarize_phase1_dev.py`
+- Read raw CSV benchmark outputs
+- Produce one summary table per dataset subset or one combined table with clear labels
+- Do not delete raw files after summarization
+
+#### Deliverable
+- Development-stage benchmark summaries exist and are easy to inspect
+
+---
+
+### 17. Generate Simple Development Graphs
+#### Tasks
+- [ ] Add a plotting script for subset benchmark results
+- [ ] Plot at least:
+  - [ ] ingest time vs subset size
+  - [ ] total runtime vs subset size
+  - [ ] query runtime by scenario
+- [ ] Save graphs to:
+  - [ ] `results/graphs/phase1_dev/`
+
+#### Agent instructions
+- Use Python for graph generation
+- Keep graphs simple and readable
+- Label all axes clearly
+- Include subset size and scenario labels
+- Save plots to file rather than only displaying them interactively
+
+#### Deliverable
+- Early graphs exist to show scaling trends before full-dataset testing
+
+---
+
+### 18. Add a Phase 1 Development Benchmark Log
+#### Tasks
+- [ ] Record each benchmark batch in `report/notes.md` or a dedicated dev benchmark log
+- [ ] For each batch, record:
+  - [ ] date/time
+  - [ ] git branch
+  - [ ] commit hash if available
+  - [ ] subset size
+  - [ ] benchmark scenarios run
+  - [ ] notable observations
+  - [ ] failures or anomalies
+- [ ] Record whether the benchmark run followed a code change
+
+#### Agent instructions
+- The coding agent should append a short notes entry after completing a benchmark batch
+- Include enough detail that the team can later trace performance changes back to code changes
+
+#### Deliverable
+- Development benchmark history is documented and traceable
+
+---
+
+### 19. Add a Correctness Cross-Check Between Subsets
+#### Tasks
+- [ ] Compare query result counts across repeated runs on the same subset
+- [ ] Confirm deterministic results for:
+  - [ ] low-speed threshold query
+  - [ ] time-window query
+  - [ ] borough + threshold query if applicable
+  - [ ] top-N query if deterministic ordering rules are defined
+- [ ] Record any nondeterministic behavior
+
+#### Agent instructions
+- Add a validation mode or helper script that reruns the same subset query and checks:
+  - [ ] result count consistency
+  - [ ] aggregate consistency
+- If mismatches occur, save both outputs and log the issue
+
+#### Deliverable
+- Subset benchmark runs are shown to be stable enough for baseline development use
+
+---
+
+### 20. Mark These Results as Pre-Baseline Only
+#### Tasks
+- [ ] Add a note in the README or report notes that subset benchmarks are:
+  - [ ] development-stage measurements
+  - [ ] not the final official comparison data
+- [ ] Distinguish clearly between:
+  - [ ] `phase1_dev`
+  - [ ] final `phase1_baseline`
+- [ ] Reserve final full-dataset benchmarking for the official comparison campaign later
+
+#### Agent instructions
+- Ensure output directories and filenames make this distinction obvious
+- Do not mix subset-development outputs with final benchmark outputs
+
+#### Deliverable
+- Early data collection is useful and organized without being confused with final results
+
+---
+
+## Extra Definition of Done for Development-Stage Benchmarking
+This subsection is complete when all of the following are true:
+
+- [ ] Reproducible subset datasets exist
+- [ ] The serial program runs successfully on all selected subset sizes
+- [ ] At least 3 benchmark scenarios run repeatedly on subsets
+- [ ] Raw results are saved to disk
+- [ ] Summary tables are generated
+- [ ] Simple graphs are generated
+- [ ] Development benchmark notes are recorded
+- [ ] Outputs are clearly labeled as pre-baseline and not final full-dataset benchmarks
