@@ -31,17 +31,17 @@ By the end of Phase 1, the repository should contain:
 
 ### 1. Repository and Build Validation
 #### Tasks
-- [ ] Confirm the repository builds with `cmake` and `clang++` or `g++`
-- [ ] Create a root `CMakeLists.txt` that builds:
-  - [ ] `run_serial`
-  - [ ] placeholder targets for later phases if needed
-- [ ] Enable warnings:
-  - [ ] `-Wall`
-  - [ ] `-Wextra`
-  - [ ] `-pedantic`
-- [ ] Add a debug build option
-- [ ] Add a release build option
-- [ ] Verify clean build from scratch
+- [x] Confirm the repository builds with `cmake` and `clang++` or `g++`
+- [x] Create a root `CMakeLists.txt` that builds:
+  - [x] `run_serial`
+  - [x] placeholder targets for later phases if needed
+- [x] Enable warnings:
+  - [x] `-Wall`
+  - [x] `-Wextra`
+  - [x] `-pedantic`
+- [x] Add a debug build option
+- [x] Add a release build option
+- [x] Verify clean build from scratch
 
 #### Deliverable
 - Build succeeds with:
@@ -52,25 +52,25 @@ By the end of Phase 1, the repository should contain:
 
 ### 2. Define Core Data Model
 #### Tasks
-- [ ] Create `TrafficRecord`
-- [ ] Create `TrafficDataset`
-- [ ] Create `GarageRecord`
-- [ ] Create `BuildingRecord` or minimal BES placeholder model
-- [ ] Create `GeoPoint` if spatial support is needed in Phase 1
-- [ ] Use primitive field types wherever possible:
-  - [ ] integers for IDs when valid
-  - [ ] `float` or `double` for speed/travel time
-  - [ ] compact date/time representation where practical
-  - [ ] strings only where unavoidable
-- [ ] Document any field-normalization assumptions
+- [x] Create `TrafficRecord`
+- [x] Create `TrafficDataset`
+- [x] Create `GarageRecord`
+- [x] Create `BuildingRecord` or minimal BES placeholder model
+- [x] Create `GeoPoint` if spatial support is needed in Phase 1
+- [x] Use primitive field types wherever possible:
+  - [x] integers for IDs when valid
+  - [x] `float` or `double` for speed/travel time
+  - [x] compact date/time representation where practical
+  - [x] strings only where unavoidable
+- [x] Document any field-normalization assumptions
 
 #### Minimum fields for `TrafficRecord`
-- [ ] link ID
-- [ ] speed
-- [ ] travel time
-- [ ] timestamp or parsed time representation
-- [ ] borough if available
-- [ ] optional link name or location descriptor
+- [x] link ID
+- [x] speed
+- [x] travel time
+- [x] timestamp or parsed time representation
+- [x] borough if available
+- [x] optional link name or location descriptor
 
 #### Deliverable
 - Header and source files compile cleanly
@@ -80,22 +80,22 @@ By the end of Phase 1, the repository should contain:
 
 ### 3. Implement Serial File Ingestion
 #### Tasks
-- [ ] Create `CSVReader` or equivalent parser wrapper
-- [ ] Implement serial parsing for DOT traffic speed data
-- [ ] Load records into `TrafficDataset`
-- [ ] Add input validation for malformed rows
-- [ ] Count:
-  - [ ] rows read
-  - [ ] rows accepted
-  - [ ] rows rejected
-- [ ] Add progress logging for long dataset loads
-- [ ] Support configurable input path through CLI arguments
+- [x] Create `CSVReader` or equivalent parser wrapper
+- [x] Implement serial parsing for DOT traffic speed data
+- [x] Load records into `TrafficDataset`
+- [x] Add input validation for malformed rows
+- [x] Count:
+  - [x] rows read
+  - [x] rows accepted
+  - [x] rows rejected
+- [x] Add progress logging for long dataset loads
+- [x] Support configurable input path through CLI arguments
 
 #### Supporting dataset ingestion
-- [ ] Add basic ingestion for garages dataset
-- [ ] Add basic ingestion or stub loader for BES dataset
-- [ ] Keep these loaders simple in Phase 1
-- [ ] Focus effort on traffic dataset first
+- [x] Add basic ingestion for garages dataset
+- [x] Add basic ingestion or stub loader for BES dataset
+- [x] Keep these loaders simple in Phase 1
+- [x] Focus effort on traffic dataset first
 
 #### Deliverable
 - `run_serial` can ingest at least one real traffic dataset file end-to-end
@@ -106,10 +106,10 @@ By the end of Phase 1, the repository should contain:
 ### 4. Implement Dataset Container APIs
 #### Tasks
 - [ ] Add methods to `TrafficDataset` for:
-  - [ ] record count
-  - [ ] empty check
+  - [x] record count
+  - [x] empty check
   - [ ] direct record access if needed
-  - [ ] iteration support
+  - [x] iteration support
 - [ ] Separate ingestion from query logic
 - [ ] Keep storage simple for baseline:
   - [ ] likely `std::vector<TrafficRecord>`
@@ -129,7 +129,7 @@ By the end of Phase 1, the repository should contain:
 - [ ] Basic aggregation:
   - [ ] average speed
   - [ ] average travel time
-  - [ ] record count by condition
+  - [x] record count by condition
 
 #### Suggested query classes
 - [ ] `TimeWindowQuery`
@@ -151,21 +151,21 @@ By the end of Phase 1, the repository should contain:
 
 ### 6. Build a Serial CLI Runner
 #### Tasks
-- [ ] Implement `apps/run_serial.cpp`
+- [x] Implement `apps/run_serial.cpp`
 - [ ] Accept command-line arguments for:
-  - [ ] traffic dataset path
-  - [ ] garages dataset path optional
-  - [ ] BES dataset path optional
+  - [x] traffic dataset path
+  - [x] garages dataset path optional
+  - [x] BES dataset path optional
   - [ ] query type
   - [ ] threshold values
   - [ ] time range values
 - [ ] Print useful execution logs:
-  - [ ] dataset load started
-  - [ ] dataset load completed
+  - [x] dataset load started
+  - [x] dataset load completed
   - [ ] query started
   - [ ] query completed
   - [ ] elapsed time
-- [ ] Return nonzero exit code on failure
+- [x] Return nonzero exit code on failure
 
 #### Deliverable
 - One executable that can load data and run at least 3 benchmarkable query scenarios
@@ -202,11 +202,11 @@ By the end of Phase 1, the repository should contain:
 
 ### 8. Add Validation and Sanity Checks
 #### Tasks
-- [ ] Validate parsed speed ranges
-- [ ] Validate travel time is nonnegative where expected
-- [ ] Detect missing or malformed timestamps
-- [ ] Add sample record print mode for debugging
-- [ ] Add counts for suspicious rows
+- [x] Validate parsed speed ranges
+- [x] Validate travel time is nonnegative where expected
+- [x] Detect missing or malformed timestamps
+- [x] Add sample record print mode for debugging
+- [x] Add counts for suspicious rows
 - [ ] Compare accepted row counts against expectations
 
 #### Deliverable
@@ -216,11 +216,11 @@ By the end of Phase 1, the repository should contain:
 
 ### 9. Add Logging and Notes for Research Use
 #### Tasks
-- [ ] Create `report/notes.md` entries for:
-  - [ ] parsing assumptions
-  - [ ] rejected-row logic
-  - [ ] timestamp handling
-  - [ ] fields ignored in baseline
+- [x] Create `report/notes.md` entries for:
+  - [x] parsing assumptions
+  - [x] rejected-row logic
+  - [x] timestamp handling
+  - [x] fields ignored in baseline
 - [ ] Record failed attempts
 - [ ] Record performance surprises
 - [ ] Record dataset-specific issues
@@ -251,17 +251,17 @@ By the end of Phase 1, the repository should contain:
 ## File-Level TODO Suggestions
 
 ### `include/data_model/`
-- [ ] `TrafficRecord.hpp`
-- [ ] `TrafficDataset.hpp`
-- [ ] `GarageRecord.hpp`
-- [ ] `BuildingRecord.hpp`
-- [ ] `GeoPoint.hpp`
+- [x] `TrafficRecord.hpp`
+- [x] `TrafficDataset.hpp`
+- [x] `GarageRecord.hpp`
+- [x] `BuildingRecord.hpp`
+- [x] `GeoPoint.hpp`
 
 ### `include/io/`
-- [ ] `CSVReader.hpp`
+- [x] `CSVReader.hpp`
 - [ ] `TrafficLoader.hpp`
-- [ ] `GarageLoader.hpp`
-- [ ] `BuildingLoader.hpp`
+- [x] `GarageLoader.hpp`
+- [x] `BuildingLoader.hpp`
 
 ### `include/query/`
 - [ ] `TimeWindowQuery.hpp`
@@ -275,7 +275,7 @@ By the end of Phase 1, the repository should contain:
 - [ ] implement matching `.cpp` files for all of the above
 
 ### `apps/`
-- [ ] `run_serial.cpp`
+- [x] `run_serial.cpp`
 
 ### `scripts/`
 - [ ] `benchmark.sh`
