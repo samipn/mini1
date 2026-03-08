@@ -414,23 +414,23 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 13. Add Early Benchmark Scenarios for Subset Datasets
 #### Tasks
-- [ ] Define a small set of repeatable Phase 1 subset benchmark scenarios
-- [ ] Use the same query definitions each time
-- [ ] Minimum subset scenarios:
-  - [ ] ingest only
-  - [ ] ingest + low-speed threshold query
-  - [ ] ingest + time-window query
-  - [ ] ingest + borough + threshold query if borough data is available
-  - [ ] ingest + top-N slowest query
+- [x] Define a small set of repeatable Phase 1 subset benchmark scenarios
+- [x] Use the same query definitions each time
+- [x] Minimum subset scenarios:
+  - [x] ingest only
+  - [x] ingest + low-speed threshold query
+  - [x] ingest + time-window query
+  - [x] ingest + borough + threshold query if borough data is available
+  - [x] ingest + top-N slowest query
 
 #### Suggested default development parameters
-- [ ] low-speed threshold:
-  - [ ] `8 mph` or another documented threshold
-- [ ] a fixed time window for repeatability
-- [ ] a fixed borough if used
-- [ ] a fixed top-N size such as:
-  - [ ] `10`
-  - [ ] or `100`
+- [x] low-speed threshold:
+  - [x] `8 mph` or another documented threshold
+- [x] a fixed time window for repeatability
+- [x] a fixed borough if used
+- [x] a fixed top-N size such as:
+  - [x] `10`
+  - [x] or `100`
 
 #### Agent instructions
 - Create a benchmark scenario definition file if useful
@@ -444,26 +444,26 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 14. Create a Repeatable Benchmark Runner for Subsets
 #### Tasks
-- [ ] Add a script that runs the Phase 1 subset benchmarks automatically
-- [ ] Support running the benchmark suite against:
-  - [ ] small subset
-  - [ ] medium subset
-  - [ ] large-dev subset
-- [ ] Support repeated runs per scenario
-- [ ] Save raw outputs to:
-  - [ ] `results/raw/phase1_dev/`
-- [ ] Save logs to:
-  - [ ] `results/raw/logs/`
+- [x] Add a script that runs the Phase 1 subset benchmarks automatically
+- [x] Support running the benchmark suite against:
+  - [x] small subset
+  - [x] medium subset
+  - [x] large-dev subset
+- [x] Support repeated runs per scenario
+- [x] Save raw outputs to:
+  - [x] `results/raw/phase1_dev/`
+- [x] Save logs to:
+  - [x] `results/raw/logs/`
 
 #### Agent instructions
 - Implement a script such as:
-  - [ ] `scripts/run_phase1_dev_benchmarks.sh`
+  - [x] `scripts/run_phase1_dev_benchmarks.sh`
 - The script should:
-  - [ ] accept a dataset path
-  - [ ] accept a repetition count
-  - [ ] run all selected benchmark scenarios
-  - [ ] save each run result in a machine-readable format
-  - [ ] print a concise summary to console
+  - [x] accept a dataset path
+  - [x] accept a repetition count
+  - [x] run all selected benchmark scenarios
+  - [x] save each run result in a machine-readable format
+  - [x] print a concise summary to console
 - Keep this runner compatible with later reuse in other branches if possible
 
 #### Deliverable
