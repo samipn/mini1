@@ -105,14 +105,14 @@ By the end of Phase 1, the repository should contain:
 
 ### 4. Implement Dataset Container APIs
 #### Tasks
-- [ ] Add methods to `TrafficDataset` for:
+- [x] Add methods to `TrafficDataset` for:
   - [x] record count
   - [x] empty check
-  - [ ] direct record access if needed
+  - [x] direct record access if needed
   - [x] iteration support
-- [ ] Separate ingestion from query logic
-- [ ] Keep storage simple for baseline:
-  - [ ] likely `std::vector<TrafficRecord>`
+- [x] Separate ingestion from query logic
+- [x] Keep storage simple for baseline:
+  - [x] likely `std::vector<TrafficRecord>`
 
 #### Deliverable
 - Dataset can be loaded once and reused across multiple query runs
@@ -121,27 +121,27 @@ By the end of Phase 1, the repository should contain:
 
 ### 5. Implement Phase 1 Query APIs
 #### Required baseline query capabilities
-- [ ] Time-range filtering
-- [ ] Speed-threshold filtering
-- [ ] Borough filtering if supported by dataset
-- [ ] Link-ID lookup or link-range query
-- [ ] Top-N slowest links or records
-- [ ] Basic aggregation:
-  - [ ] average speed
-  - [ ] average travel time
+- [x] Time-range filtering
+- [x] Speed-threshold filtering
+- [x] Borough filtering if supported by dataset
+- [x] Link-ID lookup or link-range query
+- [x] Top-N slowest links or records
+- [x] Basic aggregation:
+  - [x] average speed
+  - [x] average travel time
   - [x] record count by condition
 
 #### Suggested query classes
-- [ ] `TimeWindowQuery`
-- [ ] `CongestionQuery`
-- [ ] `TrafficAggregator`
+- [x] `TimeWindowQuery`
+- [x] `CongestionQuery`
+- [x] `TrafficAggregator`
 
 #### Example baseline queries to support
-- [ ] all records with speed below threshold
-- [ ] all records for a selected link ID
-- [ ] all records within a time window
-- [ ] all records in a borough with speed below threshold
-- [ ] top N slowest recurring links
+- [x] all records with speed below threshold
+- [x] all records for a selected link ID
+- [x] all records within a time window
+- [x] all records in a borough with speed below threshold
+- [x] top N slowest recurring links
 
 #### Deliverable
 - Query methods callable from `run_serial`
@@ -152,19 +152,19 @@ By the end of Phase 1, the repository should contain:
 ### 6. Build a Serial CLI Runner
 #### Tasks
 - [x] Implement `apps/run_serial.cpp`
-- [ ] Accept command-line arguments for:
+- [x] Accept command-line arguments for:
   - [x] traffic dataset path
   - [x] garages dataset path optional
   - [x] BES dataset path optional
-  - [ ] query type
-  - [ ] threshold values
-  - [ ] time range values
-- [ ] Print useful execution logs:
+  - [x] query type
+  - [x] threshold values
+  - [x] time range values
+- [x] Print useful execution logs:
   - [x] dataset load started
   - [x] dataset load completed
-  - [ ] query started
-  - [ ] query completed
-  - [ ] elapsed time
+  - [x] query started
+  - [x] query completed
+  - [x] elapsed time
 - [x] Return nonzero exit code on failure
 
 #### Deliverable
@@ -264,15 +264,15 @@ By the end of Phase 1, the repository should contain:
 - [x] `BuildingLoader.hpp`
 
 ### `include/query/`
-- [ ] `TimeWindowQuery.hpp`
-- [ ] `CongestionQuery.hpp`
-- [ ] `TrafficAggregator.hpp`
+- [x] `TimeWindowQuery.hpp`
+- [x] `CongestionQuery.hpp`
+- [x] `TrafficAggregator.hpp`
 
 ### `include/benchmark/`
 - [ ] `BenchmarkHarness.hpp`
 
 ### `src/...`
-- [ ] implement matching `.cpp` files for all of the above
+- [x] implement matching `.cpp` files for all of the above
 
 ### `apps/`
 - [x] `run_serial.cpp`
@@ -296,8 +296,8 @@ By the end of Phase 1, the repository should contain:
 - [ ] summary logs print correctly
 
 ### Milestone C — Query Layer
-- [ ] time and threshold queries work
-- [ ] outputs look correct on sample data
+- [x] time and threshold queries work
+- [x] outputs look correct on sample data
 
 ### Milestone D — Benchmark Baseline
 - [ ] serial timing is implemented
@@ -316,7 +316,7 @@ Phase 1 is complete when all of the following are true:
 
 - [ ] The project builds cleanly
 - [ ] Traffic data can be ingested serially
-- [ ] At least 3 useful query types are implemented
+- [x] At least 3 useful query types are implemented
 - [ ] Serial benchmark runs execute repeatedly and save results
 - [ ] No threading or OpenMP is used
 - [ ] Notes exist to support the report

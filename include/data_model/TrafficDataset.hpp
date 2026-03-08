@@ -25,6 +25,10 @@ class TrafficDataset {
   bool Empty() const;
   std::size_t Size() const;
   const std::vector<TrafficRecord>& Records() const;
+  const TrafficRecord* At(std::size_t index) const;
+
+  std::vector<TrafficRecord>::const_iterator begin() const;
+  std::vector<TrafficRecord>::const_iterator end() const;
 
   IngestionCounters& Counters();
   const IngestionCounters& Counters() const;
