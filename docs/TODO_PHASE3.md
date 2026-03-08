@@ -405,3 +405,28 @@ Do not do these unless they are clearly justified and benchmarked:
 - [ ] no report claims without benchmark evidence
 
 ---
+
+## Deferred From Phase 1 (Additive)
+These items were identified during late Phase 1 review and are appended for Phase 3 optimization work.
+
+### High-cardinality encoding and consolidation
+- [ ] Implement dictionary/interning strategy for high-cardinality text-heavy traffic fields:
+  - [ ] `link_name`
+  - [ ] any remaining repeated descriptor strings in hot paths
+- [ ] Replace repeated string comparisons in hot loops with integer-coded category checks where possible.
+- [ ] Quantify memory and runtime impact of dictionary encoding vs raw string storage.
+
+### Cross-dataset optimized relationships
+- [ ] Finalize cross-dataset indexed/materialized join structures after Phase 2 prototypes:
+  - [ ] garage `bbl` <-> BES `bbl` optimized lookup path
+  - [ ] borough-coded relationship views for repeated analytical scans
+- [ ] Benchmark and report tradeoffs of pre-materialized joins vs on-demand joins.
+
+### Boost evaluation in optimized phase
+- [ ] Evaluate Boost-based optimization candidates against STL baselines:
+  - [ ] `boost::container::small_vector` for hot-path temporary buffers
+  - [ ] `boost::container::flat_map` or similar sorted containers for compressed lookup tables
+  - [ ] `boost::dynamic_bitset` for vectorized filtering masks
+- [ ] Keep Boost usage only where measured wins are reproducible and clearly justified in benchmark notes.
+
+---
