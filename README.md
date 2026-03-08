@@ -1,28 +1,5 @@
 # UrbanDrop Mini 1A — Congestion Intelligence Engine
 
-## Project Metadata
-
-| Field | Value |
-|---|---|
-| **Assignment** | UrbanDrop Mini 1A |
-| **Course context** | Memory Overload (v0.1a) |
-| **System** | System 1 — Congestion Intelligence Engine |
-| **Language** | C/C++ (gcc/g++ v13+ or clang/clang++ v16+) |
-| **Build system** | CMake |
-| **Primary dataset** | Transportation DOT Traffic Speeds NBE (~40 GB) |
-| **Supporting datasets** | Active DCA-Licensed Garages and Parking Lots; Building Elevation and Subgrade (BES) |
-| **Min. combined size** | > 12 GB |
-| **Min. combined records** | > 2 million |
-| **Data source** | NYC OpenData |
-| **Time windows** | 2020–2022, 2022–2024, 2024–2026 |
-| **Primary research area** | Temporal congestion analysis and traffic hotspot detection |
-| **Secondary research area** | Memory-efficient query processing over large urban mobility datasets |
-| **Parallelization** | OpenMP / threading (Phase 2) |
-| **Memory optimization** | Object-of-Arrays / vectorized layout (Phase 3) |
-| **Benchmark runs** | ≥ 10 per experiment |
-| **Deliverables** | Code, report, one-slide presentation, `.tar.gz` submission |
-
-
 ## Project Context
 This repository contains **System 1** of our two-part UrbanDrop research effort for **Memory Overload (v0.1a)**.
 
@@ -61,25 +38,24 @@ This system is primarily built around NYC traffic-speed data. The uploaded traff
 ## Datasets
 
 ### Primary Dataset
-- **Transportation DOT Traffic Speeds NBE** (`~40 GB`)
-- Role in this system:
-  - primary traffic-performance dataset
-  - source for congestion detection
-  - source for temporal comparisons across operating eras
-  - source for road-link range queries and benchmark workloads
 
-The NYCDOT traffic speed detector data includes average speed, travel time, link identifiers, timestamps, and borough/link descriptions, making it well suited for large-scale traffic analysis.  
+| Field | Value |
+|---|---|
+| **Name** | Transportation DOT Traffic Speeds NBE |
+| **Source** | NYC OpenData / NYCDOT |
+| **Approximate size** | ~40 GB |
+| **Key fields** | Link ID, average speed, travel time, timestamp, borough, link description |
+| **Coverage** | Major arterials and highways within NYC limits |
+| **Role** | Primary traffic-performance dataset; source for congestion detection, temporal comparisons, and range-query benchmarks |
 
 ### Supporting Datasets
-- **Active DCA-Licensed Garages and Parking Lots**
-- **Building Elevation and Subgrade (BES)**
 
-The garages dataset contains licensed garage and parking-lot records with address, borough, detail fields, and latitude/longitude coordinates, which makes it useful as a supporting infrastructure layer for later comparison against congestion hotspots.
-The Building Elevation and Subgrade dataset is also included by dataset title as a shared supporting layer for the UrbanDrop project. 
-
-### Official Links
-- Active DCA-Licensed Garages and Parking Lots: <https://data.cityofnewyork.us/Business/Active-DCA-Licensed-Garages-and-Parking-Lots/a7m8-iids/about_data>
-- Building Elevation and Subgrade (BES): <https://data.cityofnewyork.us/City-Government/Building-Elevation-and-Subgrade-BES-/bsin-59hv/about_data>
+| Field | Active DCA-Licensed Garages and Parking Lots | Building Elevation and Subgrade (BES) |
+|---|---|---|
+| **Source** | NYC OpenData | NYC OpenData |
+| **Key fields** | Address, borough, license details, latitude/longitude | Building elevation, subgrade classification |
+| **Role** | Infrastructure layer for comparison against congestion hotspots | Shared supporting layer for UrbanDrop project |
+| **URL** | [about_data](https://data.cityofnewyork.us/Business/Active-DCA-Licensed-Garages-and-Parking-Lots/a7m8-iids/about_data) | [about_data](https://data.cityofnewyork.us/City-Government/Building-Elevation-and-Subgrade-BES-/bsin-59hv/about_data) |
 
 ## Why This System Exists
 UrbanDrop is motivated by the idea that some parts of the city may be especially poor fits for repeated curbside delivery access because traffic already moves slowly and unpredictably there. Before evaluating infrastructure solutions, we first need a defensible answer to a simpler question:
