@@ -1,0 +1,86 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Build outputs
+build/
+build-*/
+out/
+bin/
+lib/
+obj/
+
+# C/C++ artifacts
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+*.dSYM/
+*.gcda
+*.gcno
+*.gcov
+
+# CMake / build system
+CMakeCache.txt
+CMakeFiles/
+cmake-build-*/
+cmake_install.cmake
+compile_commands.json
+Makefile
+CTestTestfile.cmake
+Testing/
+install_manifest.txt
+
+# Python (for scripts/plotting)
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.envrc
+.mypy_cache/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Profiling / analysis outputs
+perf.data*
+callgrind.out.*
+massif.out.*
+cachegrind.out.*
+
+# Project data and generated results
+# Keep source code and report assets tracked; keep large/raw datasets out.
+data/
+results/raw/
+*.csv
+*.tsv
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.sqlite
+*.db
+*.log
+
+# Local notes
+.dev_notes
+.local_config
+.notes
