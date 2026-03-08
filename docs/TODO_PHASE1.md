@@ -358,31 +358,31 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 11. Create Reproducible Subset Datasets
 #### Tasks
-- [ ] Add a script that creates reproducible subset files from the main traffic dataset
-- [ ] Support at least these subset sizes:
-  - [ ] small subset
-  - [ ] medium subset
-  - [ ] large-dev subset
-- [ ] Suggested targets:
-  - [ ] `10,000` rows
-  - [ ] `100,000` rows
-  - [ ] `1,000,000` rows
-- [ ] Preserve the original header row
-- [ ] Keep the subset generation deterministic
-- [ ] Save subset files under a predictable directory such as:
-  - [ ] `data/dev/`
-  - [ ] or `data/subsets/`
-- [ ] Log the source file and row counts used to create each subset
+- [x] Add a script that creates reproducible subset files from the main traffic dataset
+- [x] Support at least these subset sizes:
+  - [x] small subset
+  - [x] medium subset
+  - [x] large-dev subset
+- [x] Suggested targets:
+  - [x] `10,000` rows
+  - [x] `100,000` rows
+  - [x] `1,000,000` rows
+- [x] Preserve the original header row
+- [x] Keep the subset generation deterministic
+- [x] Save subset files under a predictable directory such as:
+  - [x] `data/dev/`
+  - [x] or `data/subsets/`
+- [x] Log the source file and row counts used to create each subset
 
 #### Agent instructions
 - Implement a script such as:
-  - [ ] `scripts/make_subsets.sh`
-  - [ ] or `scripts/make_subsets.py`
+  - [x] `scripts/make_subsets.sh`
+  - [x] or `scripts/make_subsets.py`
 - The script should accept:
-  - [ ] input dataset path
-  - [ ] output directory
-  - [ ] requested subset sizes
-- The script should print progress and final file paths
+  - [x] input dataset path
+  - [x] output directory
+  - [x] requested subset sizes
+- [x] The script should print progress and final file paths
 
 #### Deliverable
 - Reproducible subset datasets exist for early benchmark work
@@ -391,16 +391,16 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 12. Add Sample Validation Runs on Subsets
 #### Tasks
-- [ ] Run the serial loader on the small subset
-- [ ] Run the serial loader on the medium subset
-- [ ] Run the serial loader on the large-dev subset
-- [ ] Record:
-  - [ ] rows read
-  - [ ] rows accepted
-  - [ ] rows rejected
-  - [ ] parse failures by type if available
-- [ ] Save validation summaries to:
-  - [ ] `results/raw/validation/`
+- [x] Run the serial loader on the small subset
+- [x] Run the serial loader on the medium subset
+- [x] Run the serial loader on the large-dev subset
+- [x] Record:
+  - [x] rows read
+  - [x] rows accepted
+  - [x] rows rejected
+  - [x] parse failures by type if available
+- [x] Save validation summaries to:
+  - [x] `results/raw/validation/`
 
 #### Agent instructions
 - Add a mode in `run_serial` or a helper script that prints a loader summary cleanly
