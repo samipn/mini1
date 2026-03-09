@@ -11,7 +11,7 @@ SUBSETS_DIR="${ROOT_DIR}/data/subsets"
 OUT_DIR="${ROOT_DIR}/results/raw/phase2_dev"
 LOG_DIR="${ROOT_DIR}/results/raw/logs"
 RUNS=3
-THREAD_LIST="1,2,4,8"
+THREAD_LIST="1,2,4,8,16"
 
 SMALL_PATH=""
 MEDIUM_PATH=""
@@ -29,7 +29,7 @@ Options:
   --medium <path>         Medium subset CSV path (100k)
   --large <path>          Large-dev subset CSV path (1M)
   --runs <n>              Benchmark repetitions per scenario (default: 3)
-  --threads <csv>         Parallel thread list (default: 1,2,4,8)
+  --threads <csv>         Parallel thread list (default: 1,2,4,8,16)
   --out-dir <path>        Raw benchmark output dir (default: results/raw/phase2_dev)
   --log-dir <path>        Log output dir (default: results/raw/logs)
   --help                  Show this help
@@ -125,6 +125,7 @@ GIT_COMMIT="$(git -C "${ROOT_DIR}" rev-parse --short HEAD 2>/dev/null || echo un
 SUBSET_MANIFEST="${OUT_DIR}/subset_manifest_${TS}.csv"
 BATCH_MANIFEST="${OUT_DIR}/batch_${TS}_manifest.csv"
 RPS_CSV="${OUT_DIR}/batch_${TS}_records_per_second.csv"
+ENV_CSV="${OUT_DIR}/batch_${TS}_environment.csv"
 
 cat > "${SUBSET_MANIFEST}" <<CSV
 batch_utc,subset_label,dataset_path,expected_data_rows,actual_data_rows,serial_access_ok,parallel_access_ok
@@ -137,6 +138,39 @@ CSV
 cat > "${RPS_CSV}" <<CSV
 batch_utc,git_branch,git_commit,subset_label,scenario_name,mode,thread_count,run_number,total_ms,rows_accepted,records_per_second
 CSV
+
+csv_escape() {
+  local value="$1"
+  value="${value//\"/\"\"}"
+  printf '"%s"' "${value}"
+}
+
+cpu_model="$(lscpu 2>/dev/null | awk -F: '/Model name/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' || true)"
+if [[ -z "${cpu_model}" && -f /proc/cpuinfo ]]; then
+  cpu_model="$(awk -F: '/model name/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' /proc/cpuinfo || true)"
+fi
+logical_cores="$(nproc 2>/dev/null || echo unknown)"
+mem_total_kb="$(awk '/MemTotal/ {print $2; exit}' /proc/meminfo 2>/dev/null || echo unknown)"
+compiler_bin="${CXX:-c++}"
+compiler_version="$(${compiler_bin} --version 2>/dev/null | head -n 1 || echo unknown)"
+
+cat > "${ENV_CSV}" <<CSV
+batch_utc,host,os_kernel,cpu_model,logical_cores,mem_total_kb,compiler,compiler_version,git_branch,git_commit,thread_list,benchmark_runs
+CSV
+
+printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
+  "${TS}" \
+  "$(csv_escape "$(hostname 2>/dev/null || echo unknown)")" \
+  "$(csv_escape "$(uname -sr 2>/dev/null || echo unknown)")" \
+  "$(csv_escape "${cpu_model}")" \
+  "${logical_cores}" \
+  "${mem_total_kb}" \
+  "$(csv_escape "${compiler_bin}")" \
+  "$(csv_escape "${compiler_version}")" \
+  "$(csv_escape "${GIT_BRANCH}")" \
+  "$(csv_escape "${GIT_COMMIT}")" \
+  "$(csv_escape "${THREAD_LIST}")" \
+  "${RUNS}" >> "${ENV_CSV}"
 
 calc_rows() {
   local file="$1"
@@ -167,12 +201,22 @@ emit_rps_rows() {
 
   awk -F, -v ts="${TS}" -v branch="${GIT_BRANCH}" -v commit="${GIT_COMMIT}" \
       -v subset="${subset_label}" -v scenario="${scenario_name}" -v mode="${mode}" '
+    NR == 1 {
+      for (i = 1; i <= NF; ++i) {
+        col[$i] = i;
+      }
+      if (!("thread_count" in col) || !("run_number" in col) || !("total_ms" in col) || !("rows_accepted" in col)) {
+        print "[phase2-dev] benchmark CSV missing required columns in " FILENAME > "/dev/stderr";
+        exit 2;
+      }
+      next;
+    }
     NR > 1 {
-      total_ms = $15 + 0.0;
-      rows_accepted = $17 + 0.0;
+      total_ms = $(col["total_ms"]) + 0.0;
+      rows_accepted = $(col["rows_accepted"]) + 0.0;
       rps = (total_ms > 0.0) ? (rows_accepted / (total_ms / 1000.0)) : 0.0;
       printf "%s,%s,%s,%s,%s,%s,%s,%s,%.6f,%s,%.6f\n",
-             ts, branch, commit, subset, scenario, mode, $4, $12, total_ms, $17, rps;
+             ts, branch, commit, subset, scenario, mode, $(col["thread_count"]), $(col["run_number"]), total_ms, $(col["rows_accepted"]), rps;
     }
   ' "${csv_file}" >> "${RPS_CSV}"
 }
@@ -318,3 +362,4 @@ echo "[phase2-dev] complete"
 echo "[phase2-dev] subset_manifest=${SUBSET_MANIFEST}"
 echo "[phase2-dev] batch_manifest=${BATCH_MANIFEST}"
 echo "[phase2-dev] rps=${RPS_CSV}"
+echo "[phase2-dev] env=${ENV_CSV}"

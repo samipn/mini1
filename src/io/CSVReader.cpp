@@ -1,12 +1,9 @@
 #include "io/CSVReader.hpp"
+#include "io/CsvParseUtils.hpp"
 
-#include <algorithm>
-#include <cctype>
 #include <chrono>
 #include <fstream>
-#include <iomanip>
 #include <limits>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -15,152 +12,6 @@
 #include "data_model/CommonCodes.hpp"
 
 namespace urbandrop {
-namespace {
-
-std::string Trim(const std::string& input) {
-  std::size_t start = 0;
-  while (start < input.size() && std::isspace(static_cast<unsigned char>(input[start])) != 0) {
-    ++start;
-  }
-
-  std::size_t end = input.size();
-  while (end > start && std::isspace(static_cast<unsigned char>(input[end - 1])) != 0) {
-    --end;
-  }
-
-  return input.substr(start, end - start);
-}
-
-std::string ToLower(std::string input) {
-  std::transform(input.begin(), input.end(), input.begin(), [](unsigned char c) {
-    return static_cast<char>(std::tolower(c));
-  });
-  return input;
-}
-
-std::vector<std::string> ParseCsvLine(const std::string& line) {
-  std::vector<std::string> fields;
-  std::string current;
-  bool in_quotes = false;
-
-  for (std::size_t i = 0; i < line.size(); ++i) {
-    const char c = line[i];
-
-    if (c == '"') {
-      if (in_quotes && i + 1 < line.size() && line[i + 1] == '"') {
-        current.push_back('"');
-        ++i;
-      } else {
-        in_quotes = !in_quotes;
-      }
-      continue;
-    }
-
-    if (c == ',' && !in_quotes) {
-      fields.push_back(Trim(current));
-      current.clear();
-      continue;
-    }
-
-    current.push_back(c);
-  }
-
-  fields.push_back(Trim(current));
-  return fields;
-}
-
-bool ParseInt64(const std::string& value, std::int64_t* out) {
-  if (value.empty()) {
-    return false;
-  }
-  char* end = nullptr;
-  errno = 0;
-  const long long parsed = std::strtoll(value.c_str(), &end, 10);
-  if (errno != 0 || end == value.c_str() || *end != '\0') {
-    return false;
-  }
-  *out = static_cast<std::int64_t>(parsed);
-  return true;
-}
-
-bool ParseDouble(const std::string& value, double* out) {
-  if (value.empty()) {
-    return false;
-  }
-  char* end = nullptr;
-  errno = 0;
-  const double parsed = std::strtod(value.c_str(), &end);
-  if (errno != 0 || end == value.c_str() || *end != '\0') {
-    return false;
-  }
-  *out = parsed;
-  return true;
-}
-
-std::string NormalizeTimestamp(const std::string& value) {
-  std::string cleaned = Trim(value);
-  if (cleaned.empty()) {
-    return cleaned;
-  }
-
-  if (!cleaned.empty() && cleaned.back() == 'Z') {
-    cleaned.pop_back();
-  }
-
-  const std::size_t dot_pos = cleaned.find('.');
-  if (dot_pos != std::string::npos) {
-    cleaned = cleaned.substr(0, dot_pos);
-  }
-
-  return cleaned;
-}
-
-bool ParseTimestamp(const std::string& value, std::int64_t* out_epoch_seconds) {
-  const std::string normalized = NormalizeTimestamp(value);
-  if (normalized.empty()) {
-    return false;
-  }
-
-  std::tm tm = {};
-  std::istringstream stream(normalized);
-  stream >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
-  if (stream.fail()) {
-    stream.clear();
-    stream.str(normalized);
-    stream >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
-    if (stream.fail()) {
-      return false;
-    }
-  }
-
-#if defined(_WIN32)
-  const std::time_t parsed_time = _mkgmtime(&tm);
-#else
-  const std::time_t parsed_time = timegm(&tm);
-#endif
-
-  if (parsed_time < 0) {
-    return false;
-  }
-
-  *out_epoch_seconds = static_cast<std::int64_t>(parsed_time);
-  return true;
-}
-
-bool ResolveColumn(const std::unordered_map<std::string, std::size_t>& columns,
-                   const std::vector<std::string>& aliases,
-                   std::size_t* index) {
-  for (const std::string& alias : aliases) {
-    const auto it = columns.find(alias);
-    if (it != columns.end()) {
-      *index = it->second;
-      return true;
-    }
-  }
-  return false;
-}
-
-}  // namespace
 
 bool CSVReader::LoadTrafficCSV(const std::string& csv_path,
                                TrafficDataset* dataset,
@@ -173,6 +24,8 @@ bool CSVReader::LoadTrafficCSV(const std::string& csv_path,
     }
     return false;
   }
+
+  dataset->Clear();
 
   std::ifstream input(csv_path);
   if (!input.is_open()) {
@@ -190,11 +43,11 @@ bool CSVReader::LoadTrafficCSV(const std::string& csv_path,
     return false;
   }
 
-  const std::vector<std::string> header_fields = ParseCsvLine(header_line);
+  const std::vector<std::string> header_fields = io::ParseCsvLine(header_line);
   std::unordered_map<std::string, std::size_t> columns;
   columns.reserve(header_fields.size());
   for (std::size_t i = 0; i < header_fields.size(); ++i) {
-    columns[ToLower(header_fields[i])] = i;
+    columns[io::ToLower(header_fields[i])] = i;
   }
 
   std::size_t link_id_col = std::numeric_limits<std::size_t>::max();
@@ -205,13 +58,13 @@ bool CSVReader::LoadTrafficCSV(const std::string& csv_path,
   std::size_t link_name_col = std::numeric_limits<std::size_t>::max();
 
   const bool found_required =
-      ResolveColumn(columns, {"link_id", "link id"}, &link_id_col) &&
-      ResolveColumn(columns, {"speed"}, &speed_col) &&
-      ResolveColumn(columns, {"travel_time", "travel time"}, &travel_time_col) &&
-      ResolveColumn(columns, {"data_as_of", "timestamp", "datetime"}, &timestamp_col);
+      io::ResolveColumn(columns, {"link_id", "link id"}, &link_id_col) &&
+      io::ResolveColumn(columns, {"speed"}, &speed_col) &&
+      io::ResolveColumn(columns, {"travel_time", "travel time"}, &travel_time_col) &&
+      io::ResolveColumn(columns, {"data_as_of", "timestamp", "datetime"}, &timestamp_col);
 
-  ResolveColumn(columns, {"borough"}, &borough_col);
-  ResolveColumn(columns, {"link_name", "link name"}, &link_name_col);
+  io::ResolveColumn(columns, {"borough"}, &borough_col);
+  io::ResolveColumn(columns, {"link_name", "link name"}, &link_name_col);
 
   if (!found_required) {
     if (error != nullptr) {
@@ -228,7 +81,7 @@ bool CSVReader::LoadTrafficCSV(const std::string& csv_path,
     }
 
     ++counters.rows_read;
-    const std::vector<std::string> fields = ParseCsvLine(line);
+    const std::vector<std::string> fields = io::ParseCsvLine(line);
 
     const auto has_col = [&fields](std::size_t idx) { return idx < fields.size(); };
     if (!has_col(link_id_col) || !has_col(speed_col) || !has_col(travel_time_col) || !has_col(timestamp_col)) {
@@ -238,15 +91,15 @@ bool CSVReader::LoadTrafficCSV(const std::string& csv_path,
     }
 
     TrafficRecord record;
-    if (!ParseInt64(fields[link_id_col], &record.link_id) ||
-        !ParseDouble(fields[speed_col], &record.speed_mph) ||
-        !ParseDouble(fields[travel_time_col], &record.travel_time_seconds)) {
+    if (!io::ParseInt64(fields[link_id_col], &record.link_id) ||
+        !io::ParseDouble(fields[speed_col], &record.speed_mph) ||
+        !io::ParseDouble(fields[travel_time_col], &record.travel_time_seconds)) {
       ++counters.rows_rejected;
       ++counters.malformed_rows;
       continue;
     }
 
-    if (!ParseTimestamp(fields[timestamp_col], &record.timestamp_epoch_seconds)) {
+    if (!io::ParseTimestamp(fields[timestamp_col], &record.timestamp_epoch_seconds)) {
       ++counters.rows_rejected;
       ++counters.missing_timestamp;
       continue;
@@ -298,6 +151,8 @@ bool CSVReader::LoadTrafficCSVOptimized(const std::string& csv_path,
     return false;
   }
 
+  dataset->Clear();
+
   std::ifstream input(csv_path);
   if (!input.is_open()) {
     if (error != nullptr) {
@@ -314,11 +169,11 @@ bool CSVReader::LoadTrafficCSVOptimized(const std::string& csv_path,
     return false;
   }
 
-  const std::vector<std::string> header_fields = ParseCsvLine(header_line);
+  const std::vector<std::string> header_fields = io::ParseCsvLine(header_line);
   std::unordered_map<std::string, std::size_t> columns;
   columns.reserve(header_fields.size());
   for (std::size_t i = 0; i < header_fields.size(); ++i) {
-    columns[ToLower(header_fields[i])] = i;
+    columns[io::ToLower(header_fields[i])] = i;
   }
 
   std::size_t link_id_col = std::numeric_limits<std::size_t>::max();
@@ -329,13 +184,13 @@ bool CSVReader::LoadTrafficCSVOptimized(const std::string& csv_path,
   std::size_t link_name_col = std::numeric_limits<std::size_t>::max();
 
   const bool found_required =
-      ResolveColumn(columns, {"link_id", "link id"}, &link_id_col) &&
-      ResolveColumn(columns, {"speed"}, &speed_col) &&
-      ResolveColumn(columns, {"travel_time", "travel time"}, &travel_time_col) &&
-      ResolveColumn(columns, {"data_as_of", "timestamp", "datetime"}, &timestamp_col);
+      io::ResolveColumn(columns, {"link_id", "link id"}, &link_id_col) &&
+      io::ResolveColumn(columns, {"speed"}, &speed_col) &&
+      io::ResolveColumn(columns, {"travel_time", "travel time"}, &travel_time_col) &&
+      io::ResolveColumn(columns, {"data_as_of", "timestamp", "datetime"}, &timestamp_col);
 
-  ResolveColumn(columns, {"borough"}, &borough_col);
-  ResolveColumn(columns, {"link_name", "link name"}, &link_name_col);
+  io::ResolveColumn(columns, {"borough"}, &borough_col);
+  io::ResolveColumn(columns, {"link_name", "link name"}, &link_name_col);
 
   if (!found_required) {
     if (error != nullptr) {
@@ -352,7 +207,7 @@ bool CSVReader::LoadTrafficCSVOptimized(const std::string& csv_path,
     }
 
     ++counters.rows_read;
-    const std::vector<std::string> fields = ParseCsvLine(line);
+    const std::vector<std::string> fields = io::ParseCsvLine(line);
 
     const auto has_col = [&fields](std::size_t idx) { return idx < fields.size(); };
     if (!has_col(link_id_col) || !has_col(speed_col) || !has_col(travel_time_col) ||
@@ -367,14 +222,14 @@ bool CSVReader::LoadTrafficCSVOptimized(const std::string& csv_path,
     double travel_time_seconds = 0.0;
     std::int64_t timestamp_epoch_seconds = 0;
 
-    if (!ParseInt64(fields[link_id_col], &link_id) || !ParseDouble(fields[speed_col], &speed_mph) ||
-        !ParseDouble(fields[travel_time_col], &travel_time_seconds)) {
+    if (!io::ParseInt64(fields[link_id_col], &link_id) || !io::ParseDouble(fields[speed_col], &speed_mph) ||
+        !io::ParseDouble(fields[travel_time_col], &travel_time_seconds)) {
       ++counters.rows_rejected;
       ++counters.malformed_rows;
       continue;
     }
 
-    if (!ParseTimestamp(fields[timestamp_col], &timestamp_epoch_seconds)) {
+    if (!io::ParseTimestamp(fields[timestamp_col], &timestamp_epoch_seconds)) {
       ++counters.rows_rejected;
       ++counters.missing_timestamp;
       continue;

@@ -10,6 +10,7 @@ SUBSETS_DIR="${ROOT_DIR}/data/subsets"
 OUT_DIR="${ROOT_DIR}/results/raw/phase1_dev"
 LOG_DIR="${ROOT_DIR}/results/raw/logs"
 RUNS=3
+ALLOW_UNDER_MIN_RUNS=false
 DATASET_PATH=""
 DATASET_LABEL=""
 
@@ -31,6 +32,7 @@ Options:
   --medium <path>         Medium subset CSV path (100k)
   --large <path>          Large-dev subset CSV path (1M)
   --runs <n>              Benchmark repetitions per scenario (default: 3)
+  --allow-under-min-runs  Allow runs < 3 (for smoke/debug only)
   --out-dir <path>        Raw benchmark CSV output dir (default: results/raw/phase1_dev)
   --log-dir <path>        Log output dir (default: results/raw/logs)
   --help                  Show this help
@@ -70,6 +72,10 @@ while [[ $# -gt 0 ]]; do
       RUNS="$2"
       shift 2
       ;;
+    --allow-under-min-runs)
+      ALLOW_UNDER_MIN_RUNS=true
+      shift
+      ;;
     --out-dir)
       OUT_DIR="$2"
       shift 2
@@ -89,6 +95,20 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if ! [[ "${RUNS}" =~ ^[0-9]+$ ]]; then
+  echo "[phase1-dev] --runs must be a positive integer." >&2
+  exit 2
+fi
+if [[ "${RUNS}" -lt 1 ]]; then
+  echo "[phase1-dev] --runs must be >= 1." >&2
+  exit 2
+fi
+if [[ "${RUNS}" -lt 3 && "${ALLOW_UNDER_MIN_RUNS}" != "true" ]]; then
+  echo "[phase1-dev] --runs must be >= 3 for deliverable-grade dev benchmarking." >&2
+  echo "[phase1-dev] use --allow-under-min-runs only for smoke/debug runs." >&2
+  exit 2
+fi
 
 if [[ ! -f "${SCENARIO_FILE}" ]]; then
   echo "[phase1-dev] missing scenario definition file: ${SCENARIO_FILE}" >&2
@@ -141,6 +161,7 @@ else
 fi
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
+SAFE_BRANCH="$(git -C "${ROOT_DIR}" branch --show-current | tr '/ ' '__')"
 GIT_BRANCH="$(git -C "${ROOT_DIR}" branch --show-current 2>/dev/null || echo "unknown")"
 GIT_COMMIT="$(git -C "${ROOT_DIR}" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
 MANIFEST_CSV="${OUT_DIR}/batch_${TS}_manifest.csv"
@@ -170,7 +191,7 @@ run_one_scenario() {
   local top_n="$9"
   local min_link_samples="${10}"
 
-  local out_csv="${OUT_DIR}/${subset_label}_${scenario_name}.csv"
+  local out_csv="${OUT_DIR}/${subset_label}_${scenario_name}_${SAFE_BRANCH}_${GIT_COMMIT}_${TS}.csv"
   local log_file="${LOG_DIR}/phase1_dev_${subset_label}_${scenario_name}_${TS}.log"
 
   local cmd=(
@@ -218,12 +239,23 @@ run_one_scenario() {
     "${log_file}" >> "${MANIFEST_CSV}"
 
   awk -F, -v ts="${TS}" -v branch="${GIT_BRANCH}" -v commit="${GIT_COMMIT}" '
+    NR == 1 {
+      for (i = 1; i <= NF; ++i) {
+        col[$i] = i;
+      }
+      if (!("dataset_label" in col) || !("query_type" in col) || !("run_number" in col) ||
+          !("total_ms" in col) || !("rows_accepted" in col)) {
+        print "[phase1-dev] benchmark CSV missing required columns in " FILENAME > "/dev/stderr";
+        exit 2;
+      }
+      next;
+    }
     NR > 1 {
-      total_ms = $11 + 0.0;
-      rows_accepted = $13 + 0.0;
+      total_ms = $(col["total_ms"]) + 0.0;
+      rows_accepted = $(col["rows_accepted"]) + 0.0;
       rps = (total_ms > 0.0) ? (rows_accepted / (total_ms / 1000.0)) : 0.0;
       printf "%s,%s,%s,%s,%s,%s,%.6f,%s,%.6f\n",
-             ts, branch, commit, $5, $7, $8, total_ms, $13, rps;
+             ts, branch, commit, $(col["dataset_label"]), $(col["query_type"]), $(col["run_number"]), total_ms, $(col["rows_accepted"]), rps;
     }
   ' "${out_csv}" >> "${RPS_CSV}"
 

@@ -55,7 +55,7 @@ def parse_args() -> argparse.Namespace:
         default="configs/phase3_dev_scenarios.conf",
         help="Scenario definition file",
     )
-    parser.add_argument("--threads", default="1,2,4,8", help="Thread list for optimized parallel")
+    parser.add_argument("--threads", default="1,2,4,8,16", help="Thread list for optimized parallel")
     parser.add_argument("--runs", type=int, default=5, help="Repeated runs per scenario")
     parser.add_argument(
         "--output-dir",

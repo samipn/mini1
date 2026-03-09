@@ -1,13 +1,25 @@
 #include "data_model/TrafficDataset.hpp"
 
+#include "data_model/CommonCodes.hpp"
+
 namespace urbandrop {
 
 void TrafficDataset::AddRecord(const TrafficRecord& record) {
-  records_.push_back(record);
+  TrafficRecord normalized = record;
+  // Keep borough text/code dual representation consistent for direct inserts.
+  if (normalized.borough_code < 0 && !normalized.borough.empty()) {
+    normalized.borough_code = ToInt(ParseBoroughCode(normalized.borough));
+  }
+  records_.push_back(normalized);
   ++counters_.rows_accepted;
 }
 
 void TrafficDataset::Reserve(std::size_t size) { records_.reserve(size); }
+
+void TrafficDataset::Clear() {
+  records_.clear();
+  counters_ = IngestionCounters{};
+}
 
 bool TrafficDataset::Empty() const { return records_.empty(); }
 

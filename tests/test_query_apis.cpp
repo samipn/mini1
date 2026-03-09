@@ -87,7 +87,11 @@ int main() {
 
   const auto top_slowest = urbandrop::CongestionQuery::TopNSlowestRecurringLinks(dataset, 2, 1);
   if (top_slowest.size() != 2 || top_slowest[0].link_id != 300 || top_slowest[1].link_id != 100) {
-    std::cerr << "top-N slowest ranking mismatch\n";
+    std::cerr << "top-N slowest ranking mismatch";
+    if (top_slowest.size() >= 2) {
+      std::cerr << " got=[" << top_slowest[0].link_id << "," << top_slowest[1].link_id << "]";
+    }
+    std::cerr << "\n";
     return EXIT_FAILURE;
   }
 
@@ -101,6 +105,22 @@ int main() {
   const auto summary = urbandrop::TrafficAggregator::SummarizeDataset(dataset);
   if (summary.record_count != 5 || !NearlyEqual(summary.average_speed_mph, 25.4)) {
     std::cerr << "dataset aggregation mismatch\n";
+    return EXIT_FAILURE;
+  }
+
+  // Direct inserts with borough text but missing code should normalize borough_code.
+  urbandrop::TrafficRecord direct;
+  direct.link_id = 500;
+  direct.speed_mph = 12.0;
+  direct.travel_time_seconds = 60.0;
+  direct.timestamp_epoch_seconds = 1700000500;
+  direct.borough = "Manhattan";
+  direct.borough_code = -1;
+  dataset.AddRecord(direct);
+  const auto normalized =
+      urbandrop::CongestionQuery::FilterBoroughAndSpeedBelow(dataset, "Manhattan", 20.0);
+  if (normalized.size() != 2) {
+    std::cerr << "borough normalization on AddRecord mismatch size=" << normalized.size() << "\n";
     return EXIT_FAILURE;
   }
 

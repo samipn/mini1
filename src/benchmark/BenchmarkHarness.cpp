@@ -525,7 +525,7 @@ bool WriteCsvRows(const BenchmarkConfig& config,
   }
 
   if (write_header) {
-    out << "timestamp_utc,binary_name,execution_mode,thread_count,serial_validation_enabled,serial_match,compiler_id,compiler_version,dataset_label,dataset_path,query_type,run_number,ingest_ms,query_ms,total_ms,rows_read,rows_accepted,rows_rejected,result_count,has_aggregate,average_speed_mph,average_travel_time_seconds\n";
+    out << "timestamp_utc,binary_name,execution_mode,thread_count,serial_validation_enabled,serial_match,compiler_id,compiler_version,dataset_label,dataset_path,query_type,run_number,ingest_ms,query_ms,total_ms,rows_read,rows_accepted,rows_rejected,result_count,has_aggregate,average_speed_mph,average_travel_time_seconds,validation_ms,validation_ingest_ms\n";
   }
 
 #if defined(__clang__)
@@ -550,7 +550,8 @@ bool WriteCsvRows(const BenchmarkConfig& config,
         << std::fixed << std::setprecision(3) << row.ingest_ms << ',' << row.query_ms << ',' << row.total_ms
         << ',' << row.rows_read << ',' << row.rows_accepted << ',' << row.rows_rejected << ','
         << row.result_count << ',' << (row.has_aggregate ? "true" : "false") << ','
-        << row.average_speed_mph << ',' << row.average_travel_time_seconds << '\n';
+        << row.average_speed_mph << ',' << row.average_travel_time_seconds << ','
+        << row.validation_ms << ',' << row.validation_ingest_ms << '\n';
   }
 
   return true;
@@ -660,14 +661,20 @@ bool RunInternal(const BenchmarkConfig& config,
       return false;
     }
 
+    const auto query_finished = Clock::now();
+
     bool serial_match = true;
+    double validation_ms = 0.0;
+    double validation_ingest_ms = 0.0;
     if ((mode == BenchmarkExecutionMode::kParallel || mode == BenchmarkExecutionMode::kOptimized) &&
         config.validate_parallel_against_serial) {
+      const auto validation_started = Clock::now();
       QueryExecutionResult serial_result;
       std::string serial_error;
       if (mode == BenchmarkExecutionMode::kOptimized) {
         TrafficDataset serial_dataset;
         std::string serial_ingest_error;
+        const auto serial_validation_ingest_started = Clock::now();
         if (!CSVReader::LoadTrafficCSV(
                 config.dataset_path, &serial_dataset, options, nullptr, &serial_ingest_error)) {
           if (error != nullptr) {
@@ -676,6 +683,11 @@ bool RunInternal(const BenchmarkConfig& config,
           }
           return false;
         }
+        const auto serial_validation_ingest_finished = Clock::now();
+        validation_ingest_ms =
+            std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(
+                serial_validation_ingest_finished - serial_validation_ingest_started)
+                .count();
         if (!ExecuteQuerySerial(config, serial_dataset, &serial_result, &serial_error)) {
           if (error != nullptr) {
             *error = "serial validation failed on run " + std::to_string(run) + ": " + serial_error;
@@ -696,9 +708,12 @@ bool RunInternal(const BenchmarkConfig& config,
         }
         return false;
       }
+      const auto validation_finished = Clock::now();
+      validation_ms =
+          std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(
+              validation_finished - validation_started)
+              .count();
     }
-
-    const auto query_finished = Clock::now();
     const auto total_finished = Clock::now();
 
     BenchmarkRunResult row;
@@ -731,6 +746,8 @@ bool RunInternal(const BenchmarkConfig& config,
     row.average_speed_mph = query_result.aggregate.average_speed_mph;
     row.average_travel_time_seconds = query_result.aggregate.average_travel_time_seconds;
     row.serial_match = serial_match;
+    row.validation_ms = validation_ms;
+    row.validation_ingest_ms = validation_ingest_ms;
 
     local_results.push_back(row);
   }

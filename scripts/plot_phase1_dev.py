@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import math
 from pathlib import Path
 from typing import Dict, List
 
@@ -21,6 +22,11 @@ def parse_args() -> argparse.Namespace:
         default="results/graphs/phase1_dev",
         help="Directory to save graph images.",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate summary dataset/scenario mapping without generating plots.",
+    )
     return parser.parse_args()
 
 
@@ -35,6 +41,21 @@ def load_rows(summary_csv: Path) -> List[Dict[str, str]]:
     return rows
 
 
+def sort_dataset_labels(labels: List[str]) -> List[str]:
+    known_order = {
+        "small": 1,
+        "small_smoke": 2,
+        "medium": 3,
+        "large_dev": 4,
+    }
+    return sorted(labels, key=lambda x: (known_order.get(x, 999), x))
+
+
+def scenario_display_name(query_type: str) -> str:
+    words = query_type.replace("_", " ").split()
+    return " ".join(w.capitalize() for w in words) if words else query_type
+
+
 def main() -> int:
     args = parse_args()
     summary_csv = Path(args.summary_csv)
@@ -43,33 +64,40 @@ def main() -> int:
 
     rows = load_rows(summary_csv)
 
+    labels = sorted({r["dataset_label"] for r in rows})
+    subset_order = sort_dataset_labels(labels)
+    if not subset_order:
+        raise SystemExit("No dataset_label values found in summary CSV.")
+
+    query_types = sorted({r["query_type"] for r in rows})
+    if "ingest_only" not in query_types:
+        raise SystemExit("Summary CSV is missing required ingest_only rows.")
+
+    scenario_names = [q for q in query_types if q != "ingest_only"]
+    if not scenario_names:
+        raise SystemExit("Summary CSV has no query scenarios beyond ingest_only.")
+
+    if args.dry_run:
+        print(f"[plot_phase1_dev] dataset_labels={subset_order}")
+        print(f"[plot_phase1_dev] scenarios={scenario_names}")
+        print(f"[plot_phase1_dev] output_dir={output_dir}")
+        return 0
+
     try:
         import matplotlib.pyplot as plt
     except Exception as exc:  # pragma: no cover
         raise SystemExit(
-            "matplotlib is required to generate graphs. "
-            "Install it, then rerun this script."
+            "matplotlib is required to generate Phase 1 graphs.\n"
+            "Install with one of:\n"
+            "  python3 -m pip install matplotlib\n"
+            "  sudo apt-get install python3-matplotlib\n"
+            "Or run with --dry-run to validate dataset/scenario mapping without plotting."
         ) from exc
 
-    subset_order = ["small", "medium", "large_dev"]
-    subset_labels = ["10k", "100k", "1M"]
+    subset_labels = subset_order
     ingest_only_map: Dict[str, float] = {}
     total_only_map: Dict[str, float] = {}
 
-    scenario_names = [
-        "ingest_only",
-        "speed_below",
-        "time_window",
-        "borough_speed_below",
-        "top_n_slowest",
-    ]
-    scenario_display = {
-        "ingest_only": "Ingest only",
-        "speed_below": "Speed < 8mph",
-        "time_window": "Time window",
-        "borough_speed_below": "Borough + speed",
-        "top_n_slowest": "Top-10 slowest",
-    }
     scenario_means: Dict[str, List[float]] = {name: [] for name in scenario_names}
 
     for subset in subset_order:
@@ -83,11 +111,9 @@ def main() -> int:
 
         for scenario in scenario_names:
             scenario_row = next((r for r in subset_rows if r["query_type"] == scenario), None)
-            if scenario_row is None:
-                raise SystemExit(
-                    f"Missing query_type={scenario} for dataset_label={subset}"
-                )
-            scenario_means[scenario].append(float(scenario_row["query_mean_ms"]))
+            scenario_means[scenario].append(
+                float(scenario_row["query_mean_ms"]) if scenario_row is not None else math.nan
+            )
 
     # Graph 1: ingest time vs subset size
     fig1, ax1 = plt.subplots(figsize=(8, 5))
@@ -128,12 +154,13 @@ def main() -> int:
     # Graph 3: query runtime by scenario across subset sizes
     fig3, ax3 = plt.subplots(figsize=(10, 6))
     for scenario in scenario_names:
+        display = scenario_display_name(scenario)
         ax3.plot(
             subset_labels,
             scenario_means[scenario],
             marker="o",
             linewidth=2,
-            label=scenario_display.get(scenario, scenario),
+            label=display,
         )
     ax3.set_title("Query Mean Runtime by Scenario and Subset Size")
     ax3.set_xlabel("Subset Size")

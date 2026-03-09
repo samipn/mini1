@@ -6,6 +6,7 @@
 
 #include "data_model/CommonCodes.hpp"
 #include "data_model/TrafficDataset.hpp"
+#include "data_model/TrafficDatasetOptimized.hpp"
 #include "io/CSVReader.hpp"
 
 namespace {
@@ -63,6 +64,32 @@ int main() {
       dataset.Records().at(1).borough_code !=
           urbandrop::ToInt(urbandrop::BoroughCode::kBrooklyn)) {
     std::cerr << "expected borough string to borough_code normalization\n";
+    return EXIT_FAILURE;
+  }
+
+  // Re-loading into the same dataset should replace data/counters, not append.
+  if (!urbandrop::CSVReader::LoadTrafficCSV(csv_path, &dataset, options, nullptr, &error)) {
+    std::cerr << "second load failed: " << error << "\n";
+    return EXIT_FAILURE;
+  }
+  if (dataset.Size() != 2 || dataset.Counters().rows_read != 4 || dataset.Counters().rows_accepted != 2 ||
+      dataset.Counters().rows_rejected != 2) {
+    std::cerr << "row dataset should reset on repeated load\n";
+    return EXIT_FAILURE;
+  }
+
+  urbandrop::TrafficDatasetOptimized optimized;
+  if (!urbandrop::CSVReader::LoadTrafficCSVOptimized(csv_path, &optimized, options, nullptr, &error)) {
+    std::cerr << "optimized load failed: " << error << "\n";
+    return EXIT_FAILURE;
+  }
+  if (!urbandrop::CSVReader::LoadTrafficCSVOptimized(csv_path, &optimized, options, nullptr, &error)) {
+    std::cerr << "second optimized load failed: " << error << "\n";
+    return EXIT_FAILURE;
+  }
+  if (optimized.Size() != 2 || optimized.Counters().rows_read != 4 ||
+      optimized.Counters().rows_accepted != 2 || optimized.Counters().rows_rejected != 2) {
+    std::cerr << "optimized dataset should reset on repeated load\n";
     return EXIT_FAILURE;
   }
 

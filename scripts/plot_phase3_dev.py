@@ -13,6 +13,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", default="results/graphs/phase3_dev", help="Output graph directory")
     parser.add_argument("--parallel-thread", default="4", help="Parallel thread used for subset comparison")
     parser.add_argument("--optimized-thread", default="4", help="Optimized-parallel thread used for subset comparison")
+    parser.add_argument(
+        "--memory-csv",
+        default="",
+        help="Optional memory CSV from run_phase3_memory_probe.sh for memory plots",
+    )
     return parser.parse_args()
 
 
@@ -24,6 +29,13 @@ def load_rows(path: Path) -> List[Dict[str, str]]:
     if not rows:
         raise SystemExit(f"Summary CSV has no rows: {path}")
     return rows
+
+
+def load_optional_rows(path: Path) -> List[Dict[str, str]]:
+    if not path.is_file():
+        return []
+    with path.open("r", newline="", encoding="utf-8") as fh:
+        return list(csv.DictReader(fh))
 
 
 def svg_header(width: int, height: int) -> str:
@@ -256,6 +268,35 @@ def main() -> int:
                 series=[("optimized_parallel", speedups, "#2ca02c")],
             )
             save_svg(out_dir / f"optimized_speedup_vs_threads_{scenario}.svg", svg_speedup)
+
+    if args.memory_csv:
+        memory_rows = load_optional_rows(Path(args.memory_csv))
+        if memory_rows:
+            mode_order = ["serial", "parallel", "optimized_serial", "optimized_parallel"]
+            mode_labels = {
+                "serial": "serial",
+                "parallel": "parallel",
+                "optimized_serial": "opt serial",
+                "optimized_parallel": "opt parallel",
+            }
+            labels: List[str] = []
+            rss_vals: List[float] = []
+            for mode in mode_order:
+                row = next((r for r in memory_rows if r.get("mode") == mode), None)
+                if row is None:
+                    continue
+                labels.append(mode_labels[mode])
+                rss_vals.append(float(row.get("max_rss_kb", "0") or 0.0))
+
+            if labels:
+                svg_mem = grouped_bar_chart(
+                    title="Peak RSS by Implementation Mode",
+                    xlabel="Mode",
+                    ylabel="Peak RSS (KB)",
+                    categories=labels,
+                    groups=[("max_rss_kb", rss_vals, "#6a3d9a")],
+                )
+                save_svg(out_dir / "memory_rss_by_mode.svg", svg_mem)
 
     print(f"[plot_phase3_dev] wrote SVG graphs to: {out_dir}")
     return 0

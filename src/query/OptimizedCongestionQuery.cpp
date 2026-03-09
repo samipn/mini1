@@ -26,6 +26,9 @@ std::size_t OptimizedCongestionQuery::CountSpeedBelowParallel(const TrafficDatas
                                                               std::size_t num_threads) {
   const auto& speeds = dataset.Columns().SpeedsMph();
   std::size_t count = 0;
+#if !defined(_OPENMP)
+  (void)num_threads;
+#endif
 #if defined(_OPENMP)
 #pragma omp parallel for reduction(+ : count) num_threads(static_cast<int>(num_threads))
 #endif
@@ -64,6 +67,9 @@ std::size_t OptimizedCongestionQuery::CountTimeWindowParallel(const TrafficDatas
 
   const auto& timestamps = dataset.Columns().TimestampsEpochSeconds();
   std::size_t count = 0;
+#if !defined(_OPENMP)
+  (void)num_threads;
+#endif
 #if defined(_OPENMP)
 #pragma omp parallel for reduction(+ : count) num_threads(static_cast<int>(num_threads))
 #endif
@@ -99,6 +105,9 @@ std::size_t OptimizedCongestionQuery::CountBoroughAndSpeedBelowParallel(
   const auto& speeds = dataset.Columns().SpeedsMph();
 
   std::size_t count = 0;
+#if !defined(_OPENMP)
+  (void)num_threads;
+#endif
 #if defined(_OPENMP)
 #pragma omp parallel for reduction(+ : count) num_threads(static_cast<int>(num_threads))
 #endif
@@ -193,6 +202,7 @@ std::vector<LinkSpeedStat> OptimizedCongestionQuery::TopNSlowestRecurringLinksPa
     }
   }
 #else
+  (void)num_threads;
   for (std::size_t i = 0; i < links.size(); ++i) {
     auto& p = grouped[links[i]];
     ++p.count;

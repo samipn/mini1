@@ -47,7 +47,13 @@ int Run(const std::string& command) {
   if (code == -1) {
     return code;
   }
-  return WEXITSTATUS(code);
+  if (WIFEXITED(code)) {
+    return WEXITSTATUS(code);
+  }
+  if (WIFSIGNALED(code)) {
+    return 128 + WTERMSIG(code);
+  }
+  return code;
 }
 
 }  // namespace
@@ -92,14 +98,25 @@ int main() {
 
   const std::string summary_cmd =
       "./run_parallel --traffic " + qcsv +
-      " --query summary --thread-list 1,2,4,8 --benchmark-runs 2 --validate-serial --benchmark-out " +
+      " --query summary --thread-list 1,2,4,8,16 --benchmark-runs 2 --validate-serial --benchmark-out " +
       ShellQuote(out_path) + " > /dev/null";
   if (Run(summary_cmd) != 0) {
     std::cerr << "run_parallel summary/thread-list failed\n";
     return EXIT_FAILURE;
   }
-  if (!std::filesystem::exists(out_path) || CountLines(out_path) != 9) {
-    std::cerr << "run_parallel benchmark output CSV should have header + 8 rows\n";
+  constexpr std::size_t kThreadCount = 5;
+  constexpr std::size_t kRunsPerThread = 2;
+  const std::size_t expected_lines = 1 + (kThreadCount * kRunsPerThread);
+  if (!std::filesystem::exists(out_path) || CountLines(out_path) != expected_lines) {
+    std::cerr << "run_parallel benchmark output CSV should have header + "
+              << (kThreadCount * kRunsPerThread) << " rows\n";
+    return EXIT_FAILURE;
+  }
+
+  const std::string invalid_cmd =
+      "./run_parallel --traffic " + qcsv + " --benchmark-runs nope > /dev/null 2>&1";
+  if (Run(invalid_cmd) != 2) {
+    std::cerr << "run_parallel should return code 2 on invalid numeric argument\n";
     return EXIT_FAILURE;
   }
 

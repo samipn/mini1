@@ -27,6 +27,11 @@ AggregateStats SummarizeConditional(const TrafficDatasetOptimized& dataset,
   double travel_sum = 0.0;
   std::size_t count = 0;
 
+#if !defined(_OPENMP)
+  (void)num_threads;
+  (void)use_parallel;
+#endif
+
 #if defined(_OPENMP)
   if (use_parallel) {
 #pragma omp parallel for reduction(+ : speed_sum, travel_sum, count) num_threads(static_cast<int>(num_threads))

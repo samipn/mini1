@@ -62,12 +62,15 @@ def main() -> int:
             "ingest_ms": [],
             "query_ms": [],
             "total_ms": [],
+            "validation_ms": [],
+            "validation_ingest_ms": [],
             "rows_accepted": [],
             "result_count": [],
             "avg_speed": [],
             "avg_travel": [],
             "serial_match": [],
             "records_per_second": [],
+            "validation_enabled": [],
         }
     )
 
@@ -98,12 +101,19 @@ def main() -> int:
                 grouped[key]["ingest_ms"].append(ingest_ms)
                 grouped[key]["query_ms"].append(query_ms)
                 grouped[key]["total_ms"].append(total_ms)
+                grouped[key]["validation_ms"].append(float(row.get("validation_ms", "0") or 0.0))
+                grouped[key]["validation_ingest_ms"].append(
+                    float(row.get("validation_ingest_ms", "0") or 0.0)
+                )
                 grouped[key]["rows_accepted"].append(rows_accepted)
                 grouped[key]["result_count"].append(float(row["result_count"]))
                 grouped[key]["avg_speed"].append(float(row["average_speed_mph"]))
                 grouped[key]["avg_travel"].append(float(row["average_travel_time_seconds"]))
                 grouped[key]["serial_match"].append(1.0 if row["serial_match"] == "true" else 0.0)
                 grouped[key]["records_per_second"].append(rps)
+                grouped[key]["validation_enabled"].append(
+                    1.0 if row.get("serial_validation_enabled", "false") == "true" else 0.0
+                )
 
     for (subset, scenario, mode, thread_count, _), metrics in grouped.items():
         mean_q = statistics.fmean(metrics["query_ms"])
@@ -137,6 +147,9 @@ def main() -> int:
                 "total_min_ms",
                 "total_max_ms",
                 "total_stddev_ms",
+                "validation_mean_ms",
+                "validation_ingest_mean_ms",
+                "validation_enabled_rate",
                 "records_per_second_mean",
                 "serial_match_rate",
                 "result_count_mean",
@@ -153,6 +166,8 @@ def main() -> int:
             ingest = summarize(metrics["ingest_ms"])
             query = summarize(metrics["query_ms"])
             total = summarize(metrics["total_ms"])
+            validation = summarize(metrics["validation_ms"])
+            validation_ingest = summarize(metrics["validation_ingest_ms"])
             rps = summarize(metrics["records_per_second"])
             runs = len(metrics["query_ms"])
 
@@ -162,6 +177,9 @@ def main() -> int:
             row = [subset, scenario, mode, thread_count, optimization_step, runs]
             for stats in (ingest, query, total):
                 row.extend([f"{value:.6f}" for value in stats])
+            row.append(f"{validation[0]:.6f}")
+            row.append(f"{validation_ingest[0]:.6f}")
+            row.append(f"{statistics.fmean(metrics['validation_enabled']):.6f}")
             row.append(f"{rps[0]:.6f}")
             row.append(f"{statistics.fmean(metrics['serial_match']):.6f}")
             row.append(f"{statistics.fmean(metrics['result_count']):.6f}")

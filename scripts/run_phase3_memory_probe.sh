@@ -7,12 +7,82 @@ SERIAL_BIN="${BUILD_DIR}/run_serial"
 PAR_BIN="${BUILD_DIR}/run_parallel"
 OPT_BIN="${BUILD_DIR}/run_optimized"
 
-DATASET_PATH="${1:-${ROOT_DIR}/data/subsets/i4gi-tjb9_subset_100000.csv}"
-OUT_DIR="${2:-${ROOT_DIR}/results/raw/phase3_dev/memory}"
-THREADS="${3:-4}"
-OPTIMIZATION_STEP="${4:-soa_encoded_hotloop}"
+DATASET_PATH="${ROOT_DIR}/data/subsets/i4gi-tjb9_subset_100000.csv"
+OUT_DIR="${ROOT_DIR}/results/raw/phase3_dev/memory"
+THREADS="4"
+OPTIMIZATION_STEP="soa_encoded_hotloop"
+
+usage() {
+  cat <<'USAGE'
+Usage: scripts/run_phase3_memory_probe.sh [options] [dataset_path [out_dir [threads [optimization_step]]]]
+
+Run a lightweight memory probe across serial/parallel/optimized modes.
+
+Options:
+  --dataset <path>            Dataset CSV path (default: data/subsets/i4gi-tjb9_subset_100000.csv)
+  --out-dir <path>            Output directory (default: results/raw/phase3_dev/memory)
+  --threads <n>               Thread count for parallel modes (default: 4)
+  --optimization-step <name>  Optimization step label (default: soa_encoded_hotloop)
+  --help                      Show this help
+
+Positional compatibility (legacy):
+  dataset_path out_dir threads optimization_step
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dataset)
+      DATASET_PATH="$2"
+      shift 2
+      ;;
+    --out-dir)
+      OUT_DIR="$2"
+      shift 2
+      ;;
+    --threads)
+      THREADS="$2"
+      shift 2
+      ;;
+    --optimization-step)
+      OPTIMIZATION_STEP="$2"
+      shift 2
+      ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      # Legacy positional arguments for backward compatibility.
+      DATASET_PATH="$1"
+      shift 1
+      if [[ $# -gt 0 ]]; then
+        OUT_DIR="$1"
+        shift 1
+      fi
+      if [[ $# -gt 0 ]]; then
+        THREADS="$1"
+        shift 1
+      fi
+      if [[ $# -gt 0 ]]; then
+        OPTIMIZATION_STEP="$1"
+        shift 1
+      fi
+      if [[ $# -gt 0 ]]; then
+        echo "Unknown extra arguments: $*" >&2
+        usage
+        exit 2
+      fi
+      ;;
+  esac
+done
 
 mkdir -p "${OUT_DIR}"
+
+if [[ ! -f "${DATASET_PATH}" ]]; then
+  echo "[phase3-memory] dataset not found: ${DATASET_PATH}" >&2
+  exit 1
+fi
 
 if [[ ! -x "${SERIAL_BIN}" || ! -x "${PAR_BIN}" || ! -x "${OPT_BIN}" ]]; then
   cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Release

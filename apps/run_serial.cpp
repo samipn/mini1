@@ -1,6 +1,9 @@
 #include <chrono>
+#include <cerrno>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -60,6 +63,23 @@ bool ParseDouble(const std::string& value, double* out) {
   }
 }
 
+bool ParseSizeT(const std::string& value, std::size_t* out) {
+  if (out == nullptr || value.empty()) {
+    return false;
+  }
+  errno = 0;
+  char* end = nullptr;
+  const unsigned long long parsed = std::strtoull(value.c_str(), &end, 10);
+  if (errno != 0 || end == value.c_str() || *end != '\0') {
+    return false;
+  }
+  if (parsed > static_cast<unsigned long long>(std::numeric_limits<std::size_t>::max())) {
+    return false;
+  }
+  *out = static_cast<std::size_t>(parsed);
+  return true;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -105,9 +125,15 @@ int main(int argc, char** argv) {
     } else if (arg == "--bes" && i + 1 < argc) {
       bes_csv = argv[++i];
     } else if (arg == "--progress-every" && i + 1 < argc) {
-      progress_every = static_cast<std::size_t>(std::stoull(argv[++i]));
+      if (!ParseSizeT(argv[++i], &progress_every)) {
+        std::cerr << "invalid --progress-every value\n";
+        return 2;
+      }
     } else if (arg == "--sample" && i + 1 < argc) {
-      sample_count = static_cast<std::size_t>(std::stoull(argv[++i]));
+      if (!ParseSizeT(argv[++i], &sample_count)) {
+        std::cerr << "invalid --sample value\n";
+        return 2;
+      }
     } else if (arg == "--query" && i + 1 < argc) {
       query_type = argv[++i];
     } else if (arg == "--threshold" && i + 1 < argc) {
@@ -125,11 +151,20 @@ int main(int argc, char** argv) {
     } else if (arg == "--link-end" && i + 1 < argc) {
       has_link_end = ParseInt64(argv[++i], &link_end);
     } else if (arg == "--top-n" && i + 1 < argc) {
-      top_n = static_cast<std::size_t>(std::stoull(argv[++i]));
+      if (!ParseSizeT(argv[++i], &top_n)) {
+        std::cerr << "invalid --top-n value\n";
+        return 2;
+      }
     } else if (arg == "--min-link-samples" && i + 1 < argc) {
-      min_link_samples = static_cast<std::size_t>(std::stoull(argv[++i]));
+      if (!ParseSizeT(argv[++i], &min_link_samples)) {
+        std::cerr << "invalid --min-link-samples value\n";
+        return 2;
+      }
     } else if (arg == "--benchmark-runs" && i + 1 < argc) {
-      benchmark_runs = static_cast<std::size_t>(std::stoull(argv[++i]));
+      if (!ParseSizeT(argv[++i], &benchmark_runs)) {
+        std::cerr << "invalid --benchmark-runs value\n";
+        return 2;
+      }
     } else if (arg == "--benchmark-out" && i + 1 < argc) {
       benchmark_out_csv = argv[++i];
     } else if (arg == "--benchmark-append") {
@@ -137,7 +172,10 @@ int main(int argc, char** argv) {
     } else if (arg == "--dataset-label" && i + 1 < argc) {
       dataset_label = argv[++i];
     } else if (arg == "--expect-accepted" && i + 1 < argc) {
-      expected_accepted = static_cast<std::size_t>(std::stoull(argv[++i]));
+      if (!ParseSizeT(argv[++i], &expected_accepted)) {
+        std::cerr << "invalid --expect-accepted value\n";
+        return 2;
+      }
       has_expected_accepted = true;
     } else if (arg == "--help") {
       PrintUsage();

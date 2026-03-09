@@ -5,6 +5,7 @@ import argparse
 import csv
 import math
 import statistics
+import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -75,6 +76,15 @@ def main() -> int:
             "runs": [],
         }
     )
+    grouped_all: Dict[Tuple[str, str], Dict[str, List[float]]] = defaultdict(
+        lambda: {
+            "ingest_ms": [],
+            "query_ms": [],
+            "total_ms": [],
+            "records_per_second": [],
+            "runs": [],
+        }
+    )
 
     for csv_path in raw_files:
         with csv_path.open("r", newline="", encoding="utf-8") as fh:
@@ -96,9 +106,6 @@ def main() -> int:
 
             for row in reader:
                 dataset_label = row["dataset_label"].strip()
-                if not args.include_all_labels and dataset_label not in allowed_labels:
-                    continue
-
                 query_type = row["query_type"].strip()
                 key = (dataset_label, query_type)
 
@@ -108,6 +115,15 @@ def main() -> int:
                 rows_accepted = float(row["rows_accepted"])
                 rps = rows_accepted / (total_ms / 1000.0) if total_ms > 0 else math.nan
 
+                grouped_all[key]["ingest_ms"].append(ingest_ms)
+                grouped_all[key]["query_ms"].append(query_ms)
+                grouped_all[key]["total_ms"].append(total_ms)
+                grouped_all[key]["records_per_second"].append(rps)
+                grouped_all[key]["runs"].append(float(row["run_number"]))
+
+                if not args.include_all_labels and dataset_label not in allowed_labels:
+                    continue
+
                 grouped[key]["ingest_ms"].append(ingest_ms)
                 grouped[key]["query_ms"].append(query_ms)
                 grouped[key]["total_ms"].append(total_ms)
@@ -115,7 +131,15 @@ def main() -> int:
                 grouped[key]["runs"].append(float(row["run_number"]))
 
     if not grouped:
-        raise SystemExit("No matching rows found after applying label filters.")
+        if args.include_all_labels:
+            raise SystemExit("No benchmark rows found in input CSV files.")
+        grouped = grouped_all
+        print(
+            "[summarize_phase1_dev] requested labels not found; falling back to all discovered dataset_label values.",
+            file=sys.stderr,
+        )
+        if not grouped:
+            raise SystemExit("No benchmark rows found in input CSV files.")
 
     output_dir.mkdir(parents=True, exist_ok=True)
     out_path = output_dir / args.output_file

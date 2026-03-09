@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,20 +18,52 @@ class Scenario:
     extra_args: List[str]
 
 
-SCENARIOS: List[Scenario] = [
-    Scenario("speed_below_8mph", "speed_below", ["--threshold", "8"]),
-    Scenario(
-        "time_window_full",
-        "time_window",
-        ["--start-epoch", "0", "--end-epoch", "4102444800"],
-    ),
-    Scenario(
-        "borough_manhattan_speed_below_8mph",
-        "borough_speed_below",
-        ["--borough", "Manhattan", "--threshold", "8"],
-    ),
-    Scenario("top10_slowest", "top_n_slowest", ["--top-n", "10", "--min-link-samples", "1"]),
-]
+def parse_scenarios(path: Path) -> List[Scenario]:
+    if not path.is_file():
+        raise SystemExit(f"Scenario file not found: {path}")
+
+    scenarios: List[Scenario] = []
+    with path.open("r", newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        required = {"scenario_name", "query_type"}
+        missing = required.difference(set(reader.fieldnames or []))
+        if missing:
+            raise SystemExit(
+                f"Scenario file missing required columns: {sorted(missing)} in {path}"
+            )
+
+        for row in reader:
+            query_type = (row.get("query_type", "") or "").strip()
+            if not query_type:
+                continue
+            scenario_name = (row.get("scenario_name", "") or query_type).strip()
+            extra_args: List[str] = []
+
+            threshold = (row.get("threshold", "") or "").strip()
+            start_epoch = (row.get("start_epoch", "") or "").strip()
+            end_epoch = (row.get("end_epoch", "") or "").strip()
+            borough = (row.get("borough", "") or "").strip()
+            top_n = (row.get("top_n", "") or "").strip()
+            min_link_samples = (row.get("min_link_samples", "") or "").strip()
+
+            if threshold:
+                extra_args.extend(["--threshold", threshold])
+            if start_epoch:
+                extra_args.extend(["--start-epoch", start_epoch])
+            if end_epoch:
+                extra_args.extend(["--end-epoch", end_epoch])
+            if borough:
+                extra_args.extend(["--borough", borough])
+            if top_n:
+                extra_args.extend(["--top-n", top_n])
+            if min_link_samples:
+                extra_args.extend(["--min-link-samples", min_link_samples])
+
+            scenarios.append(Scenario(scenario_name, query_type, extra_args))
+
+    if not scenarios:
+        raise SystemExit(f"No scenarios found in {path}")
+    return scenarios
 
 
 def parse_args() -> argparse.Namespace:
@@ -58,6 +91,11 @@ def parse_args() -> argparse.Namespace:
         default="results/raw/correctness",
         help="Directory for correctness outputs/reports.",
     )
+    parser.add_argument(
+        "--scenario-file",
+        default="configs/phase1_dev_scenarios.csv",
+        help="Scenario CSV used by run_phase1_dev_benchmarks.sh (default: configs/phase1_dev_scenarios.csv).",
+    )
     return parser.parse_args()
 
 
@@ -79,12 +117,49 @@ def unique_int(rows: List[Dict[str, str]], key: str) -> Tuple[bool, List[int]]:
     return len(values) == 1, values
 
 
+def run_topn_signatures(
+    binary: Path,
+    subset_path: Path,
+    scenario: Scenario,
+    repeats: int,
+) -> Tuple[bool, List[str], str]:
+    signatures: List[str] = []
+    rank_pattern = re.compile(r"^\s*rank=(\d+)\s+link_id=([-]?\d+)\s+samples=(\d+)\s+avg_speed_mph=(.+)$")
+
+    for _ in range(repeats):
+        cmd = [
+            str(binary),
+            "--traffic",
+            str(subset_path),
+            "--query",
+            scenario.query_type,
+            *scenario.extra_args,
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if proc.returncode != 0:
+            return False, [], "top_n payload command returned nonzero"
+
+        rank_lines: List[str] = []
+        for line in proc.stdout.splitlines():
+            matched = rank_pattern.match(line.strip())
+            if not matched:
+                continue
+            rank_lines.append(
+                "|".join([matched.group(1), matched.group(2), matched.group(3), matched.group(4).strip()])
+            )
+        signatures.append(";".join(rank_lines))
+
+    unique = sorted(set(signatures))
+    return len(unique) == 1, unique, "top_n payload/order mismatch across runs" if len(unique) != 1 else ""
+
+
 def main() -> int:
     args = parse_args()
     root = Path.cwd()
     binary = (root / args.binary).resolve()
     subsets_dir = (root / args.subsets_dir).resolve()
     output_dir = (root / args.output_dir).resolve()
+    scenario_file = (root / args.scenario_file).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if args.runs < 2:
@@ -93,6 +168,8 @@ def main() -> int:
         raise SystemExit(f"run_serial binary not found: {binary}")
     if not subsets_dir.is_dir():
         raise SystemExit(f"subsets directory not found: {subsets_dir}")
+
+    scenarios = parse_scenarios(scenario_file)
 
     subset_map = {
         "small": first_match(subsets_dir, "*_subset_10000.csv"),
@@ -108,7 +185,7 @@ def main() -> int:
     has_mismatch = False
 
     for subset_label, subset_path in subset_map.items():
-        for scenario in SCENARIOS:
+        for scenario in scenarios:
             csv_out = output_dir / f"determinism_{subset_label}_{scenario.name}_{ts}.csv"
             log_out = output_dir / f"determinism_{subset_label}_{scenario.name}_{ts}.log"
 
@@ -120,12 +197,12 @@ def main() -> int:
                 str(args.runs),
                 "--dataset-label",
                 subset_label,
-                "--query",
-                scenario.query_type,
-                *scenario.extra_args,
                 "--benchmark-out",
                 str(csv_out),
             ]
+            if scenario.query_type != "ingest_only":
+                cmd.extend(["--query", scenario.query_type])
+            cmd.extend(scenario.extra_args)
 
             proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
             log_out.write_text(proc.stdout + "\n" + proc.stderr, encoding="utf-8")
@@ -158,6 +235,7 @@ def main() -> int:
 
             status = "PASS"
             reasons = []
+            topn_signature_values = ""
             if len(rows) != args.runs:
                 status = "FAIL"
                 reasons.append(f"expected {args.runs} rows but found {len(rows)}")
@@ -167,6 +245,14 @@ def main() -> int:
             if not read_ok or not accepted_ok or not rejected_ok:
                 status = "FAIL"
                 reasons.append("ingest aggregate mismatch across runs")
+            if scenario.query_type == "top_n_slowest":
+                topn_ok, topn_values, topn_reason = run_topn_signatures(
+                    binary, subset_path, scenario, args.runs
+                )
+                topn_signature_values = "|".join(topn_values)
+                if not topn_ok:
+                    status = "FAIL"
+                    reasons.append(topn_reason)
             if status == "FAIL":
                 has_mismatch = True
 
@@ -177,12 +263,13 @@ def main() -> int:
                     "status": status,
                     "reason": "; ".join(reasons) if reasons else "consistent",
                     "result_counts": "|".join(map(str, result_values)),
-                    "rows_read_values": "|".join(map(str, read_values)),
-                    "rows_accepted_values": "|".join(map(str, accepted_values)),
-                    "rows_rejected_values": "|".join(map(str, rejected_values)),
-                    "csv_output": str(csv_out),
-                    "log_output": str(log_out),
-                }
+                        "rows_read_values": "|".join(map(str, read_values)),
+                        "rows_accepted_values": "|".join(map(str, accepted_values)),
+                        "rows_rejected_values": "|".join(map(str, rejected_values)),
+                        "topn_signature_values": topn_signature_values,
+                        "csv_output": str(csv_out),
+                        "log_output": str(log_out),
+                    }
             )
 
     with summary_csv.open("w", newline="", encoding="utf-8") as fh:
@@ -197,6 +284,7 @@ def main() -> int:
                 "rows_read_values",
                 "rows_accepted_values",
                 "rows_rejected_values",
+                "topn_signature_values",
                 "csv_output",
                 "log_output",
             ],
@@ -209,6 +297,7 @@ def main() -> int:
         fh.write(f"- Batch UTC: `{ts}`\n")
         fh.write(f"- Binary: `{binary}`\n")
         fh.write(f"- Subsets dir: `{subsets_dir}`\n")
+        fh.write(f"- Scenario file: `{scenario_file}`\n")
         fh.write(f"- Runs per scenario: `{args.runs}`\n")
         fh.write(f"- Summary CSV: `{summary_csv}`\n")
         fh.write(f"- Status: `{'FAIL' if has_mismatch else 'PASS'}`\n\n")
@@ -225,6 +314,8 @@ def main() -> int:
                 f"rows_accepted=`{row['rows_accepted_values']}`, "
                 f"rows_rejected=`{row['rows_rejected_values']}`\n"
             )
+            if row.get("topn_signature_values"):
+                fh.write(f"  - top_n payload signatures: `{row['topn_signature_values']}`\n")
             fh.write(f"  - csv: `{row['csv_output']}`\n")
             fh.write(f"  - log: `{row['log_output']}`\n")
         fh.write("\n")

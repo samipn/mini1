@@ -39,6 +39,8 @@ AggregateStats SummarizeConditional(const TrafficDataset& dataset,
   const std::size_t threads = NormalizeThreadCount(num_threads, n);
 #if defined(_OPENMP)
   omp_set_num_threads(static_cast<int>(threads));
+#else
+  (void)threads;
 #endif
 
   std::size_t total_count = 0;

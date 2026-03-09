@@ -1,0 +1,7 @@
+scenario_name,query_type,threshold,start_epoch,end_epoch,borough,top_n,min_link_samples
+ingest_only,ingest_only,,,,,,
+speed_below_15,speed_below,15,,,,,
+time_window_all,time_window,,1706745600,1738367999,,,,
+borough_manhattan_speed_15,borough_speed_below,15,,,MANHATTAN,,,
+top_n_slowest,top_n_slowest,,,,,10,5
+summary,summary,,,,,,
