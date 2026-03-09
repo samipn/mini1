@@ -11,7 +11,7 @@ Purpose: track issues found during incremental repository review and convert the
 - [x] Add explicit benchmark mode toggle: correctness-validation mode vs performance-only mode.
 - [x] Add `validation_ms` and `validation_ingest_ms` columns to benchmark CSV output.
 - [x] Update CMake to avoid making OpenMP a hard requirement for purely serial builds.
-- [ ] Add build matrix notes (compiler, flags, OpenMP availability) in docs for reproducibility.
+- [x] Add build matrix notes (compiler, flags, OpenMP availability) in docs for reproducibility.
 
 ## 2) Algorithms and Runtime Behavior
 - [ ] Re-run Phase 3 dev benchmarks without `--validate-serial` and regenerate summary/graphs.
@@ -23,13 +23,13 @@ Purpose: track issues found during incremental repository review and convert the
 ## 3) Requirements -> Produced Outputs
 - [ ] Align `docs/TODO_PHASE3.md` checkboxes with measured evidence only.
 - [ ] Separate “implemented” vs “fully benchmark-validated” in Phase 3 TODO wording.
-- [ ] Add a compact artifact map linking scripts -> generated CSV -> generated graph outputs.
+- [x] Add a compact artifact map linking scripts -> generated CSV -> generated graph outputs.
 - [ ] Confirm each claimed deliverable has a corresponding source file and artifact.
 
 ## 4) Missing Details
 - [ ] Add memory-usage graph generation from `results/raw/phase3_dev/memory/*.csv`.
-- [ ] Document benchmark caveat in one place: validation affects timing if enabled.
-- [ ] Record exact machine/compiler config in benchmark logs for each batch.
+- [x] Document benchmark caveat in one place: validation affects timing if enabled.
+- [x] Record exact machine/compiler config in benchmark logs for each batch.
 - [ ] Add final baseline directory plan and script (`phase3_baseline`) distinct from `phase3_dev`.
 
 ## 5) Going Above and Beyond

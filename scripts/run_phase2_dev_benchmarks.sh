@@ -125,6 +125,7 @@ GIT_COMMIT="$(git -C "${ROOT_DIR}" rev-parse --short HEAD 2>/dev/null || echo un
 SUBSET_MANIFEST="${OUT_DIR}/subset_manifest_${TS}.csv"
 BATCH_MANIFEST="${OUT_DIR}/batch_${TS}_manifest.csv"
 RPS_CSV="${OUT_DIR}/batch_${TS}_records_per_second.csv"
+ENV_CSV="${OUT_DIR}/batch_${TS}_environment.csv"
 
 cat > "${SUBSET_MANIFEST}" <<CSV
 batch_utc,subset_label,dataset_path,expected_data_rows,actual_data_rows,serial_access_ok,parallel_access_ok
@@ -137,6 +138,39 @@ CSV
 cat > "${RPS_CSV}" <<CSV
 batch_utc,git_branch,git_commit,subset_label,scenario_name,mode,thread_count,run_number,total_ms,rows_accepted,records_per_second
 CSV
+
+csv_escape() {
+  local value="$1"
+  value="${value//\"/\"\"}"
+  printf '"%s"' "${value}"
+}
+
+cpu_model="$(lscpu 2>/dev/null | awk -F: '/Model name/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' || true)"
+if [[ -z "${cpu_model}" && -f /proc/cpuinfo ]]; then
+  cpu_model="$(awk -F: '/model name/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' /proc/cpuinfo || true)"
+fi
+logical_cores="$(nproc 2>/dev/null || echo unknown)"
+mem_total_kb="$(awk '/MemTotal/ {print $2; exit}' /proc/meminfo 2>/dev/null || echo unknown)"
+compiler_bin="${CXX:-c++}"
+compiler_version="$(${compiler_bin} --version 2>/dev/null | head -n 1 || echo unknown)"
+
+cat > "${ENV_CSV}" <<CSV
+batch_utc,host,os_kernel,cpu_model,logical_cores,mem_total_kb,compiler,compiler_version,git_branch,git_commit,thread_list,benchmark_runs
+CSV
+
+printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
+  "${TS}" \
+  "$(csv_escape "$(hostname 2>/dev/null || echo unknown)")" \
+  "$(csv_escape "$(uname -sr 2>/dev/null || echo unknown)")" \
+  "$(csv_escape "${cpu_model}")" \
+  "${logical_cores}" \
+  "${mem_total_kb}" \
+  "$(csv_escape "${compiler_bin}")" \
+  "$(csv_escape "${compiler_version}")" \
+  "$(csv_escape "${GIT_BRANCH}")" \
+  "$(csv_escape "${GIT_COMMIT}")" \
+  "$(csv_escape "${THREAD_LIST}")" \
+  "${RUNS}" >> "${ENV_CSV}"
 
 calc_rows() {
   local file="$1"
@@ -328,3 +362,4 @@ echo "[phase2-dev] complete"
 echo "[phase2-dev] subset_manifest=${SUBSET_MANIFEST}"
 echo "[phase2-dev] batch_manifest=${BATCH_MANIFEST}"
 echo "[phase2-dev] rps=${RPS_CSV}"
+echo "[phase2-dev] env=${ENV_CSV}"
