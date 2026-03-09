@@ -195,3 +195,15 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P3-D8 hardening/tests: guard `run_optimized_support_experiments` numeric parsing and add negative test coverage.
   Objective: invalid `--repeats` should return usage error instead of process abort.
   Evidence: `apps/run_optimized_support_experiments.cpp` uses unguarded `std::stoull` for `--repeats`.
+- [ ] P3-D12 attribution rigor: add automated step-isolated benchmark campaign.
+  Objective: generate reproducible side-by-side results for each optimization stage (row baseline, columnar only, +encoding, +hot-loop, +parallel) instead of relying on a single step label per batch.
+  Evidence: `run_phase3_dev_benchmarks.sh` carries one `optimization_step` label per run set.
+- [ ] P3-D12 measurement policy: enforce deliverable-grade run counts for attribution/final tables.
+  Objective: prevent low-repeat batches from being mixed into deliverable evidence without explicit downgrade label.
+  Evidence: `run_phase3_dev_benchmarks.sh` default `RUNS=3`; observed manifest batches with `benchmark_runs=1`.
+- [ ] P3-D11 benchmark completeness: connect memory metrics directly to benchmark rows.
+  Objective: include memory usage in comparable benchmark schema (or provide deterministic join keys with memory probe outputs).
+  Evidence: Benchmark CSV header lacks memory fields while memory probe writes separate CSV.
+- [ ] P3-D15 notes freshness: sync benchmark log metadata with current thread policy/artifacts.
+  Objective: keep Phase 3 report evidence aligned with latest branch/commit/thread configurations (including 16-thread runs).
+  Evidence: `report/phase3_dev_benchmark_log.md` thread list is stale vs current batch manifests.

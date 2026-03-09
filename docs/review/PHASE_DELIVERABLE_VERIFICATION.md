@@ -25,7 +25,7 @@ Evidence sources:
   - Phase 3 reviewed in chunks:
     - D1-D5 reviewed (open correctness/robustness gaps identified)
     - D6-D10 reviewed (open performance/measurement hardening gaps identified)
-    - D11-D15 pending chunked review
+    - D11-D15 reviewed (open attribution/evidence-integrity gaps identified)
 
 ## Fixes Applied During Verification
 
@@ -68,5 +68,9 @@ They exist locally for verification but are not committed to git by design.
 6. `OptimizedTrafficAggregator` hot-loop path uses `std::function` predicate dispatch in scan loops.
 7. `run_optimized_support_experiments` aborts on malformed numeric `--repeats` input.
 8. Phase 3 memory probe currently swallows command failures and can emit ambiguous rows.
+9. Phase 3 optimization-attribution workflow is label-based and does not enforce full step-isolated campaign automation.
+10. Phase 3 dev benchmark runner does not enforce deliverable-grade run count (`>=10`), allowing underpowered batches.
+11. Benchmark harness comparison CSVs do not currently carry memory metrics directly.
+12. Phase 3 benchmark notes/log metadata can drift from current thread policy and newest artifacts.
 
 Previously identified CLI numeric-parse abort issues and Phase 1 benchmark output overwrite risk have been fixed on this branch. Remaining gaps are tracked in `docs/review/THOROUGH_CODE_REVIEW_TODO.md`.
