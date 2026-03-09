@@ -141,8 +141,22 @@ else
 fi
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
+GIT_BRANCH="$(git -C "${ROOT_DIR}" branch --show-current 2>/dev/null || echo "unknown")"
+GIT_COMMIT="$(git -C "${ROOT_DIR}" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
+MANIFEST_CSV="${OUT_DIR}/batch_${TS}_manifest.csv"
+RPS_CSV="${OUT_DIR}/batch_${TS}_records_per_second.csv"
+
+cat > "${MANIFEST_CSV}" <<EOF
+batch_utc,git_branch,git_commit,subset_label,scenario_name,dataset_path,benchmark_runs,output_csv,log_file
+EOF
+
+cat > "${RPS_CSV}" <<EOF
+batch_utc,git_branch,git_commit,dataset_label,query_type,run_number,total_ms,rows_accepted,records_per_second
+EOF
+
 echo "[phase1-dev] start ts=${TS} runs=${RUNS}"
 echo "[phase1-dev] scenarios=${SCENARIO_FILE}"
+echo "[phase1-dev] git_branch=${GIT_BRANCH} git_commit=${GIT_COMMIT}"
 
 run_one_scenario() {
   local subset_label="$1"
@@ -192,6 +206,27 @@ run_one_scenario() {
   echo "[phase1-dev] run subset=${subset_label} scenario=${scenario_name}"
   "${cmd[@]}" > "${log_file}" 2>&1
 
+  printf "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
+    "${TS}" \
+    "${GIT_BRANCH}" \
+    "${GIT_COMMIT}" \
+    "${subset_label}" \
+    "${scenario_name}" \
+    "${dataset_path}" \
+    "${RUNS}" \
+    "${out_csv}" \
+    "${log_file}" >> "${MANIFEST_CSV}"
+
+  awk -F, -v ts="${TS}" -v branch="${GIT_BRANCH}" -v commit="${GIT_COMMIT}" '
+    NR > 1 {
+      total_ms = $11 + 0.0;
+      rows_accepted = $13 + 0.0;
+      rps = (total_ms > 0.0) ? (rows_accepted / (total_ms / 1000.0)) : 0.0;
+      printf "%s,%s,%s,%s,%s,%s,%.6f,%s,%.6f\n",
+             ts, branch, commit, $5, $7, $8, total_ms, $13, rps;
+    }
+  ' "${out_csv}" >> "${RPS_CSV}"
+
   local avg_ingest
   local avg_query
   local avg_total
@@ -228,3 +263,5 @@ done
 echo "[phase1-dev] complete."
 echo "[phase1-dev] raw_csv_dir=${OUT_DIR}"
 echo "[phase1-dev] log_dir=${LOG_DIR}"
+echo "[phase1-dev] batch_manifest=${MANIFEST_CSV}"
+echo "[phase1-dev] batch_rps=${RPS_CSV}"

@@ -473,24 +473,24 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 15. Collect Preliminary Timing Data
 #### Tasks
-- [ ] Run each subset benchmark scenario at least:
-  - [ ] `3` times on the small subset
-  - [ ] `3` times on the medium subset
-  - [ ] `3` times on the large-dev subset
-- [ ] Record:
-  - [ ] ingest time
-  - [ ] query time
-  - [ ] total runtime
-  - [ ] records processed per second if available
-- [ ] Store each run separately before computing summaries
+- [x] Run each subset benchmark scenario at least:
+  - [x] `3` times on the small subset
+  - [x] `3` times on the medium subset
+  - [x] `3` times on the large-dev subset
+- [x] Record:
+  - [x] ingest time
+  - [x] query time
+  - [x] total runtime
+  - [x] records processed per second if available
+- [x] Store each run separately before computing summaries
 
 #### Agent instructions
 - The coding agent should execute the benchmark runner after implementation changes that affect loading or query behavior
 - Save each batch with a clear label indicating:
-  - [ ] git branch
-  - [ ] commit hash if possible
-  - [ ] dataset subset size
-  - [ ] query scenario
+  - [x] git branch
+  - [x] commit hash if possible
+  - [x] dataset subset size
+  - [x] query scenario
 - Prefer CSV output for later aggregation
 
 #### Deliverable
@@ -500,19 +500,19 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 16. Generate Development Summary Tables
 #### Tasks
-- [ ] Add a small script to summarize raw subset benchmark results
-- [ ] Compute:
-  - [ ] mean runtime
-  - [ ] median runtime
-  - [ ] minimum runtime
-  - [ ] maximum runtime
-  - [ ] standard deviation if enough runs exist
-- [ ] Save summary tables to:
-  - [ ] `results/tables/phase1_dev/`
+- [x] Add a small script to summarize raw subset benchmark results
+- [x] Compute:
+  - [x] mean runtime
+  - [x] median runtime
+  - [x] minimum runtime
+  - [x] maximum runtime
+  - [x] standard deviation if enough runs exist
+- [x] Save summary tables to:
+  - [x] `results/tables/phase1_dev/`
 
 #### Agent instructions
 - Implement a helper such as:
-  - [ ] `scripts/summarize_phase1_dev.py`
+  - [x] `scripts/summarize_phase1_dev.py`
 - Read raw CSV benchmark outputs
 - Produce one summary table per dataset subset or one combined table with clear labels
 - Do not delete raw files after summarization
@@ -524,13 +524,13 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 17. Generate Simple Development Graphs
 #### Tasks
-- [ ] Add a plotting script for subset benchmark results
-- [ ] Plot at least:
-  - [ ] ingest time vs subset size
-  - [ ] total runtime vs subset size
-  - [ ] query runtime by scenario
-- [ ] Save graphs to:
-  - [ ] `results/graphs/phase1_dev/`
+- [x] Add a plotting script for subset benchmark results
+- [x] Plot at least:
+  - [x] ingest time vs subset size
+  - [x] total runtime vs subset size
+  - [x] query runtime by scenario
+- [x] Save graphs to:
+  - [x] `results/graphs/phase1_dev/`
 
 #### Agent instructions
 - Use Python for graph generation
