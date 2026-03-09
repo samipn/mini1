@@ -12,6 +12,8 @@ endif()
 option(ENABLE_WARNINGS "Enable strict compiler warnings" ON)
 option(BUILD_TESTING "Build tests" ON)
 
+find_package(OpenMP)
+
 add_library(congestion_core
   src/data_model/TrafficRecord.cpp
   src/data_model/TrafficDataset.cpp
@@ -22,9 +24,20 @@ add_library(congestion_core
   src/query/TimeWindowQuery.cpp
   src/query/CongestionQuery.cpp
   src/query/TrafficAggregator.cpp
+  src/query/ParallelCongestionQuery.cpp
+  src/query/ParallelTrafficAggregator.cpp
 )
 
 target_include_directories(congestion_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+if(OpenMP_CXX_FOUND)
+  target_link_libraries(congestion_core PUBLIC OpenMP::OpenMP_CXX)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(congestion_core PUBLIC -fopenmp)
+  target_link_options(congestion_core PUBLIC -fopenmp)
+else()
+  message(FATAL_ERROR "OpenMP is required for Phase 2 parallel implementation.")
+endif()
 
 if(ENABLE_WARNINGS)
   if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -59,6 +72,10 @@ if(BUILD_TESTING)
   target_link_libraries(test_benchmark_harness PRIVATE congestion_core)
 
   add_executable(test_run_serial_benchmark_cli tests/test_run_serial_benchmark_cli.cpp)
+  add_executable(test_parallel_query_correctness tests/test_parallel_query_correctness.cpp)
+  target_link_libraries(test_parallel_query_correctness PRIVATE congestion_core)
+
+  add_executable(test_run_parallel_cli tests/test_run_parallel_cli.cpp)
 
   add_executable(test_realdata_ingest tests/test_realdata_ingest.cpp)
   target_link_libraries(test_realdata_ingest PRIVATE congestion_core)
@@ -78,6 +95,8 @@ if(BUILD_TESTING)
   add_test(NAME test_query_apis COMMAND test_query_apis)
   add_test(NAME test_benchmark_harness COMMAND test_benchmark_harness)
   add_test(NAME test_run_serial_benchmark_cli COMMAND test_run_serial_benchmark_cli)
+  add_test(NAME test_parallel_query_correctness COMMAND test_parallel_query_correctness)
+  add_test(NAME test_run_parallel_cli COMMAND test_run_parallel_cli)
   add_test(NAME test_realdata_ingest COMMAND test_realdata_ingest)
   add_test(NAME test_realdata_api COMMAND test_realdata_api)
   add_test(NAME test_realdata_cli COMMAND test_run_serial_queries)
