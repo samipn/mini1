@@ -186,3 +186,12 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P3-D4 behavior consistency: define and enforce row-convert benchmarking semantics.
   Objective: either route row-convert through benchmark harness for repeated runs/CSV output/validation, or document explicit limitations.
   Evidence: `apps/run_optimized.cpp` direct mode uses harness; row-convert mode does not.
+- [ ] P3-D6 hot-loop overhead: remove `std::function` predicate dispatch from optimized aggregation scans.
+  Objective: avoid per-row type-erased predicate calls in optimized query loops and enforce inlined/specialized hot paths.
+  Evidence: `src/query/OptimizedTrafficAggregator.cpp` uses `std::function<bool(std::size_t)>` in `SummarizeConditional`.
+- [ ] P3-D7 measurement integrity: memory probe should surface command failures explicitly.
+  Objective: stop swallowing probe command failures (or record `exit_code/status`) so memory artifacts cannot silently include failed runs.
+  Evidence: `scripts/run_phase3_memory_probe.sh` runs probes with `/usr/bin/time ... || true` and always appends CSV rows.
+- [ ] P3-D8 hardening/tests: guard `run_optimized_support_experiments` numeric parsing and add negative test coverage.
+  Objective: invalid `--repeats` should return usage error instead of process abort.
+  Evidence: `apps/run_optimized_support_experiments.cpp` uses unguarded `std::stoull` for `--repeats`.

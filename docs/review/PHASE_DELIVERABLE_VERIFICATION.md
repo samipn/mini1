@@ -24,7 +24,8 @@ Evidence sources:
   - Phase 2 D1-D15 reviewed (with open operational consistency gaps)
   - Phase 3 reviewed in chunks:
     - D1-D5 reviewed (open correctness/robustness gaps identified)
-    - D6-D15 pending chunked review
+    - D6-D10 reviewed (open performance/measurement hardening gaps identified)
+    - D11-D15 pending chunked review
 
 ## Fixes Applied During Verification
 
@@ -64,5 +65,8 @@ They exist locally for verification but are not committed to git by design.
 3. `run_parallel` allows `0` in explicit `--thread-list` values, causing ambiguous `threads=0` reporting.
 4. `run_optimized` row-convert path can silently succeed on unknown query types.
 5. `TrafficColumns::AddRecord` exception-safety risk can desynchronize SoA columns under allocation failure.
+6. `OptimizedTrafficAggregator` hot-loop path uses `std::function` predicate dispatch in scan loops.
+7. `run_optimized_support_experiments` aborts on malformed numeric `--repeats` input.
+8. Phase 3 memory probe currently swallows command failures and can emit ambiguous rows.
 
 Previously identified CLI numeric-parse abort issues and Phase 1 benchmark output overwrite risk have been fixed on this branch. Remaining gaps are tracked in `docs/review/THOROUGH_CODE_REVIEW_TODO.md`.
