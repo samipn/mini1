@@ -26,7 +26,13 @@ Evidence sources:
     - D6-D10 reviewed (open baseline-evidence rigor + notes freshness gaps identified)
     - D11-D15 reviewed (open scenario/evidence-policy gaps identified)
     - D16-D20 reviewed (open summary/graph/log/determinism-depth gaps identified)
-  - Phase 2 D1-D15 reviewed (with open operational consistency gaps)
+  - Phase 2 chunked re-review:
+    - D1-D5 reviewed (open warning-policy/runtime-isolation hardening gaps identified)
+    - D6-D10 reviewed (open CLI/thread-policy/top-N memory-overhead gaps identified)
+    - D11-D15 reviewed (open evidence-policy/tooling/log-freshness gaps identified)
+    - D16-D20 reviewed (open index-cli/validation-schema/path-hygiene gaps identified)
+    - D21-D25 reviewed (open run-policy/log-freshness/graph-default gaps identified)
+    - D26 reviewed (open pre-baseline guardrail enforcement gap identified)
   - Phase 3 reviewed in chunks:
     - D1-D5 reviewed (open correctness/robustness gaps identified)
     - D6-D10 reviewed (open performance/measurement hardening gaps identified)
@@ -96,5 +102,16 @@ They exist locally for verification but are not committed to git by design.
 27. Phase 1 plotting flow depends on hardcoded labels/scenarios and local `matplotlib`, reducing reproducibility on clean environments.
 28. Phase 1 determinism checks do not currently validate top-N payload/order stability.
 29. Phase 1 benchmark entrypoints still allow easy mixing of dev/pre-baseline and broader benchmark outputs.
+30. Phase 2 warning policy is not uniformly applied across app/test targets (currently concentrated on `congestion_core`).
+31. Phase 2 query helpers set process-global OpenMP thread count per call (`omp_set_num_threads`), which can couple concurrent operations.
+32. Phase 2 default `run_parallel --traffic <path>` behavior is still default-hostile (`speed_below` requires explicit threshold).
+33. Phase 2 `--thread-list` accepts `0`, creating ambiguous benchmark artifacts (`threads=0` rows).
+34. Phase 2 still has duplicate summary pipelines (`summarize_phase2.py` vs `summarize_phase2_dev.py`) with different assumptions.
+35. Phase 2 index experiment CLI still has unguarded numeric parse for `--repeats` (`std::stoull`).
+36. Phase 2 subset-validation script uses fixed CSV column positions, making it schema-fragile.
+37. Phase 2 evidence policy between 3-run dev batches and 10-run scaling claims is not explicitly enforced.
+38. Phase 2 benchmark log freshness lags current 16-thread scope and latest stability artifacts.
+39. Phase 2 graph defaults emphasize one selected parallel thread for comparison bars, reducing full-thread visibility by default.
+40. Phase 2 dev-vs-baseline path separation is documented but not strongly enforced by script defaults.
 
 Previously identified CLI numeric-parse abort issues and Phase 1 benchmark output overwrite risk have been fixed on this branch. Remaining gaps are tracked in `docs/review/THOROUGH_CODE_REVIEW_TODO.md`.
