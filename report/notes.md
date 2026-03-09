@@ -69,3 +69,19 @@
 
 ## Open issues
 - Full-dataset benchmark runs should be executed and archived before phase handoff if final report numbers require non-sampled measurements.
+
+## Pre-baseline classification (D20)
+- All subset benchmark artifacts under:
+  - `results/raw/phase1_dev/`
+  - `results/tables/phase1_dev/`
+  - `results/graphs/phase1_dev/`
+  are classified as **development-stage (pre-baseline)**.
+- These outputs are useful for:
+  - validating benchmark workflow stability,
+  - checking deterministic behavior,
+  - and observing early scaling trends.
+- They are **not** the final official Phase 1 comparison data.
+- Final official full-dataset baseline outputs are reserved for:
+  - `results/raw/phase1_baseline/`
+  - `results/tables/phase1_baseline/`
+  - `results/graphs/phase1_baseline/`
