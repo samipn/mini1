@@ -228,14 +228,14 @@ That keeps the experiment focused and easier to explain.
 
 ### 11. Add Correctness Validation for Parallel Results
 #### Tasks
-- [ ] Compare serial vs parallel outputs for all supported query types
-- [ ] Validate:
-  - [ ] result counts
-  - [ ] aggregate values
-  - [ ] sampled outputs where needed
-- [ ] Add a validation mode that runs both versions back-to-back
-- [ ] Log mismatches clearly
-- [ ] Do not benchmark a query path until correctness is confirmed
+- [x] Compare serial vs parallel outputs for all supported query types
+- [x] Validate:
+  - [x] result counts
+  - [x] aggregate values
+  - [x] sampled outputs where needed
+- [x] Add a validation mode that runs both versions back-to-back
+- [x] Log mismatches clearly
+- [x] Do not benchmark a query path until correctness is confirmed
 
 #### Deliverable
 - Parallel results are verified against serial output
@@ -244,21 +244,21 @@ That keeps the experiment focused and easier to explain.
 
 ### 12. Extend Benchmark Harness for Parallel Experiments
 #### Tasks
-- [ ] Update `BenchmarkHarness` to support:
-  - [ ] execution mode: serial or parallel
-  - [ ] thread count
-  - [ ] repeated runs
-- [ ] Record:
-  - [ ] ingest time
-  - [ ] query time
-  - [ ] total runtime
-  - [ ] thread count
-  - [ ] query type
-  - [ ] run number
-- [ ] Save outputs to:
-  - [ ] `results/raw/`
-- [ ] Separate serial and parallel result files clearly
-- [ ] Ensure output format stays graph-friendly
+- [x] Update `BenchmarkHarness` to support:
+  - [x] execution mode: serial or parallel
+  - [x] thread count
+  - [x] repeated runs
+- [x] Record:
+  - [x] ingest time
+  - [x] query time
+  - [x] total runtime
+  - [x] thread count
+  - [x] query type
+  - [x] run number
+- [x] Save outputs to:
+  - [x] `results/raw/`
+- [x] Separate serial and parallel result files clearly
+- [x] Ensure output format stays graph-friendly
 
 #### Deliverable
 - Raw benchmark results exist for serial and parallel runs in comparable format
@@ -267,24 +267,24 @@ That keeps the experiment focused and easier to explain.
 
 ### 13. Benchmark Parallel Scaling
 #### Minimum benchmark scenarios
-- [ ] serial ingest + serial speed-threshold query
-- [ ] serial ingest + parallel speed-threshold query
-- [ ] serial ingest + serial time-window query
-- [ ] serial ingest + parallel time-window query
-- [ ] serial ingest + serial aggregation
-- [ ] serial ingest + parallel aggregation
+- [x] serial ingest + serial speed-threshold query
+- [x] serial ingest + parallel speed-threshold query
+- [x] serial ingest + serial time-window query
+- [x] serial ingest + parallel time-window query
+- [x] serial ingest + serial aggregation
+- [x] serial ingest + parallel aggregation
 
 #### Thread-count experiments
-- [ ] 1 thread
-- [ ] 2 threads
-- [ ] 4 threads
-- [ ] 8 threads or appropriate upper bound
+- [x] 1 thread
+- [x] 2 threads
+- [x] 4 threads
+- [x] 8 threads or appropriate upper bound
 
 #### Benchmark requirements
-- [ ] at least 10 runs per scenario
-- [ ] same dataset
-- [ ] same query parameters
-- [ ] same machine conditions as much as possible
+- [x] at least 10 runs per scenario
+- [x] same dataset
+- [x] same query parameters
+- [x] same machine conditions as much as possible
 
 #### Deliverable
 - Scaling data exists and is usable for Phase 2 analysis
@@ -293,19 +293,19 @@ That keeps the experiment focused and easier to explain.
 
 ### 14. Measure Speedup and Parallel Overhead
 #### Tasks
-- [ ] Compute speedup relative to serial baseline
-- [ ] Identify workloads with:
-  - [ ] strong speedup
-  - [ ] weak speedup
-  - [ ] no improvement
-  - [ ] regressions
-- [ ] Note causes such as:
-  - [ ] thread startup overhead
-  - [ ] memory bandwidth limits
-  - [ ] reduction overhead
-  - [ ] uneven work distribution
-  - [ ] false sharing or contention
-- [ ] Record findings in notes for the report
+- [x] Compute speedup relative to serial baseline
+- [x] Identify workloads with:
+  - [x] strong speedup
+  - [x] weak speedup
+  - [x] no improvement
+  - [x] regressions
+- [x] Note causes such as:
+  - [x] thread startup overhead
+  - [x] memory bandwidth limits
+  - [x] reduction overhead
+  - [x] uneven work distribution
+  - [x] false sharing or contention
+- [x] Record findings in notes for the report
 
 #### Deliverable
 - Phase 2 includes both positive and negative findings, not just best cases
@@ -314,16 +314,16 @@ That keeps the experiment focused and easier to explain.
 
 ### 15. Add Logging and Research Notes
 #### Tasks
-- [ ] Update `report/notes.md` with:
-  - [ ] which query paths were parallelized
-  - [ ] why those paths were chosen
-  - [ ] thread model used
-  - [ ] known bottlenecks
-  - [ ] workloads that scaled poorly
-  - [ ] failed approaches
-- [ ] Record whether parallelizing ingestion was attempted
-- [ ] Record any numerical differences in floating-point reductions
-- [ ] Record any memory-related observations
+- [x] Update `report/notes.md` with:
+  - [x] which query paths were parallelized
+  - [x] why those paths were chosen
+  - [x] thread model used
+  - [x] known bottlenecks
+  - [x] workloads that scaled poorly
+  - [x] failed approaches
+- [x] Record whether parallelizing ingestion was attempted
+- [x] Record any numerical differences in floating-point reductions
+- [x] Record any memory-related observations
 
 #### Deliverable
 - Repo contains enough notes to support Phase 2 report writing
@@ -337,21 +337,21 @@ That keeps the experiment focused and easier to explain.
 - [x] `ParallelTrafficAggregator.hpp`
 
 ### `include/benchmark/`
-- [ ] update `BenchmarkHarness.hpp` for thread-aware benchmarking
+- [x] update `BenchmarkHarness.hpp` for thread-aware benchmarking
 
 ### `src/query/`
 - [x] `ParallelCongestionQuery.cpp`
 - [x] `ParallelTrafficAggregator.cpp`
 
 ### `src/benchmark/`
-- [ ] update `BenchmarkHarness.cpp`
+- [x] update `BenchmarkHarness.cpp`
 
 ### `apps/`
 - [x] `run_parallel.cpp`
 
 ### `scripts/`
-- [ ] update `benchmark.sh` to run thread-count sweeps
-- [ ] optional helper script for serial-vs-parallel comparison
+- [x] update `benchmark.sh` to run thread-count sweeps
+- [x] optional helper script for serial-vs-parallel comparison
 
 ---
 
@@ -367,19 +367,19 @@ That keeps the experiment focused and easier to explain.
 - [x] correctness verified against serial
 
 ### Milestone C — Multiple Parallel Workloads
-- [ ] time-window query parallelized
-- [ ] aggregation parallelized
-- [ ] results verified
+- [x] time-window query parallelized
+- [x] aggregation parallelized
+- [x] results verified
 
 ### Milestone D — Scaling Benchmarks
-- [ ] multiple thread counts tested
-- [ ] 10+ runs per scenario completed
-- [ ] raw outputs saved
+- [x] multiple thread counts tested
+- [x] 10+ runs per scenario completed
+- [x] raw outputs saved
 
 ### Milestone E — Research Notes
-- [ ] speedups documented
-- [ ] regressions documented
-- [ ] failed attempts documented
+- [x] speedups documented
+- [x] regressions documented
+- [x] failed attempts documented
 
 ---
 

@@ -7,8 +7,14 @@
 
 namespace urbandrop {
 
+enum class BenchmarkExecutionMode {
+  kSerial,
+  kParallel
+};
+
 struct BenchmarkConfig {
   std::string binary_name = "run_serial";
+  BenchmarkExecutionMode execution_mode = BenchmarkExecutionMode::kSerial;
   std::string dataset_path;
   std::string dataset_label;
 
@@ -30,6 +36,8 @@ struct BenchmarkConfig {
   std::size_t min_link_samples = 1;
 
   std::size_t runs = 10;
+  std::size_t thread_count = 0;
+  bool validate_parallel_against_serial = false;
   std::string output_csv_path;
   bool append_output = false;
   bool enable_ingest_progress = false;
@@ -42,6 +50,8 @@ struct BenchmarkConfig {
 
 struct BenchmarkRunResult {
   std::size_t run_number = 0;
+  BenchmarkExecutionMode execution_mode = BenchmarkExecutionMode::kSerial;
+  std::size_t thread_count = 1;
   double ingest_ms = 0.0;
   double query_ms = 0.0;
   double total_ms = 0.0;
@@ -49,6 +59,7 @@ struct BenchmarkRunResult {
   std::size_t rows_accepted = 0;
   std::size_t rows_rejected = 0;
   std::size_t result_count = 0;
+  bool serial_match = true;
 };
 
 class BenchmarkHarness {
@@ -56,6 +67,9 @@ class BenchmarkHarness {
   static bool RunSerial(const BenchmarkConfig& config,
                         std::vector<BenchmarkRunResult>* out_results,
                         std::string* error);
+  static bool RunParallel(const BenchmarkConfig& config,
+                          std::vector<BenchmarkRunResult>* out_results,
+                          std::string* error);
 };
 
 }  // namespace urbandrop

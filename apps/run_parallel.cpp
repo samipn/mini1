@@ -1,7 +1,6 @@
-#include <chrono>
-#include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -10,17 +9,9 @@
 #include <omp.h>
 #endif
 
-#include "data_model/TrafficDataset.hpp"
-#include "io/CSVReader.hpp"
-#include "query/CongestionQuery.hpp"
-#include "query/ParallelCongestionQuery.hpp"
-#include "query/ParallelTrafficAggregator.hpp"
-#include "query/TimeWindowQuery.hpp"
-#include "query/TrafficAggregator.hpp"
+#include "benchmark/BenchmarkHarness.hpp"
 
 namespace {
-
-using Clock = std::chrono::steady_clock;
 
 void PrintUsage() {
   std::cout
@@ -32,6 +23,13 @@ void PrintUsage() {
       << "  time_window         --start-epoch <sec> --end-epoch <sec>\n"
       << "  top_n_slowest       --top-n <n> [--min-link-samples <n>]\n"
       << "  summary             (parallel aggregate over full dataset)\n"
+      << "\n"
+      << "Benchmark mode options:\n"
+      << "  --benchmark-runs <n>      run ingest+query benchmark n times\n"
+      << "  --benchmark-out <path>    output CSV path\n"
+      << "  --benchmark-append        append to existing CSV instead of overwrite\n"
+      << "  --dataset-label <label>   metadata label for output rows\n"
+      << "  --expect-accepted <n>     fail if accepted row count differs from n\n"
       << "\n"
       << "Validation flag:\n"
       << "  --validate-serial   compare parallel result(s) with serial implementation\n";
@@ -82,10 +80,6 @@ bool ParseThreadList(const std::string& value, std::vector<std::size_t>* out) {
   return true;
 }
 
-bool NearlyEqual(double lhs, double rhs) {
-  return std::fabs(lhs - rhs) < 1e-9;
-}
-
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -96,6 +90,12 @@ int main(int argc, char** argv) {
   std::vector<std::size_t> thread_list;
   std::size_t benchmark_runs = 1;
   bool validate_serial = false;
+
+  std::string benchmark_out_csv;
+  bool benchmark_append = false;
+  std::string dataset_label;
+  std::size_t expected_accepted = 0;
+  bool has_expected_accepted = false;
 
   double threshold_mph = 15.0;
   bool has_threshold = false;
@@ -132,6 +132,15 @@ int main(int argc, char** argv) {
       }
     } else if (arg == "--benchmark-runs" && i + 1 < argc) {
       benchmark_runs = static_cast<std::size_t>(std::stoull(argv[++i]));
+    } else if (arg == "--benchmark-out" && i + 1 < argc) {
+      benchmark_out_csv = argv[++i];
+    } else if (arg == "--benchmark-append") {
+      benchmark_append = true;
+    } else if (arg == "--dataset-label" && i + 1 < argc) {
+      dataset_label = argv[++i];
+    } else if (arg == "--expect-accepted" && i + 1 < argc) {
+      expected_accepted = static_cast<std::size_t>(std::stoull(argv[++i]));
+      has_expected_accepted = true;
     } else if (arg == "--start-epoch" && i + 1 < argc) {
       has_start_epoch = ParseInt64(argv[++i], &start_epoch);
     } else if (arg == "--end-epoch" && i + 1 < argc) {
@@ -178,130 +187,70 @@ int main(int argc, char** argv) {
     return 2;
   }
 
-  urbandrop::TrafficDataset dataset;
-  urbandrop::TrafficLoadOptions options;
-  options.print_progress = false;
-
-  std::string error;
   std::cout << "[parallel] model=openmp";
 #if defined(_OPENMP)
   std::cout << " max_threads=" << omp_get_max_threads();
 #endif
   std::cout << "\n";
 
-  std::cout << "[ingest] start path=" << traffic_csv << "\n";
-  if (!urbandrop::CSVReader::LoadTrafficCSV(traffic_csv, &dataset, options, nullptr, &error)) {
-    std::cerr << "[ingest] failed: " << error << "\n";
-    return 1;
-  }
-  std::cout << "[ingest] complete rows_accepted=" << dataset.Counters().rows_accepted << "\n";
-
   if (thread_list.empty()) {
     thread_list.push_back(threads);
   }
 
   for (std::size_t configured_threads : thread_list) {
-    for (std::size_t run = 1; run <= benchmark_runs; ++run) {
-      std::cout << "[query] start run=" << run << " type=" << query_type
-                << " threads=" << configured_threads << "\n";
+    urbandrop::BenchmarkConfig config;
+    config.binary_name = "run_parallel";
+    config.execution_mode = urbandrop::BenchmarkExecutionMode::kParallel;
+    config.dataset_path = traffic_csv;
+    config.dataset_label = dataset_label;
+    config.query_type = query_type;
+    config.borough = borough;
+    config.threshold_mph = threshold_mph;
+    config.has_threshold = has_threshold;
+    config.start_epoch = start_epoch;
+    config.end_epoch = end_epoch;
+    config.has_start_epoch = has_start_epoch;
+    config.has_end_epoch = has_end_epoch;
+    config.top_n = top_n;
+    config.min_link_samples = min_link_samples;
+    config.runs = benchmark_runs;
+    config.thread_count = configured_threads;
+    config.validate_parallel_against_serial = validate_serial;
+    config.output_csv_path = benchmark_out_csv;
+    config.append_output = benchmark_append || configured_threads != thread_list.front();
+    config.enable_ingest_progress = false;
+    config.has_expected_accepted_rows = has_expected_accepted;
+    config.expected_accepted_rows = expected_accepted;
 
-      const auto query_start = Clock::now();
-      std::size_t result_count = 0;
-      std::vector<urbandrop::LinkSpeedStat> topn_result;
-      urbandrop::AggregateStats aggregate_result;
+    std::vector<urbandrop::BenchmarkRunResult> results;
+    std::string benchmark_error;
+    if (!urbandrop::BenchmarkHarness::RunParallel(config, &results, &benchmark_error)) {
+      std::cerr << "[benchmark] failed: " << benchmark_error << "\n";
+      return 1;
+    }
 
-      if (query_type == "speed_below") {
-        result_count =
-            urbandrop::ParallelCongestionQuery::CountSpeedBelow(dataset, threshold_mph, configured_threads);
-        aggregate_result =
-            urbandrop::ParallelTrafficAggregator::SummarizeSpeedBelow(dataset, threshold_mph, configured_threads);
-      } else if (query_type == "borough_speed_below") {
-        result_count = urbandrop::ParallelCongestionQuery::CountBoroughAndSpeedBelow(
-            dataset, borough, threshold_mph, configured_threads);
-        aggregate_result = urbandrop::ParallelTrafficAggregator::SummarizeBoroughAndSpeedBelow(
-            dataset, borough, threshold_mph, configured_threads);
-      } else if (query_type == "time_window") {
-        result_count = urbandrop::ParallelCongestionQuery::CountTimeWindow(
-            dataset, start_epoch, end_epoch, configured_threads);
-        aggregate_result = urbandrop::ParallelTrafficAggregator::SummarizeTimeWindow(
-            dataset, start_epoch, end_epoch, configured_threads);
-      } else if (query_type == "top_n_slowest") {
-        topn_result = urbandrop::ParallelCongestionQuery::TopNSlowestRecurringLinks(
-            dataset, top_n, min_link_samples, configured_threads);
-        result_count = topn_result.size();
-      } else if (query_type == "summary") {
-        aggregate_result = urbandrop::ParallelTrafficAggregator::SummarizeDataset(dataset, configured_threads);
-        result_count = aggregate_result.record_count;
-      } else {
-        std::cerr << "unsupported query type for run_parallel: " << query_type << "\n";
-        return 2;
-      }
+    const double total_ingest = std::accumulate(
+        results.begin(), results.end(), 0.0, [](double sum, const urbandrop::BenchmarkRunResult& row) {
+          return sum + row.ingest_ms;
+        });
+    const double total_query = std::accumulate(
+        results.begin(), results.end(), 0.0, [](double sum, const urbandrop::BenchmarkRunResult& row) {
+          return sum + row.query_ms;
+        });
+    const double total_total = std::accumulate(
+        results.begin(), results.end(), 0.0, [](double sum, const urbandrop::BenchmarkRunResult& row) {
+          return sum + row.total_ms;
+        });
+    const double runs = static_cast<double>(results.size());
 
-      const auto query_end = Clock::now();
-      const auto elapsed_ms =
-          std::chrono::duration_cast<std::chrono::milliseconds>(query_end - query_start).count();
-
-      std::cout << "[query] end run=" << run << " type=" << query_type << " threads="
-                << configured_threads << " matched_records=" << result_count
-                << " elapsed_ms=" << elapsed_ms << "\n";
-
-      if (validate_serial) {
-        std::size_t serial_count = 0;
-        std::vector<urbandrop::LinkSpeedStat> serial_topn;
-        urbandrop::AggregateStats serial_aggregate;
-
-        if (query_type == "speed_below") {
-          const auto serial_rows = urbandrop::CongestionQuery::FilterSpeedBelow(dataset, threshold_mph);
-          serial_count = serial_rows.size();
-          serial_aggregate = urbandrop::TrafficAggregator::Summarize(serial_rows);
-        } else if (query_type == "borough_speed_below") {
-          const auto serial_rows =
-              urbandrop::CongestionQuery::FilterBoroughAndSpeedBelow(dataset, borough, threshold_mph);
-          serial_count = serial_rows.size();
-          serial_aggregate = urbandrop::TrafficAggregator::Summarize(serial_rows);
-        } else if (query_type == "time_window") {
-          const auto serial_rows =
-              urbandrop::TimeWindowQuery::FilterByEpochRange(dataset, start_epoch, end_epoch);
-          serial_count = serial_rows.size();
-          serial_aggregate = urbandrop::TrafficAggregator::Summarize(serial_rows);
-        } else if (query_type == "top_n_slowest") {
-          serial_topn =
-              urbandrop::CongestionQuery::TopNSlowestRecurringLinks(dataset, top_n, min_link_samples);
-          serial_count = serial_topn.size();
-        } else {
-          serial_aggregate = urbandrop::TrafficAggregator::SummarizeDataset(dataset);
-          serial_count = serial_aggregate.record_count;
-        }
-
-        bool match = serial_count == result_count;
-        if (match && query_type != "top_n_slowest") {
-          match = NearlyEqual(serial_aggregate.average_speed_mph, aggregate_result.average_speed_mph) &&
-                  NearlyEqual(serial_aggregate.average_travel_time_seconds,
-                              aggregate_result.average_travel_time_seconds);
-        }
-        if (match && query_type == "top_n_slowest") {
-          if (serial_topn.size() != topn_result.size()) {
-            match = false;
-          } else {
-            for (std::size_t i = 0; i < serial_topn.size(); ++i) {
-              if (serial_topn[i].link_id != topn_result[i].link_id ||
-                  serial_topn[i].record_count != topn_result[i].record_count ||
-                  !NearlyEqual(serial_topn[i].average_speed_mph, topn_result[i].average_speed_mph)) {
-                match = false;
-                break;
-              }
-            }
-          }
-        }
-
-        if (!match) {
-          std::cerr << "[validate] mismatch run=" << run << " serial=" << serial_count
-                    << " parallel=" << result_count << "\n";
-          return 1;
-        }
-
-        std::cout << "[validate] run=" << run << " serial_match=true\n";
-      }
+    std::cout << "[benchmark] complete runs=" << results.size()
+              << " query_type=" << (query_type.empty() ? "ingest_only" : query_type)
+              << " threads=" << configured_threads << "\n";
+    std::cout << "  avg_ingest_ms=" << (total_ingest / runs) << "\n";
+    std::cout << "  avg_query_ms=" << (total_query / runs) << "\n";
+    std::cout << "  avg_total_ms=" << (total_total / runs) << "\n";
+    if (!benchmark_out_csv.empty()) {
+      std::cout << "  output_csv=" << benchmark_out_csv << "\n";
     }
   }
 

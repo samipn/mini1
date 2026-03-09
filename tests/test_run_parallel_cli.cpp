@@ -32,6 +32,16 @@ std::string WriteFixtureCsv() {
   return path.string();
 }
 
+std::size_t CountLines(const std::string& path) {
+  std::ifstream in(path);
+  std::size_t lines = 0;
+  std::string line;
+  while (std::getline(in, line)) {
+    ++lines;
+  }
+  return lines;
+}
+
 int Run(const std::string& command) {
   const int code = std::system(command.c_str());
   if (code == -1) {
@@ -45,6 +55,8 @@ int Run(const std::string& command) {
 int main() {
   const std::string csv = WriteFixtureCsv();
   const std::string qcsv = ShellQuote(csv);
+  const std::string out_path =
+      (std::filesystem::temp_directory_path() / "urbandrop_run_parallel_bench_output.csv").string();
 
   const std::string speed_cmd =
       "./run_parallel --traffic " + qcsv +
@@ -80,9 +92,14 @@ int main() {
 
   const std::string summary_cmd =
       "./run_parallel --traffic " + qcsv +
-      " --query summary --thread-list 1,2,4,8 --benchmark-runs 2 --validate-serial > /dev/null";
+      " --query summary --thread-list 1,2,4,8 --benchmark-runs 2 --validate-serial --benchmark-out " +
+      ShellQuote(out_path) + " > /dev/null";
   if (Run(summary_cmd) != 0) {
     std::cerr << "run_parallel summary/thread-list failed\n";
+    return EXIT_FAILURE;
+  }
+  if (!std::filesystem::exists(out_path) || CountLines(out_path) != 9) {
+    std::cerr << "run_parallel benchmark output CSV should have header + 8 rows\n";
     return EXIT_FAILURE;
   }
 
