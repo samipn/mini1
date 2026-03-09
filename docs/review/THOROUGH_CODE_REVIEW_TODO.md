@@ -116,15 +116,15 @@ Purpose: track issues found during incremental repository review and convert the
 - [x] P1-D16 summary robustness: handle dataset-label drift between runner outputs and summary defaults.
   Objective/result: summarizer now falls back to all discovered dataset labels when requested defaults are absent, so default invocation remains usable on smoke-labeled batches.
   Evidence: `scripts/summarize_phase1_dev.py`.
-- [ ] P1-D17 graph robustness: remove hardcoded subset/scenario assumptions in plotting.
-  Objective: derive labels/scenarios dynamically from summary CSV so graph generation remains stable when scenarios evolve.
-  Evidence: `plot_phase1_dev.py` hardcodes `small/medium/large_dev` and fixed scenario names.
-- [ ] P1-D17 dependency clarity: provide explicit plotting dependency/install path.
-  Objective: avoid silent graph-step failures on clean environments lacking `matplotlib`.
-  Evidence: `plot_phase1_dev.py` exits with dependency error when `matplotlib` is unavailable.
-- [ ] P1-D18 notes freshness: append benchmark-log entries for latest local Phase 1 dev artifacts.
-  Objective: keep benchmark history synchronized with latest manifests/scenario definitions.
-  Evidence: latest `batch_20260309T061031Z_manifest.csv` is not represented in `report/phase1_dev_benchmark_log.md`.
+- [x] P1-D17 graph robustness: remove hardcoded subset/scenario assumptions in plotting.
+  Objective/result: plotting now discovers dataset labels and query scenarios directly from summary CSV inputs, with optional `--dry-run` mapping validation.
+  Evidence: `scripts/plot_phase1_dev.py`.
+- [x] P1-D17 dependency clarity: provide explicit plotting dependency/install path.
+  Objective/result: plotting dependency error message now includes explicit install commands and dry-run usage guidance.
+  Evidence: `scripts/plot_phase1_dev.py`.
+- [x] P1-D18 notes freshness: append benchmark-log entries for latest local Phase 1 dev artifacts.
+  Objective/result: benchmark log now includes the `2026-03-09T06:10:31Z` smoke batch with current scenario names and artifact links.
+  Evidence: `report/phase1_dev_benchmark_log.md`.
 - [ ] P1-D19 determinism depth: verify top-N payload/order stability, not only counts.
   Objective: catch nondeterministic top-N member/order regressions in repeated subset runs.
   Evidence: current determinism checker validates `result_count`/ingest aggregates only.
