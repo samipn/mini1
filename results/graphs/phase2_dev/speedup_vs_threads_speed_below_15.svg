@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="480.0" y="30" text-anchor="middle" font-size="20">Speedup vs Thread Count (speed_below_15)</text>
+<line x1="90" y1="450" x2="920" y2="450" stroke="#333"/>
+<line x1="90" y1="450" x2="90" y2="60" stroke="#333"/>
+<text x="480.0" y="520" text-anchor="middle" font-size="14">Thread Count</text>
+<text x="20" y="270.0" text-anchor="middle" font-size="14" transform="rotate(-90 20 270.0)">Speedup</text>
+<line x1="90.00" y1="450" x2="90.00" y2="456" stroke="#333"/>
+<text x="90.00" y="474" text-anchor="middle" font-size="12">1</text>
+<line x1="366.67" y1="450" x2="366.67" y2="456" stroke="#333"/>
+<text x="366.67" y="474" text-anchor="middle" font-size="12">2</text>
+<line x1="643.33" y1="450" x2="643.33" y2="456" stroke="#333"/>
+<text x="643.33" y="474" text-anchor="middle" font-size="12">4</text>
+<line x1="920.00" y1="450" x2="920.00" y2="456" stroke="#333"/>
+<text x="920.00" y="474" text-anchor="middle" font-size="12">8</text>
+<polyline fill="none" stroke="#1f77b4" stroke-width="2" points="90.00,271.51 366.67,414.28 643.33,411.58 920.00,440.00"/>
+<circle cx="90.00" cy="271.51" r="3" fill="#1f77b4"/>
+<circle cx="366.67" cy="414.28" r="3" fill="#1f77b4"/>
+<circle cx="643.33" cy="411.58" r="3" fill="#1f77b4"/>
+<circle cx="920.00" cy="440.00" r="3" fill="#1f77b4"/>
+<rect x="740" y="70" width="14" height="14" fill="#1f77b4"/>
+<text x="760" y="82" font-size="12">10k</text>
+<polyline fill="none" stroke="#ff7f0e" stroke-width="2" points="90.00,278.65 366.67,140.63 643.33,77.39 920.00,70.00"/>
+<circle cx="90.00" cy="278.65" r="3" fill="#ff7f0e"/>
+<circle cx="366.67" cy="140.63" r="3" fill="#ff7f0e"/>
+<circle cx="643.33" cy="77.39" r="3" fill="#ff7f0e"/>
+<circle cx="920.00" cy="70.00" r="3" fill="#ff7f0e"/>
+<rect x="740" y="90" width="14" height="14" fill="#ff7f0e"/>
+<text x="760" y="102" font-size="12">100k</text>
+<polyline fill="none" stroke="#2ca02c" stroke-width="2" points="90.00,270.80 366.67,188.19 643.33,158.18 920.00,175.34"/>
+<circle cx="90.00" cy="270.80" r="3" fill="#2ca02c"/>
+<circle cx="366.67" cy="188.19" r="3" fill="#2ca02c"/>
+<circle cx="643.33" cy="158.18" r="3" fill="#2ca02c"/>
+<circle cx="920.00" cy="175.34" r="3" fill="#2ca02c"/>
+<rect x="740" y="110" width="14" height="14" fill="#2ca02c"/>
+<text x="760" y="122" font-size="12">1M</text>
+</svg>

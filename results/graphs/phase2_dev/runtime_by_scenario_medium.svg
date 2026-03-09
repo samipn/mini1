@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="480.0" y="30" text-anchor="middle" font-size="20">Runtime by Scenario (100k)</text>
+<line x1="90" y1="420" x2="920" y2="420" stroke="#333"/>
+<line x1="90" y1="420" x2="90" y2="60" stroke="#333"/>
+<text x="480.0" y="520" text-anchor="middle" font-size="14">Scenario</text>
+<text x="20" y="270.0" text-anchor="middle" font-size="14" transform="rotate(-90 20 270.0)">Mean Query Runtime (ms)</text>
+<text x="193.75" y="458" text-anchor="middle" font-size="11" transform="rotate(20 193.75 458)">borough_manhattan_speed_15</text>
+<rect x="121.12" y="270.24" width="70.62" height="149.76" fill="#1f77b4"/>
+<rect x="193.75" y="178.16" width="70.62" height="241.84" fill="#ff7f0e"/>
+<text x="401.25" y="458" text-anchor="middle" font-size="11" transform="rotate(20 401.25 458)">speed_below_15</text>
+<rect x="328.62" y="236.51" width="70.62" height="183.49" fill="#1f77b4"/>
+<rect x="401.25" y="183.26" width="70.62" height="236.74" fill="#ff7f0e"/>
+<text x="608.75" y="458" text-anchor="middle" font-size="11" transform="rotate(20 608.75 458)">summary</text>
+<rect x="536.12" y="327.81" width="70.62" height="92.19" fill="#1f77b4"/>
+<rect x="608.75" y="243.17" width="70.62" height="176.83" fill="#ff7f0e"/>
+<text x="816.25" y="458" text-anchor="middle" font-size="11" transform="rotate(20 816.25 458)">time_window_all</text>
+<rect x="743.62" y="70.00" width="70.62" height="350.00" fill="#1f77b4"/>
+<rect x="816.25" y="137.23" width="70.62" height="282.77" fill="#ff7f0e"/>
+<rect x="740" y="70" width="14" height="14" fill="#1f77b4"/>
+<text x="760" y="82" font-size="12">serial</text>
+<rect x="740" y="90" width="14" height="14" fill="#ff7f0e"/>
+<text x="760" y="102" font-size="12">parallel t=4</text>
+</svg>
