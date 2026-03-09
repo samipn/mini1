@@ -52,11 +52,11 @@ That keeps the experiment focused and easier to explain.
 
 ### 1. Preserve and Lock the Phase 1 Baseline
 #### Tasks
-- [ ] Keep `run_serial` unchanged except for bug fixes
-- [ ] Tag or branch the repository at the Phase 1 completion point
-- [ ] Confirm Phase 1 benchmark scenarios still run
-- [ ] Save a stable copy of Phase 1 benchmark outputs for comparison
-- [ ] Define identical datasets and query scenarios for Phase 2
+- [x] Keep `run_serial` unchanged except for bug fixes
+- [x] Tag or branch the repository at the Phase 1 completion point
+- [x] Confirm Phase 1 benchmark scenarios still run
+- [x] Save a stable copy of Phase 1 benchmark outputs for comparison
+- [x] Define identical datasets and query scenarios for Phase 2
 
 #### Deliverable
 - A known-good serial baseline exists for direct comparison
@@ -65,16 +65,16 @@ That keeps the experiment focused and easier to explain.
 
 ### 2. Add Parallel Build Support
 #### Tasks
-- [ ] Update `CMakeLists.txt` to support parallel builds
-- [ ] If using OpenMP:
-  - [ ] detect OpenMP in CMake
-  - [ ] link required OpenMP flags/libraries
+- [x] Update `CMakeLists.txt` to support parallel builds
+- [x] If using OpenMP:
+  - [x] detect OpenMP in CMake
+  - [x] link required OpenMP flags/libraries
 - [ ] If using `std::thread`:
   - [ ] ensure thread support is available and linked as needed
-- [ ] Build a new executable:
-  - [ ] `run_parallel`
-- [ ] Keep compile warnings enabled
-- [ ] Ensure Release mode is easy to build and run
+- [x] Build a new executable:
+  - [x] `run_parallel`
+- [x] Keep compile warnings enabled
+- [x] Ensure Release mode is easy to build and run
 
 #### Deliverable
 - `run_parallel` builds successfully with the chosen parallel model
@@ -83,20 +83,20 @@ That keeps the experiment focused and easier to explain.
 
 ### 3. Define Parallelization Targets
 #### Tasks
-- [ ] Identify the most expensive read-only workloads from Phase 1
-- [ ] Choose at least 2–3 query paths to parallelize
-- [ ] Prioritize:
-  - [ ] speed-threshold scans
+- [x] Identify the most expensive read-only workloads from Phase 1
+- [x] Choose at least 2–3 query paths to parallelize
+- [x] Prioritize:
+  - [x] speed-threshold scans
   - [ ] time-window scans
-  - [ ] borough + threshold scans
-  - [ ] aggregations over the full record set
-- [ ] Document why these paths were chosen
+  - [x] borough + threshold scans
+  - [x] aggregations over the full record set
+- [x] Document why these paths were chosen
 
 #### Good candidates
-- [ ] scanning all traffic records for a predicate match
-- [ ] computing average speed over subsets
-- [ ] counting low-speed records by condition
-- [ ] grouping partial results by thread and reducing at the end
+- [x] scanning all traffic records for a predicate match
+- [x] computing average speed over subsets
+- [x] counting low-speed records by condition
+- [x] grouping partial results by thread and reducing at the end
 
 #### Lower-priority candidates
 - [ ] ingestion parsing
@@ -110,14 +110,14 @@ That keeps the experiment focused and easier to explain.
 
 ### 4. Implement Parallel Query Infrastructure
 #### Tasks
-- [ ] Add parallel-capable query implementations
-- [ ] Keep serial implementations available for comparison
-- [ ] Create separate classes or methods as needed:
-  - [ ] `ParallelCongestionQuery`
-  - [ ] `ParallelTrafficAggregator`
-- [ ] Avoid shared mutable output structures without a reduction strategy
-- [ ] Use thread-local partial results where appropriate
-- [ ] Merge partial results after parallel work completes
+- [x] Add parallel-capable query implementations
+- [x] Keep serial implementations available for comparison
+- [x] Create separate classes or methods as needed:
+  - [x] `ParallelCongestionQuery`
+  - [x] `ParallelTrafficAggregator`
+- [x] Avoid shared mutable output structures without a reduction strategy
+- [x] Use thread-local partial results where appropriate
+- [x] Merge partial results after parallel work completes
 
 #### Deliverable
 - Parallel query code exists without breaking the serial code path
@@ -126,14 +126,14 @@ That keeps the experiment focused and easier to explain.
 
 ### 5. Parallelize Speed-Threshold Query
 #### Tasks
-- [ ] Implement parallel scan over all loaded traffic records
-- [ ] Evaluate predicate such as:
-  - [ ] speed below threshold
-- [ ] Store results safely:
+- [x] Implement parallel scan over all loaded traffic records
+- [x] Evaluate predicate such as:
+  - [x] speed below threshold
+- [x] Store results safely:
   - [ ] thread-local vectors then merge, or
-  - [ ] counts only if full record output is not needed
-- [ ] Compare returned result count to serial version
-- [ ] Add benchmark scenario using the same threshold as Phase 1
+  - [x] counts only if full record output is not needed
+- [x] Compare returned result count to serial version
+- [x] Add benchmark scenario using the same threshold as Phase 1
 
 #### Deliverable
 - Parallel low-speed scan returns the same result as the serial baseline
@@ -332,21 +332,21 @@ That keeps the experiment focused and easier to explain.
 ## File-Level TODO Suggestions
 
 ### `include/query/`
-- [ ] `ParallelCongestionQuery.hpp`
-- [ ] `ParallelTrafficAggregator.hpp`
+- [x] `ParallelCongestionQuery.hpp`
+- [x] `ParallelTrafficAggregator.hpp`
 
 ### `include/benchmark/`
 - [ ] update `BenchmarkHarness.hpp` for thread-aware benchmarking
 
 ### `src/query/`
-- [ ] `ParallelCongestionQuery.cpp`
-- [ ] `ParallelTrafficAggregator.cpp`
+- [x] `ParallelCongestionQuery.cpp`
+- [x] `ParallelTrafficAggregator.cpp`
 
 ### `src/benchmark/`
 - [ ] update `BenchmarkHarness.cpp`
 
 ### `apps/`
-- [ ] `run_parallel.cpp`
+- [x] `run_parallel.cpp`
 
 ### `scripts/`
 - [ ] update `benchmark.sh` to run thread-count sweeps
@@ -357,13 +357,13 @@ That keeps the experiment focused and easier to explain.
 ## Suggested Phase 2 Milestones
 
 ### Milestone A — Parallel Build Path
-- [ ] `run_parallel` builds
-- [ ] OpenMP or thread setup works
-- [ ] executable launches successfully
+- [x] `run_parallel` builds
+- [x] OpenMP or thread setup works
+- [x] executable launches successfully
 
 ### Milestone B — First Parallel Query
-- [ ] speed-threshold query parallelized
-- [ ] correctness verified against serial
+- [x] speed-threshold query parallelized
+- [x] correctness verified against serial
 
 ### Milestone C — Multiple Parallel Workloads
 - [ ] time-window query parallelized

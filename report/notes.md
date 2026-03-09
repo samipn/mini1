@@ -70,6 +70,29 @@
 ## Open issues
 - Full-dataset benchmark runs should be executed and archived before phase handoff if final report numbers require non-sampled measurements.
 
+## Phase 2 Notes (D1-D5)
+- Branch: `P2-D1-5`.
+- Parallel model selected for Phase 2 first pass: **OpenMP**.
+- Serial baseline preserved; ingestion remains serial for fair comparison focus.
+- Implemented parallel query infrastructure:
+  - `ParallelCongestionQuery` using OpenMP parallel-for reductions for count-based scans.
+  - `ParallelTrafficAggregator` using OpenMP reductions for dataset-wide averages.
+- Implemented query paths in this pass:
+  - `speed_below` (parallelized)
+  - `borough_speed_below` (parallelized)
+  - `summary` aggregation (parallelized infrastructure support)
+- Implemented parallel CLI:
+  - `run_parallel` supports `--traffic`, `--query`, `--threshold`, `--borough`, `--threads`, `--benchmark-runs`, and `--validate-serial`.
+  - CLI logs include OpenMP model and maximum runtime thread capacity.
+- Correctness and testing:
+  - `test_parallel_query_correctness` compares parallel vs serial across multiple thread counts.
+  - `test_run_parallel_cli` validates end-to-end CLI behavior and serial-parallel parity.
+  - Real-data smoke validation on first 1000 lines from `/datasets/i4gi-tjb9.csv` confirms `speed_below` parallel counts match serial counts for repeated runs.
+
+## Phase 2 D1-D5 caveats
+- Current parallel scan API returns counts rather than full materialized record vectors to keep first-pass thread safety simple.
+- Time-window query parallelization is deferred to the next Phase 2 increment (outside D1-D5).
+
 ## Pre-baseline classification (D20)
 - All subset benchmark artifacts under:
   - `results/raw/phase1_dev/`
