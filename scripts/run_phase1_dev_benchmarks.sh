@@ -141,6 +141,7 @@ else
 fi
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
+SAFE_BRANCH="$(git -C "${ROOT_DIR}" branch --show-current | tr '/ ' '__')"
 GIT_BRANCH="$(git -C "${ROOT_DIR}" branch --show-current 2>/dev/null || echo "unknown")"
 GIT_COMMIT="$(git -C "${ROOT_DIR}" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
 MANIFEST_CSV="${OUT_DIR}/batch_${TS}_manifest.csv"
@@ -170,7 +171,7 @@ run_one_scenario() {
   local top_n="$9"
   local min_link_samples="${10}"
 
-  local out_csv="${OUT_DIR}/${subset_label}_${scenario_name}.csv"
+  local out_csv="${OUT_DIR}/${subset_label}_${scenario_name}_${SAFE_BRANCH}_${GIT_COMMIT}_${TS}.csv"
   local log_file="${LOG_DIR}/phase1_dev_${subset_label}_${scenario_name}_${TS}.log"
 
   local cmd=(

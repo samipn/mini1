@@ -45,7 +45,13 @@ int Run(const std::string& command) {
   if (code == -1) {
     return code;
   }
-  return WEXITSTATUS(code);
+  if (WIFEXITED(code)) {
+    return WEXITSTATUS(code);
+  }
+  if (WIFSIGNALED(code)) {
+    return 128 + WTERMSIG(code);
+  }
+  return code;
 }
 
 }  // namespace
@@ -65,6 +71,13 @@ int main() {
 
   if (!std::filesystem::exists(out_path) || CountLines(out_path) != 3) {
     std::cerr << "run_serial benchmark output CSV should have header + 2 rows\n";
+    return EXIT_FAILURE;
+  }
+
+  const std::string invalid_cmd =
+      "./run_serial --traffic " + ShellQuote(csv_path) + " --benchmark-runs nope > /dev/null 2>&1";
+  if (Run(invalid_cmd) != 2) {
+    std::cerr << "run_serial should return code 2 on invalid numeric argument\n";
     return EXIT_FAILURE;
   }
 

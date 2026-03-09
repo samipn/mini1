@@ -55,3 +55,12 @@ Scope: Phase 1 deliverables (`docs/TODO_PHASE1.md`) with emphasis on redundancy,
 2. Update `run_phase1_dev_benchmarks.sh` output naming to include branch/commit/timestamp (same style as phase2/phase3 scripts).
 3. Extract shared CSV/parse helpers into a common utility module used by all loaders.
 4. Add CLI negative tests for malformed numeric arguments.
+
+## Resolution Status (Current Branch)
+
+- Completed:
+1. Safe numeric parsing hardening in `run_serial` (invalid numeric args now return code 2).
+2. Phase 1 benchmark output naming now includes branch/commit/timestamp (no overwrite-prone fixed names).
+3. Negative CLI regression test added for malformed numeric arguments.
+- Open:
+1. Shared loader parsing helper consolidation remains pending (maintainability task).

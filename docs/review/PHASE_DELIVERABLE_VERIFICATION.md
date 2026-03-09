@@ -57,9 +57,6 @@ They exist locally for verification but are not committed to git by design.
 
 ## Open Hardening Gaps Discovered After Verification
 
-1. `run_serial` can abort on malformed numeric inputs due uncaught `stoull` exceptions.
-2. `run_phase1_dev_benchmarks.sh` can overwrite per-scenario raw CSVs across batches due non-unique output naming.
-3. `run_parallel` can abort on malformed numeric inputs due uncaught `stoull` exceptions.
-4. `run_optimized` can abort on malformed numeric inputs due uncaught `stoull` exceptions.
+1. Shared CSV/parse helper duplication across `CSVReader`, `GarageLoader`, `BuildingLoader` (maintainability risk).
 
-These are tracked in `docs/review/THOROUGH_CODE_REVIEW_TODO.md` under Phase 1/2/3 open gaps.
+Previously identified CLI numeric-parse abort issues and Phase 1 benchmark output overwrite risk have been fixed on this branch. Remaining gaps are tracked in `docs/review/THOROUGH_CODE_REVIEW_TODO.md`.

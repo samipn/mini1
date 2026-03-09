@@ -71,18 +71,18 @@ Purpose: track issues found during incremental repository review and convert the
   Objective/result: scenario completeness verified via `configs/phase1_dev_scenarios.csv` and smoke benchmark artifact generation.
 
 #### Phase 1 Open Gaps (from deep review)
-- [ ] P1-D6 hardening: prevent `run_serial` aborts on malformed numeric CLI inputs.
-  Objective: replace exception-throwing `stoull` parsing with guarded parse helpers and return clean usage/error code.
+- [x] P1-D6 hardening: prevent `run_serial` aborts on malformed numeric CLI inputs.
+  Objective/result: replaced exception-throwing `stoull` parsing with guarded parse helper; invalid numeric args now return code 2.
   Evidence: `apps/run_serial.cpp` (`--progress-every`, `--sample`, `--top-n`, `--min-link-samples`, `--benchmark-runs`, `--expect-accepted`).
-- [ ] P1-D10 reproducibility: avoid overwrite-prone output naming in phase1 benchmark runner.
-  Objective: include timestamp/branch/commit in per-scenario output CSV naming and keep manifest rows immutable.
+- [x] P1-D10 reproducibility: avoid overwrite-prone output naming in phase1 benchmark runner.
+  Objective/result: per-scenario output naming now includes branch/commit/timestamp; manifest rows remain immutable across batches.
   Evidence: `scripts/run_phase1_dev_benchmarks.sh:173`.
 - [ ] P1-D3 maintainability: remove loader parsing redundancy.
   Objective: centralize shared CSV parse/timestamp helper logic used by `CSVReader`, `GarageLoader`, and `BuildingLoader`.
   Evidence: duplicated helpers across `src/io/CSVReader.cpp`, `src/io/GarageLoader.cpp`, `src/io/BuildingLoader.cpp`.
-- [ ] P1 test depth: add explicit negative CLI tests for malformed numeric parameters.
-  Objective: regression tests proving graceful argument failure (exit code + message), no crash.
-  Evidence: current CLI benchmark test covers success path only (`tests/test_run_serial_benchmark_cli.cpp`).
+- [x] P1 test depth: add explicit negative CLI tests for malformed numeric parameters.
+  Objective/result: regression coverage added to assert graceful failure (exit code 2), no crash.
+  Evidence: `tests/test_run_serial_benchmark_cli.cpp`.
 
 ### Phase 2 (D1-D15)
 - [x] D1 baseline lock reviewed.
@@ -117,12 +117,13 @@ Purpose: track issues found during incremental repository review and convert the
   Objective/result: notes and produced artifacts reconciled through audit docs.
 
 #### Phase 2 Open Gaps (from deep review)
-- [ ] P2-D9 hardening: prevent `run_parallel` aborts on malformed numeric CLI inputs.
-  Objective: replace exception-throwing `stoull` parsing with guarded parse helpers and return clean usage/error code.
+- [x] P2-D9 hardening: prevent `run_parallel` aborts on malformed numeric CLI inputs.
+  Objective/result: replaced exception-throwing `stoull` parsing with guarded parse helper; invalid numeric args now return code 2.
   Evidence: `apps/run_parallel.cpp` (`--benchmark-runs`, `--expect-accepted`, `--top-n`, `--min-link-samples`).
-- [ ] P2 test depth: add negative CLI tests for malformed numeric parameters.
+- [x] P2 test depth: add negative CLI tests for malformed numeric parameters.
+  Objective/result: added negative CLI regression assertions for malformed numeric arguments.
   Objective: assert graceful failure behavior for invalid numeric args in parallel CLI.
-  Evidence: `tests/test_run_parallel_cli.cpp` currently exercises success paths only.
+  Evidence: `tests/test_run_parallel_cli.cpp`.
 
 ### Phase 3 (D1-D15)
 - [x] D1 baseline freeze/comparison reviewed.
@@ -157,9 +158,10 @@ Purpose: track issues found during incremental repository review and convert the
   Objective/result: review docs now provide auditable evidence chain for report and slide preparation.
 
 #### Phase 3 Open Gaps (from deep review)
-- [ ] P3-D10 hardening: prevent `run_optimized` aborts on malformed numeric CLI inputs.
-  Objective: replace exception-throwing `stoull` parsing with guarded parse helpers and return clean usage/error code.
+- [x] P3-D10 hardening: prevent `run_optimized` aborts on malformed numeric CLI inputs.
+  Objective/result: replaced exception-throwing `stoull` parsing with guarded parse helper; invalid numeric args now return code 2.
   Evidence: `apps/run_optimized.cpp` (`--benchmark-runs`, `--expect-accepted`, `--top-n`, `--min-link-samples`).
-- [ ] P3 test depth: add negative CLI tests for malformed numeric parameters.
+- [x] P3 test depth: add negative CLI tests for malformed numeric parameters.
+  Objective/result: added negative CLI regression assertions for malformed numeric arguments.
   Objective: assert graceful failure behavior for invalid numeric args in optimized CLI.
-  Evidence: `tests/test_run_optimized_cli.cpp` currently exercises success paths only.
+  Evidence: `tests/test_run_optimized_cli.cpp`.
