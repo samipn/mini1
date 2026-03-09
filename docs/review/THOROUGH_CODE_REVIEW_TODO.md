@@ -172,42 +172,42 @@ Purpose: track issues found during incremental repository review and convert the
   Objective/result: added negative CLI regression assertions for malformed numeric arguments.
   Objective: assert graceful failure behavior for invalid numeric args in parallel CLI.
   Evidence: `tests/test_run_parallel_cli.cpp`.
-- [ ] P2-D9 operational consistency: align default query behavior in `run_parallel`.
-  Objective: make `run_parallel --traffic <path>` produce a useful default run without contradictory required flags.
-  Evidence: `apps/run_parallel.cpp` default `query_type=speed_below` and threshold requirement check.
-- [ ] P2-D10 thread-list policy: reject `0` in explicit `--thread-list` entries.
-  Objective: enforce explicit positive thread counts and avoid ambiguous `threads=0` output semantics.
-  Evidence: `apps/run_parallel.cpp` ParseThreadList currently allows `0`.
+- [x] P2-D9 operational consistency: align default query behavior in `run_parallel`.
+  Objective/result: default query now uses `summary`, so `run_parallel --traffic <path>` executes without requiring extra query-specific flags.
+  Evidence: `apps/run_parallel.cpp` default `query_type`.
+- [x] P2-D10 thread-list policy: reject `0` in explicit `--thread-list` entries.
+  Objective/result: explicit `--thread-list` entries now require strictly positive thread counts; `0` is rejected with exit code 2.
+  Evidence: `apps/run_parallel.cpp` (`ParseThreadList`), `tests/test_run_parallel_cli.cpp`.
 - [ ] P2 maintainability: deduplicate CLI numeric parsing helpers.
   Objective: centralize parse helpers shared by serial/parallel/optimized runners to prevent divergence.
   Evidence: duplicated parse helper logic across app binaries.
-- [ ] P2-D2 build policy: apply strict warning policy to app/test targets in addition to `congestion_core`.
-  Objective: keep warning enforcement consistent across all binaries participating in Phase 2 deliverables.
-  Evidence: warning flags are currently scoped to `congestion_core` target options.
-- [ ] P2-D4 runtime isolation: avoid process-global OpenMP thread mutation in query helpers.
-  Objective: remove cross-call coupling from `omp_set_num_threads` and prefer scoped `num_threads(...)` usage.
-  Evidence: `ParallelCongestionQuery` and `ParallelTrafficAggregator` set global OpenMP thread count per call.
-- [ ] P2-D11/D13 evidence policy: separate dev batches (`runs=3`) from deliverable-grade scaling evidence (`runs>=10`).
-  Objective: prevent ambiguity when comparing Phase 2 scaling claims across `phase2_dev` and `phase2` artifact families.
-  Evidence: `phase2_dev` manifests use 3 runs; `results/raw/phase2` contains 10-run sample sets.
-- [ ] P2-D14 tooling clarity: deprecate or clearly scope legacy `summarize_phase2.py`.
-  Objective: avoid analysis drift from parallel maintenance of fixed-file and manifest-driven summary pipelines.
-  Evidence: both `scripts/summarize_phase2.py` and `scripts/summarize_phase2_dev.py` are active.
-- [ ] P2-D16 hardening: guard numeric parsing for `run_index_experiments --repeats`.
-  Objective: invalid repeat values should return usage error, not process abort.
-  Evidence: `apps/run_index_experiments.cpp` uses unguarded `std::stoull`.
-- [ ] P2-D18 robustness: replace fixed-column parsing in subset validation script with header-based extraction.
-  Objective: keep validation resilient to benchmark CSV schema changes.
-  Evidence: `scripts/run_phase2_subset_validation.sh` uses positional fields (`$19/$21/$22/$6`).
-- [ ] P2-D20/D26 path hygiene: enforce clearer dev-vs-baseline output destination policy for phase2 scripts.
-  Objective: reduce accidental mixing between `phase2_dev`, `phase2`, and future `phase2_baseline` artifacts.
-  Evidence: index experiment defaults to `results/raw/phase2`; mixed benchmark entrypoint defaults to generic `results/raw`.
-- [ ] P2-D24 notes freshness: refresh Phase 2 benchmark log for current 16-thread policy and latest stability batch.
-  Objective: keep report evidence synchronized with current thread scope and newest artifact timestamps.
-  Evidence: `report/phase2_dev_benchmark_log.md` entries primarily document 1/2/4/8-thread runs.
-- [ ] P2-D23 graph defaults: add all-thread comparison views (including 16-thread) by default.
-  Objective: improve out-of-box visibility of full thread-scaling behavior in Phase 2 graphs.
-  Evidence: `plot_phase2_dev.py` default comparative bars focus on one selected thread (`--parallel-thread 4`).
+- [x] P2-D2 build policy: apply strict warning policy to app/test targets in addition to `congestion_core`.
+  Objective/result: warning policy helper is applied across app/test targets in CMake, not only core library target.
+  Evidence: `CMakeLists.txt` (`urbandrop_enable_warnings(...)` for app/test targets).
+- [x] P2-D4 runtime isolation: avoid process-global OpenMP thread mutation in query helpers.
+  Objective/result: removed per-call `omp_set_num_threads` usage and switched to scoped `num_threads(...)` clauses in parallel regions.
+  Evidence: `src/query/ParallelCongestionQuery.cpp`, `src/query/ParallelTrafficAggregator.cpp`.
+- [x] P2-D11/D13 evidence policy: separate dev batches (`runs=3`) from deliverable-grade scaling evidence (`runs>=10`).
+  Objective/result: Phase 2 dev runner now enforces `runs>=3` (with explicit smoke override), and dedicated baseline runner enforces `runs>=10` in `results/raw/phase2_baseline`.
+  Evidence: `scripts/run_phase2_dev_benchmarks.sh`, `scripts/run_phase2_baseline_benchmarks.sh`.
+- [x] P2-D14 tooling clarity: deprecate or clearly scope legacy `summarize_phase2.py`.
+  Objective/result: legacy summarizer now emits explicit deprecation guidance and points to manifest-driven `summarize_phase2_dev.py`.
+  Evidence: `scripts/summarize_phase2.py`.
+- [x] P2-D16 hardening: guard numeric parsing for `run_index_experiments --repeats`.
+  Objective/result: replaced unguarded `std::stoull` with checked parsing; invalid values now return exit code 2.
+  Evidence: `apps/run_index_experiments.cpp`, `tests/test_run_index_experiments_cli.cpp`.
+- [x] P2-D18 robustness: replace fixed-column parsing in subset validation script with header-based extraction.
+  Objective/result: subset validation now resolves benchmark fields by header names for both serial and parallel CSVs.
+  Evidence: `scripts/run_phase2_subset_validation.sh`.
+- [x] P2-D20/D26 path hygiene: enforce clearer dev-vs-baseline output destination policy for phase2 scripts.
+  Objective/result: added dedicated baseline runner with default `results/raw/phase2_baseline` output and baseline run-count policy.
+  Evidence: `scripts/run_phase2_baseline_benchmarks.sh`.
+- [x] P2-D24 notes freshness: refresh Phase 2 benchmark log for current 16-thread policy and latest stability batch.
+  Objective/result: appended new Phase 2 dev benchmark entry with explicit 16-thread scope and fresh manifest/summary/graph artifacts.
+  Evidence: `report/phase2_dev_benchmark_log.md` (`2026-03-09T08:17:03Z` entry).
+- [x] P2-D23 graph defaults: add all-thread comparison views (including 16-thread) by default.
+  Objective/result: plotting now generates default all-thread serial-vs-parallel comparison charts using `1,2,4,8,16`.
+  Evidence: `scripts/plot_phase2_dev.py` (`--parallel-threads` default and `serial_vs_parallel_all_threads_by_subset_*.svg` outputs).
 
 ### Phase 3 (D1-D15)
 - [x] D1 baseline freeze/comparison reviewed.

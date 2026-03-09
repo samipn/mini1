@@ -1,7 +1,10 @@
 #include <chrono>
 #include <cstdint>
+#include <cerrno>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <string>
 #include <unordered_set>
@@ -24,6 +27,23 @@ void PrintUsage() {
       << "Usage: run_index_experiments --traffic <path> [--garages <path>] [--bes <path>] [--repeats <n>] [--output <csv>]\n"
       << "\n"
       << "Runs baseline scan vs index lookup experiments and optional Boost index evaluations.\n";
+}
+
+bool ParseSizeT(const std::string& value, std::size_t* out) {
+  if (out == nullptr || value.empty()) {
+    return false;
+  }
+  errno = 0;
+  char* end = nullptr;
+  const unsigned long long parsed = std::strtoull(value.c_str(), &end, 10);
+  if (errno != 0 || end == value.c_str() || *end != '\0') {
+    return false;
+  }
+  if (parsed > static_cast<unsigned long long>(std::numeric_limits<std::size_t>::max())) {
+    return false;
+  }
+  *out = static_cast<std::size_t>(parsed);
+  return true;
 }
 
 std::string EscapeCsv(const std::string& value) {
@@ -104,7 +124,10 @@ int main(int argc, char** argv) {
     } else if (arg == "--bes" && i + 1 < argc) {
       bes_csv = argv[++i];
     } else if (arg == "--repeats" && i + 1 < argc) {
-      repeats = static_cast<std::size_t>(std::stoull(argv[++i]));
+      if (!ParseSizeT(argv[++i], &repeats)) {
+        std::cerr << "invalid --repeats value\n";
+        return 2;
+      }
     } else if (arg == "--output" && i + 1 < argc) {
       output_csv = argv[++i];
     } else if (arg == "--help") {

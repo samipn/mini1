@@ -120,5 +120,19 @@ int main() {
     return EXIT_FAILURE;
   }
 
+  const std::string invalid_thread_list_cmd =
+      "./run_parallel --traffic " + qcsv + " --query summary --thread-list 1,0,2 > /dev/null 2>&1";
+  if (Run(invalid_thread_list_cmd) != 2) {
+    std::cerr << "run_parallel should reject --thread-list values containing 0\n";
+    return EXIT_FAILURE;
+  }
+
+  const std::string default_query_cmd =
+      "./run_parallel --traffic " + qcsv + " --threads 2 > /dev/null";
+  if (Run(default_query_cmd) != 0) {
+    std::cerr << "run_parallel default query execution failed\n";
+    return EXIT_FAILURE;
+  }
+
   return EXIT_SUCCESS;
 }

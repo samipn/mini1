@@ -120,3 +120,7 @@ Update: subsequent Phase 1 fix chunks resolved the previously reported determini
 Update: additional Phase 1 hardening chunks resolved serial baseline entrypoint clarity (`run_phase1_baseline.sh`), top-N determinism payload/order checks, and mixed-entrypoint output-path guardrails.
 Update: Phase 1 maintenance/evidence chunk centralized CSV parse helpers, refreshed subset validation logs (`results/raw/validation/*_20260309T075859Z.log`), and logged a fresh `runs=3` benchmark batch (`batch_20260309T075912Z_manifest.csv`).
 Update: baseline evidence was refreshed with a full `runs=10` Phase 1 baseline batch (`results/raw/phase1_baseline/batch_20260309T080046Z_manifest.csv`).
+Update: Phase 2 chunk-1 hardening resolved `run_parallel` default query behavior, rejected `0` in explicit `--thread-list`, and added guarded parsing for `run_index_experiments --repeats` with CLI coverage.
+Update: Phase 2 chunk-2 hardening replaced fixed-column validation parsing with header-based extraction, added a dedicated `phase2_baseline` runner (`runs>=10` policy), and marked legacy `summarize_phase2.py` as deprecated in favor of manifest-driven summaries.
+Update: Phase 2 chunk-3 removed process-global OpenMP thread mutation in parallel query helpers, refreshed Phase 2 benchmark log with a 16-thread smoke batch, and added default all-thread comparison graph outputs.
+Update: Phase 2 run-policy hardening now enforces dev-batch minimum repeats (`runs>=3`, smoke override explicit) and baseline-batch minimum repeats (`runs>=10`) with distinct output families.
