@@ -67,6 +67,22 @@ int main() {
     return EXIT_FAILURE;
   }
 
+  // Direct inserts with borough text but missing code should normalize borough_code.
+  urbandrop::TrafficRecord direct;
+  direct.link_id = 500;
+  direct.speed_mph = 12.0;
+  direct.travel_time_seconds = 60.0;
+  direct.timestamp_epoch_seconds = 1700000500;
+  direct.borough = "Manhattan";
+  direct.borough_code = -1;
+  dataset.AddRecord(direct);
+  const auto normalized =
+      urbandrop::CongestionQuery::FilterBoroughAndSpeedBelow(dataset, "Manhattan", 20.0);
+  if (normalized.size() != 3) {
+    std::cerr << "borough normalization on AddRecord mismatch\n";
+    return EXIT_FAILURE;
+  }
+
   const auto by_link = urbandrop::CongestionQuery::FindByLinkId(dataset, 100);
   if (by_link.size() != 2) {
     std::cerr << "link-id query mismatch\n";

@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <string>
+#include <utility>
 #include <unordered_map>
 #include <vector>
 
@@ -148,6 +149,8 @@ bool BuildingLoader::LoadCSV(const std::string& csv_path,
   ResolveColumn(cols, {"latitude", "lat"}, &lat_col);
   ResolveColumn(cols, {"longitude", "lon", "lng"}, &lon_col);
 
+  std::vector<BuildingRecord> records;
+
   std::string line;
   while (std::getline(input, line)) {
     if (line.empty()) {
@@ -180,10 +183,11 @@ bool BuildingLoader::LoadCSV(const std::string& csv_path,
       continue;
     }
 
-    out_records->push_back(record);
+    records.push_back(record);
     ++out_stats->rows_accepted;
   }
 
+  *out_records = std::move(records);
   return true;
 }
 

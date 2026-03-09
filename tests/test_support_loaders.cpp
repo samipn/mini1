@@ -56,6 +56,18 @@ int main() {
       std::cerr << "garage metadata mapping mismatch\n";
       return EXIT_FAILURE;
     }
+
+    // Reusing output vector should replace contents, not append.
+    garages.push_back(urbandrop::GarageRecord{});
+    if (!urbandrop::GarageLoader::LoadCSV(WriteGarageFixture(), &garages, &stats, &error)) {
+      std::cerr << "garage second load failed: " << error << "\n";
+      return EXIT_FAILURE;
+    }
+    if (garages.size() != 2 || stats.rows_read != 3 || stats.rows_accepted != 2 ||
+        stats.rows_rejected != 1) {
+      std::cerr << "garage loader should replace output vector per load\n";
+      return EXIT_FAILURE;
+    }
   }
 
   {
@@ -84,6 +96,18 @@ int main() {
     }
     if (stats.rows_read != 2 || stats.rows_accepted != 1 || stats.rows_rejected != 1) {
       std::cerr << "building stats should reset per load\n";
+      return EXIT_FAILURE;
+    }
+
+    // Reusing output vector should replace contents, not append.
+    buildings_second.push_back(urbandrop::BuildingRecord{});
+    if (!urbandrop::BuildingLoader::LoadCSV(WriteBesFixture(), &buildings_second, &stats, &error)) {
+      std::cerr << "building third load failed: " << error << "\n";
+      return EXIT_FAILURE;
+    }
+    if (buildings_second.size() != 1 || stats.rows_read != 2 || stats.rows_accepted != 1 ||
+        stats.rows_rejected != 1) {
+      std::cerr << "building loader should replace output vector per load\n";
       return EXIT_FAILURE;
     }
   }
