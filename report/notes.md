@@ -200,6 +200,26 @@
   - Batch metadata now records branch, commit, subset label, scenario, and thread controls.
   - Query parity was enforced during parallel runs using `--validate-serial`.
 
+## Phase 2 Notes (D22-D26)
+- Branch: `P2-D22-26`.
+- Added development summary + graph tooling for `phase2_dev` batches:
+  - `scripts/summarize_phase2_dev.py`
+  - `scripts/plot_phase2_dev.py` (dependency-free SVG output)
+  - `scripts/check_phase2_dev_determinism.py`
+- Generated summary table from latest batch manifest:
+  - `results/tables/phase2_dev/phase2_dev_summary_20260309T040238Z.csv`
+- Generated simple graphs:
+  - `results/graphs/phase2_dev/runtime_vs_threads_*.svg`
+  - `results/graphs/phase2_dev/speedup_vs_threads_*.svg`
+  - `results/graphs/phase2_dev/serial_vs_parallel_by_subset_*.svg`
+  - `results/graphs/phase2_dev/runtime_by_scenario_*.svg`
+- Stability/determinism batch executed (medium subset, runs=5, threads=1,2,4,8):
+  - `results/raw/phase2_dev/stability/stability_summary_20260309T041112Z.csv`
+  - `results/raw/phase2_dev/stability/stability_report_20260309T041112Z.md`
+  - Result: `PASS` (no result-count drift; aggregate ranges stable within expected floating-point precision).
+- Added dedicated Phase 2 dev benchmark log:
+  - `report/phase2_dev_benchmark_log.md`
+
 ## Pre-baseline classification (D20)
 - All subset benchmark artifacts under:
   - `results/raw/phase1_dev/`
@@ -215,3 +235,15 @@
   - `results/raw/phase1_baseline/`
   - `results/tables/phase1_baseline/`
   - `results/graphs/phase1_baseline/`
+
+## Pre-baseline classification (Phase 2)
+- All subset benchmark artifacts under:
+  - `results/raw/phase2_dev/`
+  - `results/tables/phase2_dev/`
+  - `results/graphs/phase2_dev/`
+  are classified as **development-stage (pre-baseline)**.
+- These outputs are not final official Phase 2 baseline comparisons.
+- Final official full-dataset Phase 2 comparison outputs are reserved for:
+  - `results/raw/phase2_baseline/`
+  - `results/tables/phase2_baseline/`
+  - `results/graphs/phase2_baseline/`

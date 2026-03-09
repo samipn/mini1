@@ -583,25 +583,25 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 
 ### 22. Generate Development Summary Tables for Phase 2
 #### Tasks
-- [ ] Add or extend a script to summarize raw Phase 2 development benchmark results
+- [x] Add or extend a script to summarize raw Phase 2 development benchmark results
 - [ ] Compute:
-  - [ ] mean runtime
-  - [ ] median runtime
-  - [ ] minimum runtime
-  - [ ] maximum runtime
-  - [ ] standard deviation if enough runs exist
-  - [ ] speedup relative to serial for the same subset/scenario
+  - [x] mean runtime
+  - [x] median runtime
+  - [x] minimum runtime
+  - [x] maximum runtime
+  - [x] standard deviation if enough runs exist
+  - [x] speedup relative to serial for the same subset/scenario
 - [ ] Save summary tables to:
-  - [ ] `results/tables/phase2_dev/`
+  - [x] `results/tables/phase2_dev/`
 
 #### Agent instructions
 - Implement or extend a helper such as:
-  - [ ] `scripts/summarize_phase2_dev.py`
+  - [x] `scripts/summarize_phase2_dev.py`
 - Read raw CSV benchmark outputs
 - Produce grouped tables by:
-  - [ ] subset size
-  - [ ] query scenario
-  - [ ] thread count
+  - [x] subset size
+  - [x] query scenario
+  - [x] thread count
 - Do not delete raw files after summarization
 
 #### Deliverable
@@ -611,14 +611,14 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 
 ### 23. Generate Simple Development Graphs for Phase 2
 #### Tasks
-- [ ] Add or extend plotting scripts for subset-based parallel benchmark results
+- [x] Add or extend plotting scripts for subset-based parallel benchmark results
 - [ ] Plot at least:
-  - [ ] query runtime vs thread count
-  - [ ] speedup vs thread count
-  - [ ] serial vs parallel runtime by subset size
-  - [ ] runtime by scenario
+  - [x] query runtime vs thread count
+  - [x] speedup vs thread count
+  - [x] serial vs parallel runtime by subset size
+  - [x] runtime by scenario
 - [ ] Save graphs to:
-  - [ ] `results/graphs/phase2_dev/`
+  - [x] `results/graphs/phase2_dev/`
 
 #### Agent instructions
 - Use Python for graph generation
@@ -634,17 +634,17 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 
 ### 24. Add a Phase 2 Development Benchmark Log
 #### Tasks
-- [ ] Record each benchmark batch in `report/notes.md` or a dedicated Phase 2 dev benchmark log
+- [x] Record each benchmark batch in `report/notes.md` or a dedicated Phase 2 dev benchmark log
 - [ ] For each batch, record:
-  - [ ] date/time
-  - [ ] git branch
-  - [ ] commit hash if available
-  - [ ] subset size
-  - [ ] benchmark scenarios run
-  - [ ] thread counts tested
-  - [ ] notable observations
-  - [ ] failures or anomalies
-- [ ] Record whether the benchmark batch followed a code change
+  - [x] date/time
+  - [x] git branch
+  - [x] commit hash if available
+  - [x] subset size
+  - [x] benchmark scenarios run
+  - [x] thread counts tested
+  - [x] notable observations
+  - [x] failures or anomalies
+- [x] Record whether the benchmark batch followed a code change
 
 #### Agent instructions
 - The coding agent should append a short notes entry after completing a benchmark batch
@@ -657,18 +657,18 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 
 ### 25. Add Stability and Determinism Checks for Parallel Runs
 #### Tasks
-- [ ] Rerun identical parallel scenarios multiple times on the same subset
+- [x] Rerun identical parallel scenarios multiple times on the same subset
 - [ ] Confirm consistency of:
-  - [ ] result count
-  - [ ] aggregate values
-  - [ ] timing distribution within reason
-- [ ] Check for obvious nondeterministic result corruption
-- [ ] Record any floating-point variation if present
+  - [x] result count
+  - [x] aggregate values
+  - [x] timing distribution within reason
+- [x] Check for obvious nondeterministic result corruption
+- [x] Record any floating-point variation if present
 
 #### Agent instructions
 - Add a helper mode or script that reruns the same scenario multiple times and compares outputs
 - Save mismatches and timing anomalies to:
-  - [ ] `results/raw/phase2_dev/stability/`
+  - [x] `results/raw/phase2_dev/stability/`
 
 #### Deliverable
 - Parallel subset benchmarks are shown to be stable enough for development use
@@ -677,13 +677,13 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 
 ### 26. Mark These Results as Pre-Baseline Only
 #### Tasks
-- [ ] Add a note in the README or report notes that Phase 2 subset benchmarks are:
-  - [ ] development-stage measurements
-  - [ ] not the final official comparison data
-- [ ] Distinguish clearly between:
-  - [ ] `phase2_dev`
-  - [ ] final `phase2_baseline`
-- [ ] Reserve final full-dataset serial-vs-parallel benchmarking for the official comparison campaign later
+- [x] Add a note in the README or report notes that Phase 2 subset benchmarks are:
+  - [x] development-stage measurements
+  - [x] not the final official comparison data
+- [x] Distinguish clearly between:
+  - [x] `phase2_dev`
+  - [x] final `phase2_baseline`
+- [x] Reserve final full-dataset serial-vs-parallel benchmarking for the official comparison campaign later
 
 #### Agent instructions
 - Ensure output directories and filenames make this distinction obvious
@@ -697,12 +697,12 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 ## Extra Definition of Done for Development-Stage Parallel Benchmarking
 This subsection is complete when all of the following are true:
 
-- [ ] Reproducible subset datasets are reused successfully
-- [ ] Serial and parallel programs both run successfully on all selected subset sizes
-- [ ] At least 3 benchmark scenarios run repeatedly in serial and parallel modes
-- [ ] Multiple thread counts are tested
-- [ ] Raw results are saved to disk
-- [ ] Summary tables are generated
-- [ ] Simple graphs are generated
-- [ ] Development benchmark notes are recorded
-- [ ] Outputs are clearly labeled as pre-baseline and not final full-dataset benchmarks
+- [x] Reproducible subset datasets are reused successfully
+- [x] Serial and parallel programs both run successfully on all selected subset sizes
+- [x] At least 3 benchmark scenarios run repeatedly in serial and parallel modes
+- [x] Multiple thread counts are tested
+- [x] Raw results are saved to disk
+- [x] Summary tables are generated
+- [x] Simple graphs are generated
+- [x] Development benchmark notes are recorded
+- [x] Outputs are clearly labeled as pre-baseline and not final full-dataset benchmarks
