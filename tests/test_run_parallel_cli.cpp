@@ -98,8 +98,12 @@ int main() {
     std::cerr << "run_parallel summary/thread-list failed\n";
     return EXIT_FAILURE;
   }
-  if (!std::filesystem::exists(out_path) || CountLines(out_path) != 9) {
-    std::cerr << "run_parallel benchmark output CSV should have header + 8 rows\n";
+  constexpr std::size_t kThreadCount = 5;
+  constexpr std::size_t kRunsPerThread = 2;
+  const std::size_t expected_lines = 1 + (kThreadCount * kRunsPerThread);
+  if (!std::filesystem::exists(out_path) || CountLines(out_path) != expected_lines) {
+    std::cerr << "run_parallel benchmark output CSV should have header + "
+              << (kThreadCount * kRunsPerThread) << " rows\n";
     return EXIT_FAILURE;
   }
 

@@ -11,8 +11,28 @@ endif()
 
 option(ENABLE_WARNINGS "Enable strict compiler warnings" ON)
 option(BUILD_TESTING "Build tests" ON)
+option(ENABLE_OPENMP "Enable OpenMP acceleration when available" ON)
+option(REQUIRE_OPENMP "Fail configure if OpenMP is unavailable" OFF)
 
-find_package(OpenMP)
+set(URBANDROP_OPENMP_ENABLED OFF)
+if(ENABLE_OPENMP)
+  find_package(OpenMP)
+  if(OpenMP_CXX_FOUND)
+    set(URBANDROP_OPENMP_ENABLED ON)
+  elseif(REQUIRE_OPENMP)
+    message(FATAL_ERROR
+      "OpenMP requested but not found.\n"
+      "Compiler: ${CMAKE_CXX_COMPILER_ID} (${CMAKE_CXX_COMPILER})\n"
+      "Hints:\n"
+      "  - Use a compiler toolchain with OpenMP support (for example GCC/g++).\n"
+      "  - If switching compilers, configure in a fresh build directory.\n"
+      "  - Or re-run with -DREQUIRE_OPENMP=OFF to build without OpenMP acceleration.")
+  else()
+    message(WARNING
+      "OpenMP not found. Building without OpenMP acceleration.\n"
+      "Parallel code paths will still build, but run without OpenMP speedups.")
+  endif()
+endif()
 
 add_library(congestion_core
   src/data_model/TrafficRecord.cpp
@@ -36,13 +56,8 @@ add_library(congestion_core
 
 target_include_directories(congestion_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-if(OpenMP_CXX_FOUND)
+if(URBANDROP_OPENMP_ENABLED)
   target_link_libraries(congestion_core PUBLIC OpenMP::OpenMP_CXX)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(congestion_core PUBLIC -fopenmp)
-  target_link_options(congestion_core PUBLIC -fopenmp)
-else()
-  message(FATAL_ERROR "OpenMP is required for Phase 2 parallel implementation.")
 endif()
 
 if(ENABLE_WARNINGS)
