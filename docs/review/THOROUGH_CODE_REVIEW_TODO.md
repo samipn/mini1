@@ -26,6 +26,8 @@ Purpose: track issues found during incremental repository review and convert the
 - [x] Add a compact artifact map linking scripts -> generated CSV -> generated graph outputs.
 - [ ] Confirm each claimed deliverable has a corresponding source file and artifact.
   Current evidence: `docs/review/PHASE_DELIVERABLE_AUDIT.md` (phase1 4/6, phase2 7/7, phase3 7/10).
+- [ ] Reconcile checked path tokens in phase TODO docs with actual repo snapshot evidence.
+  Current evidence: `docs/review/TODO_EVIDENCE_AUDIT.md` (phase1 12/16, phase2 12/13, phase3 9/14).
 
 ## 4) Missing Details
 - [x] Add memory-usage graph generation from `results/raw/phase3_dev/memory/*.csv`.
