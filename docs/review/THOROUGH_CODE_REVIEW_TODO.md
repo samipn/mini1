@@ -71,30 +71,30 @@ Purpose: track issues found during incremental repository review and convert the
   Objective/result: scenario completeness verified via `configs/phase1_dev_scenarios.csv` and smoke benchmark artifact generation.
 
 #### Phase 1 Open Gaps (from deep review)
-- [ ] P1-D3 operational correctness: define and enforce loader output-vector reset semantics.
-  Objective: avoid silent duplicate accumulation when calling `GarageLoader::LoadCSV` / `BuildingLoader::LoadCSV` repeatedly with the same output vector.
-  Evidence: both loaders reset stats but append to `out_records` without clearing.
+- [x] P1-D3 operational correctness: define and enforce loader output-vector reset semantics.
+  Objective/result: loaders now replace caller vectors on each successful load, preventing accumulation across repeated invocations.
+  Evidence: `src/io/GarageLoader.cpp`, `src/io/BuildingLoader.cpp`, `tests/test_support_loaders.cpp`.
 - [x] P1-D6 hardening: prevent `run_serial` aborts on malformed numeric CLI inputs.
   Objective/result: replaced exception-throwing `stoull` parsing with guarded parse helper; invalid numeric args now return code 2.
   Evidence: `apps/run_serial.cpp` (`--progress-every`, `--sample`, `--top-n`, `--min-link-samples`, `--benchmark-runs`, `--expect-accepted`).
 - [x] P1-D10 reproducibility: avoid overwrite-prone output naming in phase1 benchmark runner.
   Objective/result: per-scenario output naming now includes branch/commit/timestamp; manifest rows remain immutable across batches.
   Evidence: `scripts/run_phase1_dev_benchmarks.sh:173`.
-- [ ] P1-D1 build policy: apply strict warning configuration to app/test targets as well.
-  Objective: keep warning policy consistent across all compiled binaries, not only library objects.
-  Evidence: warning flags are attached to `congestion_core` target but not explicitly to executable targets.
-- [ ] P1-D2/D5 API invariant: borough representation normalization for direct-record query correctness.
-  Objective: prevent false negatives in borough-filter query when records are inserted with `borough` text but unset `borough_code`.
-  Evidence: `TrafficDataset::AddRecord` does not normalize borough fields; borough query prefers code for known borough strings.
+- [x] P1-D1 build policy: apply strict warning configuration to app/test targets as well.
+  Objective/result: warning policy helper is applied to all app and test executables in CMake.
+  Evidence: `CMakeLists.txt` (`urbandrop_enable_warnings(...)` on app/test targets).
+- [x] P1-D2/D5 API invariant: borough representation normalization for direct-record query correctness.
+  Objective/result: direct inserts now normalize borough text into `borough_code` when missing, preserving query behavior.
+  Evidence: `src/data_model/TrafficDataset.cpp`, `tests/test_query_apis.cpp`.
 - [x] P1-D3 maintainability: remove loader parsing redundancy.
   Objective/result: centralized shared CSV parse/numeric/timestamp helper logic and switched `CSVReader`, `GarageLoader`, and `BuildingLoader` to shared helpers.
   Evidence: `include/io/CsvParseUtils.hpp`, `src/io/CsvParseUtils.cpp`, updated loader/reader sources.
 - [x] P1 test depth: add explicit negative CLI tests for malformed numeric parameters.
   Objective/result: regression coverage added to assert graceful failure (exit code 2), no crash.
   Evidence: `tests/test_run_serial_benchmark_cli.cpp`.
-- [ ] P1-D10 evidence rigor: enforce deliverable-grade run count policy for baseline claims.
-  Objective: prevent single-run/smoke batches from being treated as Phase 1 baseline evidence.
-  Evidence: latest Phase 1 dev manifest/summary rows show `runs=1`.
+- [x] P1-D10 evidence rigor: enforce deliverable-grade run count policy for baseline claims.
+  Objective/result: baseline-grade Phase 1 batch generated with `runs=10` across small/medium/large-dev subsets using dedicated baseline runner.
+  Evidence: `results/raw/phase1_baseline/batch_20260309T080046Z_manifest.csv`.
 - [x] P1-D9 notes freshness: keep Phase 1 benchmark log aligned with current scenario config and artifacts.
   Objective/result: appended latest `runs=3` Phase 1 dev batch entry with scenario names matching current config and current branch/commit metadata.
   Evidence: `report/phase1_dev_benchmark_log.md` (`2026-03-09T07:59:12Z` entry).
