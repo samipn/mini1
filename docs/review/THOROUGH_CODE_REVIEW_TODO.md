@@ -174,3 +174,15 @@ Purpose: track issues found during incremental repository review and convert the
   Objective/result: added negative CLI regression assertions for malformed numeric arguments.
   Objective: assert graceful failure behavior for invalid numeric args in optimized CLI.
   Evidence: `tests/test_run_optimized_cli.cpp`.
+- [ ] P3-D5 correctness: reject unknown query types in `run_optimized` row-convert mode.
+  Objective: ensure unknown query types return nonzero and never silently report `result_count=0`.
+  Evidence: `apps/run_optimized.cpp` row-convert branch currently falls through to success.
+- [ ] P3-D3 robustness: make `TrafficColumns::AddRecord` exception-safe for SoA alignment.
+  Objective: prevent partial-column append on interning/allocation failure to preserve index alignment invariants.
+  Evidence: `src/data_model/TrafficColumns.cpp` pushes base columns before `InternLinkName`.
+- [ ] P3-D2 evidence: strengthen hotspot proof artifacts.
+  Objective: add profiler/timing artifact references for hotspot selection or adjust docs wording to “timing-based identification only”.
+  Evidence: D2 TODO claim references profiling confirmation but profiler outputs are not currently part of artifact chain.
+- [ ] P3-D4 behavior consistency: define and enforce row-convert benchmarking semantics.
+  Objective: either route row-convert through benchmark harness for repeated runs/CSV output/validation, or document explicit limitations.
+  Evidence: `apps/run_optimized.cpp` direct mode uses harness; row-convert mode does not.
