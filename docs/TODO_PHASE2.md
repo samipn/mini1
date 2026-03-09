@@ -411,21 +411,21 @@ Do not do these yet:
 These items were identified during late Phase 1 review and are appended here for Phase 2/3 planning.
 
 ### Phase 2 tasks
-- [ ] Add optional indexed lookup structures to improve cross-dataset joins without changing baseline correctness paths:
-  - [ ] BBL index for garage-to-BES relationship checks
-  - [ ] optional link-id index for faster repeated traffic lookups
-- [ ] Prototype a materialized relationship pass for shared keys where beneficial:
-  - [ ] garage `bbl` <-> BES `bbl`
-  - [ ] borough-level cross-dataset rollups
-- [ ] Benchmark indexed/materialized lookup overhead vs. baseline scans before enabling by default.
-- [ ] Evaluate selective Boost usage for indexing/prototyping ergonomics in Phase 2:
-  - [ ] `boost::container::flat_map` for cache-friendly sorted lookup experiments
-  - [ ] `boost::unordered_flat_map` (if available) for hash lookup comparison against STL maps
-  - [ ] `boost::dynamic_bitset` for optional membership/filter masks in validation passes
-- [ ] Document which cross-dataset indexing choices are kept for Phase 2 and which are deferred to Phase 3 layout optimization.
+- [x] Add optional indexed lookup structures to improve cross-dataset joins without changing baseline correctness paths:
+  - [x] BBL index for garage-to-BES relationship checks
+  - [x] optional link-id index for faster repeated traffic lookups
+- [x] Prototype a materialized relationship pass for shared keys where beneficial:
+  - [x] garage `bbl` <-> BES `bbl`
+  - [x] borough-level cross-dataset rollups
+- [x] Benchmark indexed/materialized lookup overhead vs. baseline scans before enabling by default.
+- [x] Evaluate selective Boost usage for indexing/prototyping ergonomics in Phase 2:
+  - [x] `boost::container::flat_map` for cache-friendly sorted lookup experiments
+  - [x] `boost::unordered_flat_map` (if available) for hash lookup comparison against STL maps
+  - [x] `boost::dynamic_bitset` for optional membership/filter masks in validation passes
+- [x] Document which cross-dataset indexing choices are kept for Phase 2 and which are deferred to Phase 3 layout optimization.
 
 ### Handoff to Phase 3
-- [ ] If index/materialization complexity grows or memory overhead is high, defer final design to Phase 3 and track benchmarks proving why.
+- [x] If index/materialization complexity grows or memory overhead is high, defer final design to Phase 3 and track benchmarks proving why.
 
 ---
 

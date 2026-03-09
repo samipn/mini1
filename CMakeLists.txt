@@ -24,6 +24,7 @@ add_library(congestion_core
   src/query/TimeWindowQuery.cpp
   src/query/CongestionQuery.cpp
   src/query/TrafficAggregator.cpp
+  src/query/CrossDatasetIndex.cpp
   src/query/ParallelCongestionQuery.cpp
   src/query/ParallelTrafficAggregator.cpp
 )
@@ -54,6 +55,9 @@ target_link_libraries(run_parallel PRIVATE congestion_core)
 add_executable(run_optimized apps/run_optimized.cpp)
 target_link_libraries(run_optimized PRIVATE congestion_core)
 
+add_executable(run_index_experiments apps/run_index_experiments.cpp)
+target_link_libraries(run_index_experiments PRIVATE congestion_core)
+
 include(CTest)
 if(BUILD_TESTING)
   add_executable(test_traffic_dataset tests/test_traffic_dataset.cpp)
@@ -76,6 +80,8 @@ if(BUILD_TESTING)
   target_link_libraries(test_parallel_query_correctness PRIVATE congestion_core)
 
   add_executable(test_run_parallel_cli tests/test_run_parallel_cli.cpp)
+  add_executable(test_cross_dataset_index tests/test_cross_dataset_index.cpp)
+  target_link_libraries(test_cross_dataset_index PRIVATE congestion_core)
 
   add_executable(test_realdata_ingest tests/test_realdata_ingest.cpp)
   target_link_libraries(test_realdata_ingest PRIVATE congestion_core)
@@ -97,6 +103,7 @@ if(BUILD_TESTING)
   add_test(NAME test_run_serial_benchmark_cli COMMAND test_run_serial_benchmark_cli)
   add_test(NAME test_parallel_query_correctness COMMAND test_parallel_query_correctness)
   add_test(NAME test_run_parallel_cli COMMAND test_run_parallel_cli)
+  add_test(NAME test_cross_dataset_index COMMAND test_cross_dataset_index)
   add_test(NAME test_realdata_ingest COMMAND test_realdata_ingest)
   add_test(NAME test_realdata_api COMMAND test_realdata_api)
   add_test(NAME test_realdata_cli COMMAND test_run_serial_queries)
