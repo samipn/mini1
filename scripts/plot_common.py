@@ -78,3 +78,27 @@ def write_chart_manifest(path: Path, rows: Iterable[Dict[str, str]]) -> None:
         )
         writer.writeheader()
         writer.writerows(rows_list)
+
+
+def write_chart_markdown_index(path: Path, rows: Iterable[Dict[str, str]]) -> None:
+    rows_list = list(rows)
+    if not rows_list:
+        return
+    ensure_dir(path.parent)
+    lines = ["# Chart Index", ""]
+    by_phase: Dict[str, List[Dict[str, str]]] = {}
+    for row in rows_list:
+        by_phase.setdefault(row.get("phase", "unknown"), []).append(row)
+    for phase in sorted(by_phase.keys()):
+        lines.append(f"## {phase}")
+        for row in by_phase[phase]:
+            chart_id = row.get("chart_id", "unknown")
+            file_path = row.get("file_path", "")
+            what = row.get("what_tested", "")
+            x_axis = row.get("x_axis", "")
+            y_axis = row.get("y_axis", "")
+            lines.append(f"- `{chart_id}`: `{file_path}`")
+            lines.append(f"  - what: {what}")
+            lines.append(f"  - axes: x=`{x_axis}`, y=`{y_axis}`")
+        lines.append("")
+    path.write_text("\n".join(lines), encoding="utf-8")

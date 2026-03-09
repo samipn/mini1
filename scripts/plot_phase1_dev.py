@@ -11,6 +11,7 @@ from plot_common import (
     add_common_figure_text,
     save_matplotlib_figure,
     utc_now_iso,
+    write_chart_markdown_index,
     write_chart_manifest,
 )
 
@@ -261,6 +262,7 @@ def main() -> int:
 
     manifest_path = output_dir / "chart_manifest.csv"
     write_chart_manifest(manifest_path, manifest_rows)
+    write_chart_markdown_index(output_dir / "chart_index.md", manifest_rows)
     for row in manifest_rows:
         print(f"[plot_phase1_dev] wrote: {row['file_path']}")
     print(f"[plot_phase1_dev] wrote: {manifest_path}")

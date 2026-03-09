@@ -95,7 +95,7 @@ Purpose: improve graph completeness, visual quality, and interpretability across
   - source summary file
   - scenario/mode/thread filters
   - generation timestamp
-- [ ] Add an auto-generated markdown index linking all produced charts with one-line descriptions.
+- [x] Add an auto-generated markdown index linking all produced charts with one-line descriptions.
 - [ ] Add script option to export only selected scenario/subset/thread slices.
 
 ## 8) Testing and CI Guardrails

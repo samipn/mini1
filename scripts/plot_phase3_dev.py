@@ -6,7 +6,7 @@ import csv
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from plot_common import utc_now_iso, write_chart_manifest
+from plot_common import utc_now_iso, write_chart_manifest, write_chart_markdown_index
 
 
 def parse_args() -> argparse.Namespace:
@@ -414,6 +414,7 @@ def main() -> int:
                 )
 
     write_chart_manifest(out_dir / "chart_manifest.csv", chart_manifest_rows)
+    write_chart_markdown_index(out_dir / "chart_index.md", chart_manifest_rows)
     print(f"[plot_phase3_dev] wrote SVG graphs to: {out_dir}")
     return 0
 
