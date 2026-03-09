@@ -103,3 +103,89 @@ for Phase 2 serial-vs-parallel work.
   - No benchmark execution failures.
 - Followed a code change:
   - Yes. This batch was executed after Phase 2 script/runtime hardening updates.
+
+## Batch: 2026-03-09T08:23:07Z
+- Date/time (UTC): `2026-03-09T08:23:07Z`
+- Git branch: `main`
+- Commit hash: `618462e`
+- Subset sizes:
+  - `small` (`10,000` rows)
+  - `medium` (`100,000` rows)
+  - `large_dev` (`1,000,000` rows)
+- Scenarios run:
+  - `speed_below_15`
+  - `time_window_all`
+  - `summary`
+  - `borough_manhattan_speed_15`
+- Thread counts tested:
+  - `1`
+  - `2`
+  - `4`
+  - `8`
+  - `16`
+- Repeated runs:
+  - `3` per scenario/mode/thread configuration
+- Raw outputs:
+  - `results/raw/phase2_dev/subset_manifest_20260309T082307Z.csv`
+  - `results/raw/phase2_dev/batch_20260309T082307Z_manifest.csv`
+  - `results/raw/phase2_dev/batch_20260309T082307Z_records_per_second.csv`
+  - `results/raw/phase2_dev/batch_20260309T082307Z_environment.csv`
+  - `results/tables/phase2_dev/phase2_dev_summary_20260309T082307Z.csv`
+  - `results/graphs/phase2_dev/*.svg`
+- Notable observations:
+  - Full-size subset run completed under the current 16-thread Phase 2 policy.
+  - Serial and parallel artifacts were generated for all scenarios/subsets.
+- Failures or anomalies:
+  - No benchmark execution failures.
+- Followed a code change:
+  - No. This batch was executed as objective consistency verification.
+
+## Stability+Validation Batch: 2026-03-09T08:25:34Z / 2026-03-09T08:25:55Z
+- Date/time (UTC): `2026-03-09T08:25:34Z` (stability), `2026-03-09T08:25:55Z` (subset validation)
+- Git branch: `main`
+- Commit hash: `618462e`
+- Scope:
+  - Stability/determinism recheck on medium subset
+  - Serial-vs-parallel subset parity recheck on small/medium/large_dev
+- Outputs:
+  - `results/raw/phase2_dev/stability/stability_summary_20260309T082534Z.csv`
+  - `results/raw/phase2_dev/stability/stability_report_20260309T082534Z.md`
+  - `results/raw/phase2_dev/validation/validation_20260309T082555Z.csv`
+- Notable observations:
+  - Stability checker status: `PASS`.
+  - Validation parity rows: no failures (`status=ok`, `serial_match=true`).
+- Failures or anomalies:
+  - None observed.
+
+## Baseline Batch: 2026-03-09T08:26:45Z
+- Date/time (UTC): `2026-03-09T08:26:45Z`
+- Git branch: `main`
+- Commit hash: `618462e`
+- Subset sizes:
+  - `small` (`10,000` rows)
+  - `medium` (`100,000` rows)
+  - `large_dev` (`1,000,000` rows)
+- Scenarios run:
+  - `speed_below_15`
+  - `time_window_all`
+  - `summary`
+  - `borough_manhattan_speed_15`
+- Thread counts tested:
+  - `1`
+  - `2`
+  - `4`
+  - `8`
+  - `16`
+- Repeated runs:
+  - `10` per scenario/mode/thread configuration
+- Raw outputs:
+  - `results/raw/phase2_baseline/subset_manifest_20260309T082645Z.csv`
+  - `results/raw/phase2_baseline/batch_20260309T082645Z_manifest.csv`
+  - `results/raw/phase2_baseline/batch_20260309T082645Z_records_per_second.csv`
+  - `results/raw/phase2_baseline/batch_20260309T082645Z_environment.csv`
+  - `results/tables/phase2_baseline/phase2_baseline_summary_20260309T082645Z.csv`
+- Notable observations:
+  - Deliverable-grade baseline batch completed with `runs=10`.
+  - Used for consistency-tier comparison against dev batch variability.
+- Failures or anomalies:
+  - No benchmark execution failures.
