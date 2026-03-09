@@ -9,18 +9,18 @@ Purpose: improve graph completeness, visual quality, and interpretability across
   - parallel = one fixed color family
   - optimized = one fixed color family
   - baseline/dev variants = consistent shades
-- [ ] Add chart subtitle template to every graph:
+- [x] Add chart subtitle template to every graph:
   - dataset scope
   - scenario/query
   - run count
   - thread policy
   - artifact timestamp
 - [ ] Require explicit axis labels with units on every chart.
-- [ ] Add a short “What this graph tests” annotation block on every chart.
+- [x] Add a short “What this graph tests” annotation block on every chart.
 - [ ] Add legend titles where multiple modes/threads are shown.
 - [ ] Add error bars or variability bands (stddev/CI) where repeated runs exist.
 - [ ] Add automatic warnings on charts when required comparison groups are missing.
-- [ ] Add metadata footer text on each chart:
+- [x] Add metadata footer text on each chart:
   - summary source CSV path
   - script name/version
   - generated UTC timestamp
@@ -52,12 +52,18 @@ Purpose: improve graph completeness, visual quality, and interpretability across
   - dual-output export (`.png` + `.svg`)
   - chart manifest output (`chart_manifest.csv`)
   - strict vs partial data handling (`--allow-partial`)
+- Refactored Phase 2/3 plotting to include:
+  - subtitle context
+  - “What this tests” annotation block
+  - metadata footer text (source + generated UTC)
+  - strict vs partial data handling (`--allow-partial`)
+  - chart manifest output (`chart_manifest.csv`)
 
 ## 4) Phase 2 Plot Improvements (`scripts/plot_phase2_dev.py`)
-- [ ] Add default all-thread comparison charts for every scenario and subset.
-- [ ] Add dedicated speedup charts that clearly define baseline:
+- [x] Add default all-thread comparison charts for every scenario and subset.
+- [x] Add dedicated speedup charts that clearly define baseline:
   - speedup = serial query mean / candidate query mean
-- [ ] Add scalability chart (runtime vs thread count) with monotonicity indicators.
+- [x] Add scalability chart (runtime vs thread count) with monotonicity indicators.
 - [ ] Add parity/validation summary plot:
   - pass/fail counts by scenario/thread
 - [ ] Add overhead plot comparing:
@@ -71,7 +77,7 @@ Purpose: improve graph completeness, visual quality, and interpretability across
   - optimized serial
   - optimized parallel
 - [ ] Add memory vs runtime tradeoff chart using memory probe outputs.
-- [ ] Add per-thread optimized speedup charts with clear baseline definition.
+- [x] Add per-thread optimized speedup charts with clear baseline definition.
 - [ ] Add large-subset focused plots and all-subset overview plots.
 - [ ] Add “validation enabled vs disabled” timing comparison where data is available.
 
@@ -84,7 +90,7 @@ Purpose: improve graph completeness, visual quality, and interpretability across
 
 ## 7) Output Formats and Report Integration
 - [ ] Emit both SVG and PNG for each chart by default.
-- [ ] Add a machine-readable chart manifest:
+- [x] Add a machine-readable chart manifest:
   - chart file
   - source summary file
   - scenario/mode/thread filters
@@ -100,10 +106,10 @@ Purpose: improve graph completeness, visual quality, and interpretability across
 - [ ] Add CI check to verify axis labels and titles are non-empty in generated SVG.
 
 ## 9) Rollout Plan
-- [ ] Step 1: extract shared chart utilities and style config.
-- [ ] Step 2: refactor Phase 1 plot script to new utilities.
-- [ ] Step 3: refactor Phase 2 plot script, then validate against latest manifests.
-- [ ] Step 4: refactor Phase 3 plot script and memory/tradeoff visuals.
+- [x] Step 1: extract shared chart utilities and style config.
+- [x] Step 2: refactor Phase 1 plot script to new utilities.
+- [x] Step 3: refactor Phase 2 plot script, then validate against latest manifests.
+- [x] Step 4: refactor Phase 3 plot script and memory/tradeoff visuals.
 - [ ] Step 5: add chart manifest/index generation and CI checks.
 
 ## 10) Acceptance Criteria
