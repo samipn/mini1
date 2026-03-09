@@ -38,6 +38,23 @@ struct QueryExecutionResult {
   std::vector<LinkSpeedStat> topn;
 };
 
+static inline double cpu_now_ms() {
+  return static_cast<double>(std::clock()) * 1000.0 / CLOCKS_PER_SEC;
+}
+
+static long read_peak_rss_kb() {
+  std::ifstream f("/proc/self/status");
+  std::string line;
+  while (std::getline(f, line)) {
+    if (line.rfind("VmHWM:", 0) == 0) {
+      long kb = 0;
+      std::sscanf(line.c_str(), "VmHWM: %ld kB", &kb);
+      return kb;
+    }
+  }
+  return -1;
+}
+
 std::string EscapeCsv(const std::string& value) {
   if (value.find(',') == std::string::npos && value.find('"') == std::string::npos) {
     return value;
@@ -525,7 +542,7 @@ bool WriteCsvRows(const BenchmarkConfig& config,
   }
 
   if (write_header) {
-    out << "timestamp_utc,binary_name,execution_mode,thread_count,serial_validation_enabled,serial_match,compiler_id,compiler_version,dataset_label,dataset_path,query_type,run_number,ingest_ms,query_ms,total_ms,rows_read,rows_accepted,rows_rejected,result_count,has_aggregate,average_speed_mph,average_travel_time_seconds,validation_ms,validation_ingest_ms\n";
+    out << "timestamp_utc,binary_name,execution_mode,thread_count,serial_validation_enabled,serial_match,compiler_id,compiler_version,dataset_label,dataset_path,query_type,run_number,ingest_ms,query_ms,total_ms,rows_read,rows_accepted,rows_rejected,result_count,has_aggregate,average_speed_mph,average_travel_time_seconds,validation_ms,validation_ingest_ms,cpu_ms,peak_rss_kb\n";
   }
 
 #if defined(__clang__)
@@ -551,7 +568,8 @@ bool WriteCsvRows(const BenchmarkConfig& config,
         << ',' << row.rows_read << ',' << row.rows_accepted << ',' << row.rows_rejected << ','
         << row.result_count << ',' << (row.has_aggregate ? "true" : "false") << ','
         << row.average_speed_mph << ',' << row.average_travel_time_seconds << ','
-        << row.validation_ms << ',' << row.validation_ingest_ms << '\n';
+        << row.validation_ms << ',' << row.validation_ingest_ms << ','
+        << row.cpu_ms << ',' << row.peak_rss_kb << '\n';
   }
 
   return true;
@@ -642,6 +660,7 @@ bool RunInternal(const BenchmarkConfig& config,
       }
     }
 
+    const double cpu_query_start = cpu_now_ms();
     const auto query_started = Clock::now();
     QueryExecutionResult query_result;
     std::string query_error;
@@ -662,6 +681,7 @@ bool RunInternal(const BenchmarkConfig& config,
     }
 
     const auto query_finished = Clock::now();
+    const double cpu_query_end = cpu_now_ms();
 
     bool serial_match = true;
     double validation_ms = 0.0;
@@ -748,6 +768,8 @@ bool RunInternal(const BenchmarkConfig& config,
     row.serial_match = serial_match;
     row.validation_ms = validation_ms;
     row.validation_ingest_ms = validation_ingest_ms;
+    row.cpu_ms = cpu_query_end - cpu_query_start;
+    row.peak_rss_kb = read_peak_rss_kb();
 
     local_results.push_back(row);
   }

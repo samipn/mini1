@@ -66,6 +66,8 @@ struct BenchmarkRunResult {
   bool serial_match = true;
   double validation_ms = 0.0;
   double validation_ingest_ms = 0.0;
+  double cpu_ms = 0.0;
+  long peak_rss_kb = -1;
 };
 
 class BenchmarkHarness {
