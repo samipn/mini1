@@ -387,7 +387,7 @@ bool WriteCsvRows(const BenchmarkConfig& config,
   }
 
   if (write_header) {
-    out << "timestamp_utc,binary_name,execution_mode,thread_count,serial_validation_enabled,serial_match,compiler_id,compiler_version,dataset_label,dataset_path,query_type,run_number,ingest_ms,query_ms,total_ms,rows_read,rows_accepted,rows_rejected,result_count\n";
+    out << "timestamp_utc,binary_name,execution_mode,thread_count,serial_validation_enabled,serial_match,compiler_id,compiler_version,dataset_label,dataset_path,query_type,run_number,ingest_ms,query_ms,total_ms,rows_read,rows_accepted,rows_rejected,result_count,has_aggregate,average_speed_mph,average_travel_time_seconds\n";
   }
 
 #if defined(__clang__)
@@ -411,7 +411,8 @@ bool WriteCsvRows(const BenchmarkConfig& config,
         << EscapeCsv(config.dataset_path) << ',' << EscapeCsv(query_label) << ',' << row.run_number << ','
         << std::fixed << std::setprecision(3) << row.ingest_ms << ',' << row.query_ms << ',' << row.total_ms
         << ',' << row.rows_read << ',' << row.rows_accepted << ',' << row.rows_rejected << ','
-        << row.result_count << '\n';
+        << row.result_count << ',' << (row.has_aggregate ? "true" : "false") << ','
+        << row.average_speed_mph << ',' << row.average_travel_time_seconds << '\n';
   }
 
   return true;
@@ -550,6 +551,9 @@ bool RunInternal(const BenchmarkConfig& config,
     row.rows_accepted = dataset.Counters().rows_accepted;
     row.rows_rejected = dataset.Counters().rows_rejected;
     row.result_count = query_result.result_count;
+    row.has_aggregate = query_result.has_aggregate;
+    row.average_speed_mph = query_result.aggregate.average_speed_mph;
+    row.average_travel_time_seconds = query_result.aggregate.average_travel_time_seconds;
     row.serial_match = serial_match;
 
     local_results.push_back(row);

@@ -156,6 +156,50 @@
 - Ingestion parallelization status:
   - not attempted in this chunk; ingestion remains serial by design to preserve experiment focus.
 
+## Phase 2 Notes (D17-D21)
+- Branch: `P2-D17-21`.
+- Date: `2026-03-09`.
+- Scope completed:
+  - subset dataset reuse/validation and manifest generation
+  - serial-vs-parallel subset validation runs with aggregate parity reporting
+  - repeatable subset benchmark scenarios + runner for serial/parallel pair execution
+  - preliminary timing/scaling batch collection across required subset sizes and thread counts
+- Added files:
+  - `configs/phase2_dev_scenarios.conf`
+  - `scripts/run_phase2_subset_validation.sh`
+  - `scripts/run_phase2_dev_benchmarks.sh`
+- Benchmark harness output was extended to include aggregate fields per run:
+  - `has_aggregate`
+  - `average_speed_mph`
+  - `average_travel_time_seconds`
+- Subset status:
+  - In this workspace, prior Phase 1 subset files were missing.
+  - Deterministic subsets were recreated from `/datasets/i4gi-tjb9.csv` at:
+    - `data/subsets/i4gi-tjb9_subset_10000.csv`
+    - `data/subsets/i4gi-tjb9_subset_100000.csv`
+    - `data/subsets/i4gi-tjb9_subset_1000000.csv`
+  - Source manifest: `data/subsets/manifest.csv`
+- Phase 2 subset manifest/accessibility artifact:
+  - `results/raw/phase2_dev/subset_manifest_20260309T040238Z.csv`
+  - confirms expected row counts and serial/parallel runner accessibility.
+- Validation batch artifact:
+  - `results/raw/phase2_dev/validation/validation_20260309T035930Z.csv`
+  - includes subset label, scenario, thread count, serial/parallel result counts, aggregate values, and `serial_match` status.
+  - observed status in this run: all rows `ok`, no mismatches.
+- Preliminary timing batch artifacts (`runs=3`, threads `1,2,4,8`):
+  - manifest: `results/raw/phase2_dev/batch_20260309T040238Z_manifest.csv`
+  - records/sec: `results/raw/phase2_dev/batch_20260309T040238Z_records_per_second.csv`
+  - per-scenario raw files: `results/raw/phase2_dev/{small,medium,large_dev}_*_{serial|parallel}_P2-D17-21_aea201e_20260309T040238Z.csv`
+  - logs: `results/raw/logs/phase2_dev_*_20260309T040238Z.log`
+- Scenarios executed for each subset:
+  - `speed_below_15`
+  - `time_window_all`
+  - `summary`
+  - `borough_manhattan_speed_15`
+- Notes:
+  - Batch metadata now records branch, commit, subset label, scenario, and thread controls.
+  - Query parity was enforced during parallel runs using `--validate-serial`.
+
 ## Pre-baseline classification (D20)
 - All subset benchmark artifacts under:
   - `results/raw/phase1_dev/`
