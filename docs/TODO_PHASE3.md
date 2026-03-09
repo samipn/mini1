@@ -142,12 +142,12 @@ The goal is to isolate which changes actually matter.
 
 ### 6. Reduce Hot-Loop Overhead
 #### Tasks
-- [ ] Remove unnecessary string comparisons inside tight loops
-- [ ] Use encoded/category values instead of repeated text checks
-- [ ] Precompute threshold or range parameters where appropriate
-- [ ] Minimize branching in scan-heavy code
-- [ ] Avoid repeated virtual dispatch in critical paths if it shows up as overhead
-- [ ] Reuse buffers where practical
+- [x] Remove unnecessary string comparisons inside tight loops
+- [x] Use encoded/category values instead of repeated text checks
+- [x] Precompute threshold or range parameters where appropriate
+- [x] Minimize branching in scan-heavy code
+- [x] Avoid repeated virtual dispatch in critical paths if it shows up as overhead
+- [x] Reuse buffers where practical
 
 #### Deliverable
 - Hot loops are cleaner, simpler, and more cache-friendly
@@ -156,14 +156,14 @@ The goal is to isolate which changes actually matter.
 
 ### 7. Evaluate Memory Usage Changes
 #### Tasks
-- [ ] Measure memory usage of:
-  - [ ] row-oriented Phase 1/2 layout
-  - [ ] optimized Phase 3 layout
-- [ ] Record any savings from:
-  - [ ] compact categorical encoding
-  - [ ] removing duplicated strings
-  - [ ] reduced per-record object overhead
-- [ ] Note cases where memory usage increases for speed
+- [x] Measure memory usage of:
+  - [x] row-oriented Phase 1/2 layout
+  - [x] optimized Phase 3 layout
+- [x] Record any savings from:
+  - [x] compact categorical encoding
+  - [x] removing duplicated strings
+  - [x] reduced per-record object overhead
+- [x] Note cases where memory usage increases for speed
 
 #### Deliverable
 - Memory tradeoffs are documented, not just runtime changes
@@ -172,14 +172,14 @@ The goal is to isolate which changes actually matter.
 
 ### 8. Add Optional Query-Support Optimizations
 #### Possible tasks
-- [ ] Add precomputed index ranges if useful
-- [ ] Add sorted or grouped storage by frequently filtered key if justified
-- [ ] Add light auxiliary lookup structures for:
-  - [ ] link ID grouping
-  - [ ] borough grouping
-  - [ ] coarse time partitioning
-- [ ] Benchmark each addition independently
-- [ ] Reject any structure that adds complexity without measurable benefit
+- [x] Add precomputed index ranges if useful
+- [x] Add sorted or grouped storage by frequently filtered key if justified
+- [x] Add light auxiliary lookup structures for:
+  - [x] link ID grouping
+  - [x] borough grouping
+  - [x] coarse time partitioning
+- [x] Benchmark each addition independently
+- [x] Reject any structure that adds complexity without measurable benefit
 
 #### Deliverable
 - Any extra indexing is justified by benchmark evidence
@@ -188,14 +188,14 @@ The goal is to isolate which changes actually matter.
 
 ### 9. Integrate Parallelism with the Optimized Layout
 #### Tasks
-- [ ] Reuse the best Phase 2 parallel strategy on top of the optimized layout
-- [ ] Measure:
-  - [ ] optimized serial query performance
-  - [ ] optimized parallel query performance
-- [ ] Compare whether the new layout improves:
-  - [ ] single-thread performance
-  - [ ] multi-thread scaling
-- [ ] Watch for memory-bandwidth limitations
+- [x] Reuse the best Phase 2 parallel strategy on top of the optimized layout
+- [x] Measure:
+  - [x] optimized serial query performance
+  - [x] optimized parallel query performance
+- [x] Compare whether the new layout improves:
+  - [x] single-thread performance
+  - [x] multi-thread scaling
+- [x] Watch for memory-bandwidth limitations
 
 #### Deliverable
 - Optimized layout is benchmarked in both serial and parallel execution modes where relevant
@@ -205,14 +205,14 @@ The goal is to isolate which changes actually matter.
 ### 10. Implement the Optimized CLI Runner
 #### Tasks
 - [x] Implement `apps/run_optimized.cpp`
-- [ ] Accept command-line arguments for:
+- [x] Accept command-line arguments for:
   - [x] dataset path
   - [x] query type
   - [x] thresholds
   - [x] time ranges
   - [x] execution mode if needed
   - [x] thread count if parallel optimized mode is supported
-- [ ] Print useful execution logs:
+- [x] Print useful execution logs:
   - [x] optimized layout load started/completed
   - [x] query started/completed
   - [x] elapsed time
@@ -226,21 +226,21 @@ The goal is to isolate which changes actually matter.
 
 ### 11. Extend Benchmark Harness for Final Comparisons
 #### Tasks
-- [ ] Update `BenchmarkHarness` to support:
-  - [ ] implementation mode: serial / parallel / optimized
-  - [ ] thread count where applicable
-  - [ ] repeated runs
-- [ ] Record:
-  - [ ] ingest time
-  - [ ] query time
-  - [ ] total runtime
-  - [ ] memory usage if available
-  - [ ] implementation mode
-  - [ ] query type
-  - [ ] run number
-- [ ] Save outputs to:
-  - [ ] `results/raw/`
-- [ ] Keep formats easy to graph and compare later
+- [x] Update `BenchmarkHarness` to support:
+  - [x] implementation mode: serial / parallel / optimized
+  - [x] thread count where applicable
+  - [x] repeated runs
+- [x] Record:
+  - [x] ingest time
+  - [x] query time
+  - [x] total runtime
+  - [x] memory usage if available
+  - [x] implementation mode
+  - [x] query type
+  - [x] run number
+- [x] Save outputs to:
+  - [x] `results/raw/`
+- [x] Keep formats easy to graph and compare later
 
 #### Deliverable
 - Final benchmark outputs can compare all three phases directly
@@ -249,23 +249,23 @@ The goal is to isolate which changes actually matter.
 
 ### 12. Benchmark Each Major Optimization Separately
 #### Minimum comparison points
-- [ ] Phase 1 row-oriented serial baseline
-- [ ] Phase 2 row-oriented parallel baseline
-- [ ] Phase 3 optimized serial
-- [ ] Phase 3 optimized parallel if implemented
+- [x] Phase 1 row-oriented serial baseline
+- [x] Phase 2 row-oriented parallel baseline
+- [x] Phase 3 optimized serial
+- [x] Phase 3 optimized parallel if implemented
 
 #### Suggested measurement steps
-- [ ] baseline row-oriented query
-- [ ] columnar layout only
-- [ ] columnar layout + encoded categorical fields
-- [ ] columnar layout + hot-loop cleanup
-- [ ] columnar layout + parallel query
+- [x] baseline row-oriented query
+- [x] columnar layout only
+- [x] columnar layout + encoded categorical fields
+- [x] columnar layout + hot-loop cleanup
+- [x] columnar layout + parallel query
 
 #### Benchmark requirements
-- [ ] at least 10 runs per scenario
-- [ ] same dataset
-- [ ] same query parameters
-- [ ] same machine conditions as much as possible
+- [x] at least 10 runs per scenario
+- [x] same dataset
+- [x] same query parameters
+- [x] same machine conditions as much as possible
 
 #### Deliverable
 - You can attribute performance changes to specific design choices
@@ -274,14 +274,14 @@ The goal is to isolate which changes actually matter.
 
 ### 13. Validate Correctness Against Earlier Phases
 #### Tasks
-- [ ] Compare optimized outputs against serial baseline outputs
-- [ ] Validate:
-  - [ ] record counts
-  - [ ] aggregate metrics
-  - [ ] sample outputs where useful
-- [ ] Add a validation mode if helpful
-- [ ] Log mismatches clearly
-- [ ] Resolve or explain acceptable differences such as tiny floating-point deviations
+- [x] Compare optimized outputs against serial baseline outputs
+- [x] Validate:
+  - [x] record counts
+  - [x] aggregate metrics
+  - [x] sample outputs where useful
+- [x] Add a validation mode if helpful
+- [x] Log mismatches clearly
+- [x] Resolve or explain acceptable differences such as tiny floating-point deviations
 
 #### Deliverable
 - Optimized implementation is correct enough to defend in the report
@@ -290,14 +290,14 @@ The goal is to isolate which changes actually matter.
 
 ### 14. Summarize Performance Tradeoffs
 #### Tasks
-- [ ] Identify which optimizations produced the biggest gains
-- [ ] Identify which optimizations produced little or no benefit
-- [ ] Identify any regressions
-- [ ] Note tradeoffs such as:
-  - [ ] better scan speed but more complex code
-  - [ ] lower memory footprint but costlier ingest
-  - [ ] better single-thread speed but limited scaling
-- [ ] Record the likely causes behind final performance behavior
+- [x] Identify which optimizations produced the biggest gains
+- [x] Identify which optimizations produced little or no benefit
+- [x] Identify any regressions
+- [x] Note tradeoffs such as:
+  - [x] better scan speed but more complex code
+  - [x] lower memory footprint but costlier ingest
+  - [x] better single-thread speed but limited scaling
+- [x] Record the likely causes behind final performance behavior
 
 #### Deliverable
 - Phase 3 includes a clear story, not just raw numbers
@@ -306,16 +306,16 @@ The goal is to isolate which changes actually matter.
 
 ### 15. Add Final Research Notes
 #### Tasks
-- [ ] Update `report/notes.md` with:
-  - [ ] chosen optimized layout
-  - [ ] field encoding choices
-  - [ ] conversion vs direct-load decision
-  - [ ] which hot paths improved most
-  - [ ] which ideas failed
-  - [ ] final recommended design
-- [ ] Record benchmark caveats
-- [ ] Record open questions that were not fully resolved
-- [ ] Capture possible content for the final one-slide presentation
+- [x] Update `report/notes.md` with:
+  - [x] chosen optimized layout
+  - [x] field encoding choices
+  - [x] conversion vs direct-load decision
+  - [x] which hot paths improved most
+  - [x] which ideas failed
+  - [x] final recommended design
+- [x] Record benchmark caveats
+- [x] Record open questions that were not fully resolved
+- [x] Capture possible content for the final one-slide presentation
 
 #### Deliverable
 - Repo contains enough material to support final report writing and presentation selection
@@ -333,7 +333,7 @@ The goal is to isolate which changes actually matter.
 - [x] `OptimizedTrafficAggregator.hpp`
 
 ### `include/benchmark/`
-- [ ] update `BenchmarkHarness.hpp` for final comparison modes
+- [x] update `BenchmarkHarness.hpp` for final comparison modes
 
 ### `src/data_model/`
 - [x] `TrafficColumns.cpp`
@@ -344,15 +344,15 @@ The goal is to isolate which changes actually matter.
 - [x] `OptimizedTrafficAggregator.cpp`
 
 ### `src/benchmark/`
-- [ ] update `BenchmarkHarness.cpp`
+- [x] update `BenchmarkHarness.cpp`
 
 ### `apps/`
 - [x] `run_optimized.cpp`
 
 ### `scripts/`
-- [ ] update `benchmark.sh` for full phase comparison runs
-- [ ] update `plot_results.py` to graph serial vs parallel vs optimized
-- [ ] optional helper script for final experiment bundles
+- [x] update `benchmark.sh` for full phase comparison runs
+- [x] update `plot_results.py` to graph serial vs parallel vs optimized
+- [x] optional helper script for final experiment bundles
 
 ---
 
@@ -368,32 +368,32 @@ The goal is to isolate which changes actually matter.
 - [x] correctness verified against baseline
 
 ### Milestone C — Core Query Port Complete
-- [ ] time-window query ported
-- [ ] borough + threshold query ported
-- [ ] aggregation ported
+- [x] time-window query ported
+- [x] borough + threshold query ported
+- [x] aggregation ported
 
 ### Milestone D — Final Benchmarking
-- [ ] optimized serial runs complete
-- [ ] optimized parallel runs complete if supported
-- [ ] all raw outputs saved
+- [x] optimized serial runs complete
+- [x] optimized parallel runs complete if supported
+- [x] all raw outputs saved
 
 ### Milestone E — Final Analysis Notes
-- [ ] strongest optimization documented
-- [ ] regressions documented
-- [ ] slide-worthy finding identified
+- [x] strongest optimization documented
+- [x] regressions documented
+- [x] slide-worthy finding identified
 
 ---
 
 ## Definition of Done for Phase 3
 Phase 3 is complete when all of the following are true:
 
-- [ ] The project builds an optimized executable cleanly
-- [ ] Key traffic data is stored in a vectorized/Object-of-Arrays layout
-- [ ] At least the main query workloads run on the optimized layout
-- [ ] Benchmarks compare Phase 1, Phase 2, and Phase 3 directly
-- [ ] Results are validated against the earlier baseline
-- [ ] Raw outputs and notes are saved to disk
-- [ ] The team can clearly explain which optimization mattered most and why
+- [x] The project builds an optimized executable cleanly
+- [x] Key traffic data is stored in a vectorized/Object-of-Arrays layout
+- [x] At least the main query workloads run on the optimized layout
+- [x] Benchmarks compare Phase 1, Phase 2, and Phase 3 directly
+- [x] Results are validated against the earlier baseline
+- [x] Raw outputs and notes are saved to disk
+- [x] The team can clearly explain which optimization mattered most and why
 
 ---
 
@@ -410,24 +410,24 @@ Do not do these unless they are clearly justified and benchmarked:
 These items were identified during late Phase 1 review and are appended for Phase 3 optimization work.
 
 ### High-cardinality encoding and consolidation
-- [ ] Implement dictionary/interning strategy for high-cardinality text-heavy traffic fields:
-  - [ ] `link_name`
-  - [ ] any remaining repeated descriptor strings in hot paths
-- [ ] Replace repeated string comparisons in hot loops with integer-coded category checks where possible.
-- [ ] Quantify memory and runtime impact of dictionary encoding vs raw string storage.
+- [x] Implement dictionary/interning strategy for high-cardinality text-heavy traffic fields:
+  - [x] `link_name`
+  - [x] any remaining repeated descriptor strings in hot paths
+- [x] Replace repeated string comparisons in hot loops with integer-coded category checks where possible.
+- [x] Quantify memory and runtime impact of dictionary encoding vs raw string storage.
 
 ### Cross-dataset optimized relationships
-- [ ] Finalize cross-dataset indexed/materialized join structures after Phase 2 prototypes:
-  - [ ] garage `bbl` <-> BES `bbl` optimized lookup path
-  - [ ] borough-coded relationship views for repeated analytical scans
-- [ ] Benchmark and report tradeoffs of pre-materialized joins vs on-demand joins.
+- [x] Finalize cross-dataset indexed/materialized join structures after Phase 2 prototypes:
+  - [x] garage `bbl` <-> BES `bbl` optimized lookup path
+  - [x] borough-coded relationship views for repeated analytical scans
+- [x] Benchmark and report tradeoffs of pre-materialized joins vs on-demand joins.
 
 ### Boost evaluation in optimized phase
-- [ ] Evaluate Boost-based optimization candidates against STL baselines:
-  - [ ] `boost::container::small_vector` for hot-path temporary buffers
-  - [ ] `boost::container::flat_map` or similar sorted containers for compressed lookup tables
-  - [ ] `boost::dynamic_bitset` for vectorized filtering masks
-- [ ] Keep Boost usage only where measured wins are reproducible and clearly justified in benchmark notes.
+- [x] Evaluate Boost-based optimization candidates against STL baselines:
+  - [x] `boost::container::small_vector` for hot-path temporary buffers
+  - [x] `boost::container::flat_map` or similar sorted containers for compressed lookup tables
+  - [x] `boost::dynamic_bitset` for vectorized filtering masks
+- [x] Keep Boost usage only where measured wins are reproducible and clearly justified in benchmark notes.
 
 ---
 
@@ -457,15 +457,15 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 18. Reuse or Validate Subset Datasets for Phase 3
 #### Tasks
-- [ ] Reuse the reproducible subset datasets created earlier
-- [ ] Confirm subset row counts still match expected sizes
-- [ ] Confirm subset files are accessible to serial, parallel, and optimized runners
-- [ ] Record which subset files are used in Phase 3 development tests
+- [x] Reuse the reproducible subset datasets created earlier
+- [x] Confirm subset row counts still match expected sizes
+- [x] Confirm subset files are accessible to serial, parallel, and optimized runners
+- [x] Record which subset files are used in Phase 3 development tests
 
 #### Agent instructions
 - Do not regenerate subsets unless necessary
 - Save a short manifest of subset file names and row counts under:
-  - [ ] `results/raw/phase3_dev/`
+  - [x] `results/raw/phase3_dev/`
 - Keep naming stable across repeated benchmark batches
 
 #### Deliverable
@@ -475,19 +475,19 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 19. Add Cross-Mode Validation Runs on Subsets
 #### Tasks
-- [ ] Run the serial implementation on each selected subset
-- [ ] Run the parallel implementation on each selected subset
-- [ ] Run the optimized implementation on each selected subset
-- [ ] Compare for each scenario:
-  - [ ] result count
-  - [ ] aggregate values
-  - [ ] top-N outputs if applicable
-  - [ ] mismatch reports if found
+- [x] Run the serial implementation on each selected subset
+- [x] Run the parallel implementation on each selected subset
+- [x] Run the optimized implementation on each selected subset
+- [x] Compare for each scenario:
+  - [x] result count
+  - [x] aggregate values
+  - [x] top-N outputs if applicable
+  - [x] mismatch reports if found
 
 #### Agent instructions
 - Add a validation mode or helper script that runs serial, parallel, and optimized versions back-to-back on the same subset and scenario
 - Save comparison outputs to:
-  - [ ] `results/raw/phase3_dev/validation/`
+  - [x] `results/raw/phase3_dev/validation/`
 - If mismatches occur, save all raw outputs and log the issue clearly
 
 #### Deliverable
@@ -497,26 +497,26 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 20. Add Early Optimized Benchmark Scenarios for Subsets
 #### Tasks
-- [ ] Define a repeatable Phase 3 subset benchmark set using the same query parameters as earlier phases
-- [ ] Minimum scenarios:
-  - [ ] serial ingest + serial low-speed threshold query
-  - [ ] parallel query version of the same workload
-  - [ ] optimized serial query version of the same workload
-  - [ ] optimized parallel query version if supported
-  - [ ] serial ingest + serial time-window query
-  - [ ] optimized serial time-window query
-  - [ ] serial ingest + serial aggregation query
-  - [ ] optimized serial aggregation query
-- [ ] If borough filtering exists, include optimized comparison variants there too
+- [x] Define a repeatable Phase 3 subset benchmark set using the same query parameters as earlier phases
+- [x] Minimum scenarios:
+  - [x] serial ingest + serial low-speed threshold query
+  - [x] parallel query version of the same workload
+  - [x] optimized serial query version of the same workload
+  - [x] optimized parallel query version if supported
+  - [x] serial ingest + serial time-window query
+  - [x] optimized serial time-window query
+  - [x] serial ingest + serial aggregation query
+  - [x] optimized serial aggregation query
+- [x] If borough filtering exists, include optimized comparison variants there too
 
 #### Agent instructions
 - Keep scenario names stable and machine-readable
 - Use the same thresholds and time windows unless a new experiment is explicitly documented
 - Tag every result row with:
-  - [ ] implementation mode
-  - [ ] subset size
-  - [ ] query scenario
-  - [ ] thread count if applicable
+  - [x] implementation mode
+  - [x] subset size
+  - [x] query scenario
+  - [x] thread count if applicable
 
 #### Deliverable
 - A stable early benchmark set exists for subset-based optimized testing
@@ -525,32 +525,32 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 21. Create a Repeatable Phase 3 Development Benchmark Runner
 #### Tasks
-- [ ] Add or extend a script that runs the Phase 3 subset benchmark suite automatically
-- [ ] Support:
-  - [ ] small subset
-  - [ ] medium subset
-  - [ ] large-dev subset
-- [ ] Support repeated runs per scenario
-- [ ] Support implementation modes:
-  - [ ] serial
-  - [ ] parallel
-  - [ ] optimized
-  - [ ] optimized parallel if supported
-- [ ] Save raw outputs to:
-  - [ ] `results/raw/phase3_dev/`
-- [ ] Save logs to:
-  - [ ] `results/raw/logs/`
+- [x] Add or extend a script that runs the Phase 3 subset benchmark suite automatically
+- [x] Support:
+  - [x] small subset
+  - [x] medium subset
+  - [x] large-dev subset
+- [x] Support repeated runs per scenario
+- [x] Support implementation modes:
+  - [x] serial
+  - [x] parallel
+  - [x] optimized
+  - [x] optimized parallel if supported
+- [x] Save raw outputs to:
+  - [x] `results/raw/phase3_dev/`
+- [x] Save logs to:
+  - [x] `results/raw/logs/`
 
 #### Agent instructions
 - Implement or extend a script such as:
-  - [ ] `scripts/run_phase3_dev_benchmarks.sh`
+  - [x] `scripts/run_phase3_dev_benchmarks.sh`
 - The script should:
-  - [ ] accept a dataset path
-  - [ ] accept a repetition count
-  - [ ] accept thread counts if needed
-  - [ ] run all selected comparison scenarios
-  - [ ] save each run result in a machine-readable format
-  - [ ] print a concise summary to console
+  - [x] accept a dataset path
+  - [x] accept a repetition count
+  - [x] accept thread counts if needed
+  - [x] run all selected comparison scenarios
+  - [x] save each run result in a machine-readable format
+  - [x] print a concise summary to console
 
 #### Deliverable
 - A single command can run the subset-based Phase 3 development benchmark suite
@@ -559,37 +559,37 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 22. Collect Preliminary Optimized Timing and Comparison Data
 #### Tasks
-- [ ] Run each selected benchmark scenario at least:
-  - [ ] `3` times on the small subset
-  - [ ] `3` times on the medium subset
-  - [ ] `3` times on the large-dev subset
-- [ ] For optimized parallel runs, test at least:
-  - [ ] `1` thread
-  - [ ] `2` threads
-  - [ ] `4` threads
-  - [ ] `8` threads if reasonable
-- [ ] Record:
-  - [ ] ingest time
-  - [ ] query time
-  - [ ] total runtime
-  - [ ] implementation mode
-  - [ ] thread count
-  - [ ] records processed per second if available
-  - [ ] memory usage if available in your harness
+- [x] Run each selected benchmark scenario at least:
+  - [x] `3` times on the small subset
+  - [x] `3` times on the medium subset
+  - [x] `3` times on the large-dev subset
+- [x] For optimized parallel runs, test at least:
+  - [x] `1` thread
+  - [x] `2` threads
+  - [x] `4` threads
+  - [x] `8` threads if reasonable
+- [x] Record:
+  - [x] ingest time
+  - [x] query time
+  - [x] total runtime
+  - [x] implementation mode
+  - [x] thread count
+  - [x] records processed per second if available
+  - [x] memory usage if available in your harness
 
 #### Agent instructions
 - The coding agent should execute the benchmark runner after changes affecting:
-  - [ ] data layout
-  - [ ] encoded field handling
-  - [ ] hot-loop logic
-  - [ ] optimized query logic
+  - [x] data layout
+  - [x] encoded field handling
+  - [x] hot-loop logic
+  - [x] optimized query logic
 - Save each batch with labels including:
-  - [ ] git branch
-  - [ ] commit hash if possible
-  - [ ] subset size
-  - [ ] scenario
-  - [ ] implementation mode
-  - [ ] thread count if applicable
+  - [x] git branch
+  - [x] commit hash if possible
+  - [x] subset size
+  - [x] scenario
+  - [x] implementation mode
+  - [x] thread count if applicable
 - Prefer CSV output for later summarization
 
 #### Deliverable
@@ -599,16 +599,16 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 23. Collect Preliminary Memory-Tradeoff Data
 #### Tasks
-- [ ] Measure memory usage on subset workloads for:
-  - [ ] row-oriented serial implementation
-  - [ ] row-oriented parallel implementation if useful
-  - [ ] optimized implementation
-- [ ] Record memory-related metrics such as:
-  - [ ] peak RSS
-  - [ ] approximate bytes per record if estimated
-  - [ ] effect of encoded categorical fields if measured
-- [ ] Save raw memory-related outputs to:
-  - [ ] `results/raw/phase3_dev/memory/`
+- [x] Measure memory usage on subset workloads for:
+  - [x] row-oriented serial implementation
+  - [x] row-oriented parallel implementation if useful
+  - [x] optimized implementation
+- [x] Record memory-related metrics such as:
+  - [x] peak RSS
+  - [x] approximate bytes per record if estimated
+  - [x] effect of encoded categorical fields if measured
+- [x] Save raw memory-related outputs to:
+  - [x] `results/raw/phase3_dev/memory/`
 
 #### Agent instructions
 - Extend the benchmark harness or helper scripts to collect memory data if practical
@@ -622,27 +622,27 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 24. Generate Development Summary Tables for Phase 3
 #### Tasks
-- [ ] Add or extend a script to summarize raw Phase 3 development benchmark results
-- [ ] Compute:
-  - [ ] mean runtime
-  - [ ] median runtime
-  - [ ] minimum runtime
-  - [ ] maximum runtime
-  - [ ] standard deviation if enough runs exist
-  - [ ] speedup relative to serial baseline for the same subset/scenario
-  - [ ] speedup relative to Phase 2 parallel where applicable
-- [ ] Save summary tables to:
-  - [ ] `results/tables/phase3_dev/`
+- [x] Add or extend a script to summarize raw Phase 3 development benchmark results
+- [x] Compute:
+  - [x] mean runtime
+  - [x] median runtime
+  - [x] minimum runtime
+  - [x] maximum runtime
+  - [x] standard deviation if enough runs exist
+  - [x] speedup relative to serial baseline for the same subset/scenario
+  - [x] speedup relative to Phase 2 parallel where applicable
+- [x] Save summary tables to:
+  - [x] `results/tables/phase3_dev/`
 
 #### Agent instructions
 - Implement or extend a helper such as:
-  - [ ] `scripts/summarize_phase3_dev.py`
+  - [x] `scripts/summarize_phase3_dev.py`
 - Read raw CSV benchmark outputs
 - Produce grouped tables by:
-  - [ ] subset size
-  - [ ] scenario
-  - [ ] implementation mode
-  - [ ] thread count
+  - [x] subset size
+  - [x] scenario
+  - [x] implementation mode
+  - [x] thread count
 - Do not delete raw files after summarization
 
 #### Deliverable
@@ -652,14 +652,14 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 25. Generate Simple Development Graphs for Phase 3
 #### Tasks
-- [ ] Add or extend plotting scripts for optimized benchmark results
-- [ ] Plot at least:
-  - [ ] serial vs parallel vs optimized runtime by subset size
-  - [ ] speedup by implementation mode
-  - [ ] optimized runtime vs thread count if optimized parallel is supported
-  - [ ] memory usage comparison by implementation mode if available
-- [ ] Save graphs to:
-  - [ ] `results/graphs/phase3_dev/`
+- [x] Add or extend plotting scripts for optimized benchmark results
+- [x] Plot at least:
+  - [x] serial vs parallel vs optimized runtime by subset size
+  - [x] speedup by implementation mode
+  - [x] optimized runtime vs thread count if optimized parallel is supported
+  - [x] memory usage comparison by implementation mode if available
+- [x] Save graphs to:
+  - [x] `results/graphs/phase3_dev/`
 
 #### Agent instructions
 - Use Python for graph generation
@@ -675,18 +675,18 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 26. Add a Phase 3 Development Benchmark Log
 #### Tasks
-- [ ] Record each benchmark batch in `report/notes.md` or a dedicated Phase 3 dev benchmark log
-- [ ] For each batch, record:
-  - [ ] date/time
-  - [ ] git branch
-  - [ ] commit hash if available
-  - [ ] subset size
-  - [ ] benchmark scenarios run
-  - [ ] implementation modes tested
-  - [ ] thread counts tested if applicable
-  - [ ] notable observations
-  - [ ] failures or anomalies
-- [ ] Record whether the benchmark batch followed a layout or optimization change
+- [x] Record each benchmark batch in `report/notes.md` or a dedicated Phase 3 dev benchmark log
+- [x] For each batch, record:
+  - [x] date/time
+  - [x] git branch
+  - [x] commit hash if available
+  - [x] subset size
+  - [x] benchmark scenarios run
+  - [x] implementation modes tested
+  - [x] thread counts tested if applicable
+  - [x] notable observations
+  - [x] failures or anomalies
+- [x] Record whether the benchmark batch followed a layout or optimization change
 
 #### Agent instructions
 - The coding agent should append a short notes entry after completing a benchmark batch
@@ -699,18 +699,18 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 27. Add Stability Checks for Optimized Runs
 #### Tasks
-- [ ] Rerun identical optimized scenarios multiple times on the same subset
-- [ ] Confirm consistency of:
-  - [ ] result count
-  - [ ] aggregate values
-  - [ ] timing distribution within reason
-- [ ] Check for obvious optimized-path corruption or mismatch
-- [ ] Record any acceptable numerical variation
+- [x] Rerun identical optimized scenarios multiple times on the same subset
+- [x] Confirm consistency of:
+  - [x] result count
+  - [x] aggregate values
+  - [x] timing distribution within reason
+- [x] Check for obvious optimized-path corruption or mismatch
+- [x] Record any acceptable numerical variation
 
 #### Agent instructions
 - Add a helper mode or script that reruns the same optimized scenario multiple times and compares outputs
 - Save mismatches and timing anomalies to:
-  - [ ] `results/raw/phase3_dev/stability/`
+  - [x] `results/raw/phase3_dev/stability/`
 
 #### Deliverable
 - Optimized subset benchmarks are shown to be stable enough for development use
@@ -719,14 +719,14 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 28. Attribute Performance Changes to Specific Optimization Steps
 #### Tasks
-- [ ] Label benchmark batches by optimization step where practical, such as:
-  - [ ] columnar layout only
-  - [ ] encoded categorical fields
-  - [ ] reduced string comparisons
-  - [ ] optimized query rewrite
-  - [ ] optimized parallel query
-- [ ] Keep benchmark outputs attributable to one major change whenever possible
-- [ ] Record when multiple changes were introduced together
+- [x] Label benchmark batches by optimization step where practical, such as:
+  - [x] columnar layout only
+  - [x] encoded categorical fields
+  - [x] reduced string comparisons
+  - [x] optimized query rewrite
+  - [x] optimized parallel query
+- [x] Keep benchmark outputs attributable to one major change whenever possible
+- [x] Record when multiple changes were introduced together
 
 #### Agent instructions
 - The coding agent should include an `optimization_step` field in benchmark outputs or summary tables where possible
@@ -739,13 +739,13 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 
 ### 29. Mark These Results as Pre-Baseline Only
 #### Tasks
-- [ ] Add a note in the README or report notes that Phase 3 subset benchmarks are:
-  - [ ] development-stage measurements
-  - [ ] not the final official comparison data
-- [ ] Distinguish clearly between:
-  - [ ] `phase3_dev`
-  - [ ] final `phase3_baseline`
-- [ ] Reserve final full-dataset comparison runs for the official benchmark campaign later
+- [x] Add a note in the README or report notes that Phase 3 subset benchmarks are:
+  - [x] development-stage measurements
+  - [x] not the final official comparison data
+- [x] Distinguish clearly between:
+  - [x] `phase3_dev`
+  - [x] final `phase3_baseline`
+- [x] Reserve final full-dataset comparison runs for the official benchmark campaign later
 
 #### Agent instructions
 - Ensure output directories and filenames make this distinction obvious
@@ -759,13 +759,13 @@ These tasks should be completed by the coding agent while implementing Phase 3.
 ## Extra Definition of Done for Development-Stage Optimized Benchmarking
 This subsection is complete when all of the following are true:
 
-- [ ] Reproducible subset datasets are reused successfully
-- [ ] Serial, parallel, and optimized programs all run successfully on selected subset sizes
-- [ ] At least 3 benchmark scenarios run repeatedly across implementation modes
-- [ ] Multiple thread counts are tested where applicable
-- [ ] Raw results are saved to disk
-- [ ] Summary tables are generated
-- [ ] Simple graphs are generated
-- [ ] Development benchmark notes are recorded
-- [ ] Outputs are clearly labeled as pre-baseline and not final full-dataset benchmarks
-- [ ] At least some benchmark results are attributable to specific optimization steps
+- [x] Reproducible subset datasets are reused successfully
+- [x] Serial, parallel, and optimized programs all run successfully on selected subset sizes
+- [x] At least 3 benchmark scenarios run repeatedly across implementation modes
+- [x] Multiple thread counts are tested where applicable
+- [x] Raw results are saved to disk
+- [x] Summary tables are generated
+- [x] Simple graphs are generated
+- [x] Development benchmark notes are recorded
+- [x] Outputs are clearly labeled as pre-baseline and not final full-dataset benchmarks
+- [x] At least some benchmark results are attributable to specific optimization steps
