@@ -328,3 +328,56 @@
   - `results/raw/phase2_baseline/`
   - `results/tables/phase2_baseline/`
   - `results/graphs/phase2_baseline/`
+
+## Phase 3 Notes (D6-Final)
+- Branch: `P3-D6-10`.
+- Date: `2026-03-09`.
+- Added optimized hot-loop and support/index work:
+  - `OptimizedQuerySupport` precomputed lookup counts for `link_id`, `borough_code`, and coarse hour buckets.
+  - `run_optimized_support_experiments` benchmark app compares repeated scan vs indexed lookup paths.
+- Added Phase 3 dev benchmark automation:
+  - `configs/phase3_dev_scenarios.conf`
+  - `scripts/run_phase3_subset_validation.sh`
+  - `scripts/run_phase3_dev_benchmarks.sh`
+  - `scripts/check_phase3_dev_determinism.py`
+  - `scripts/summarize_phase3_dev.py`
+  - `scripts/plot_phase3_dev.py`
+  - `scripts/run_phase3_memory_probe.sh`
+- Updated full benchmark helpers for three-way comparison:
+  - `scripts/benchmark.sh` now runs serial + parallel + optimized (serial/parallel) scenarios.
+  - `scripts/plot_results.py` now summarizes all execution modes and serial-relative speedup.
+- New correctness coverage:
+  - `test_optimized_query_support`
+
+### Phase 3 dev batch artifacts (pre-baseline)
+- Cross-mode subset validation:
+  - `results/raw/phase3_dev/validation/validation_20260309T045850Z.csv`
+- Benchmark batch (`runs=3`, threads `1,2,4,8`, subsets `small|medium|large_dev`):
+  - `results/raw/phase3_dev/subset_manifest_20260309T050044Z.csv`
+  - `results/raw/phase3_dev/batch_20260309T050044Z_manifest.csv`
+  - `results/raw/phase3_dev/batch_20260309T050044Z_records_per_second.csv`
+- Summary and graphs:
+  - `results/tables/phase3_dev/phase3_dev_summary_batch_20260309T050044Z_manifest.csv`
+  - `results/graphs/phase3_dev/*.svg`
+- Stability checks:
+  - `results/raw/phase3_dev/stability/stability_summary_20260309T050629Z.csv`
+  - `results/raw/phase3_dev/stability/stability_report_20260309T050629Z.md`
+  - status: `PASS`
+- Memory probe:
+  - `results/raw/phase3_dev/memory/memory_probe_20260309T050703Z.csv`
+- Optional support/index experiment:
+  - `results/raw/phase3_dev/optimized_support_benchmark.csv`
+  - observed (100k subset, repeats=2): indexed lookups for link and borough were substantially faster than repeated scans; index build cost remained small.
+
+### Phase 3 tradeoff summary
+- Strongest gains observed in scan-heavy query loops on optimized layout, especially when combined with OpenMP parallel execution at larger subset sizes.
+- Some scenarios remain ingest-dominated at smaller subset sizes, limiting visible query-speedup despite optimized query logic.
+- Auxiliary support structures can reduce repeated lookup costs significantly, but introduce extra build-time and memory overhead.
+
+### Phase 3 caveats and recommendation
+- All `phase3_dev` outputs are development-stage (**pre-baseline**) subset measurements and not final full-dataset baseline claims.
+- Keep final official full-dataset Phase 3 comparison outputs separate under:
+  - `results/raw/phase3_baseline/`
+  - `results/tables/phase3_baseline/`
+  - `results/graphs/phase3_baseline/`
+- Recommended final design: keep row and optimized paths side-by-side, use optimized layout for heavy scan/aggregation workloads, and keep optional support indexes behind benchmark-validated use cases.
