@@ -473,24 +473,24 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 15. Collect Preliminary Timing Data
 #### Tasks
-- [ ] Run each subset benchmark scenario at least:
-  - [ ] `3` times on the small subset
-  - [ ] `3` times on the medium subset
-  - [ ] `3` times on the large-dev subset
-- [ ] Record:
-  - [ ] ingest time
-  - [ ] query time
-  - [ ] total runtime
-  - [ ] records processed per second if available
-- [ ] Store each run separately before computing summaries
+- [x] Run each subset benchmark scenario at least:
+  - [x] `3` times on the small subset
+  - [x] `3` times on the medium subset
+  - [x] `3` times on the large-dev subset
+- [x] Record:
+  - [x] ingest time
+  - [x] query time
+  - [x] total runtime
+  - [x] records processed per second if available
+- [x] Store each run separately before computing summaries
 
 #### Agent instructions
 - The coding agent should execute the benchmark runner after implementation changes that affect loading or query behavior
 - Save each batch with a clear label indicating:
-  - [ ] git branch
-  - [ ] commit hash if possible
-  - [ ] dataset subset size
-  - [ ] query scenario
+  - [x] git branch
+  - [x] commit hash if possible
+  - [x] dataset subset size
+  - [x] query scenario
 - Prefer CSV output for later aggregation
 
 #### Deliverable
@@ -500,19 +500,19 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 16. Generate Development Summary Tables
 #### Tasks
-- [ ] Add a small script to summarize raw subset benchmark results
-- [ ] Compute:
-  - [ ] mean runtime
-  - [ ] median runtime
-  - [ ] minimum runtime
-  - [ ] maximum runtime
-  - [ ] standard deviation if enough runs exist
-- [ ] Save summary tables to:
-  - [ ] `results/tables/phase1_dev/`
+- [x] Add a small script to summarize raw subset benchmark results
+- [x] Compute:
+  - [x] mean runtime
+  - [x] median runtime
+  - [x] minimum runtime
+  - [x] maximum runtime
+  - [x] standard deviation if enough runs exist
+- [x] Save summary tables to:
+  - [x] `results/tables/phase1_dev/`
 
 #### Agent instructions
 - Implement a helper such as:
-  - [ ] `scripts/summarize_phase1_dev.py`
+  - [x] `scripts/summarize_phase1_dev.py`
 - Read raw CSV benchmark outputs
 - Produce one summary table per dataset subset or one combined table with clear labels
 - Do not delete raw files after summarization
@@ -524,13 +524,13 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 17. Generate Simple Development Graphs
 #### Tasks
-- [ ] Add a plotting script for subset benchmark results
-- [ ] Plot at least:
-  - [ ] ingest time vs subset size
-  - [ ] total runtime vs subset size
-  - [ ] query runtime by scenario
-- [ ] Save graphs to:
-  - [ ] `results/graphs/phase1_dev/`
+- [x] Add a plotting script for subset benchmark results
+- [x] Plot at least:
+  - [x] ingest time vs subset size
+  - [x] total runtime vs subset size
+  - [x] query runtime by scenario
+- [x] Save graphs to:
+  - [x] `results/graphs/phase1_dev/`
 
 #### Agent instructions
 - Use Python for graph generation
@@ -546,16 +546,16 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 18. Add a Phase 1 Development Benchmark Log
 #### Tasks
-- [ ] Record each benchmark batch in `report/notes.md` or a dedicated dev benchmark log
-- [ ] For each batch, record:
-  - [ ] date/time
-  - [ ] git branch
-  - [ ] commit hash if available
-  - [ ] subset size
-  - [ ] benchmark scenarios run
-  - [ ] notable observations
-  - [ ] failures or anomalies
-- [ ] Record whether the benchmark run followed a code change
+- [x] Record each benchmark batch in `report/notes.md` or a dedicated dev benchmark log
+- [x] For each batch, record:
+  - [x] date/time
+  - [x] git branch
+  - [x] commit hash if available
+  - [x] subset size
+  - [x] benchmark scenarios run
+  - [x] notable observations
+  - [x] failures or anomalies
+- [x] Record whether the benchmark run followed a code change
 
 #### Agent instructions
 - The coding agent should append a short notes entry after completing a benchmark batch
@@ -568,18 +568,18 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 19. Add a Correctness Cross-Check Between Subsets
 #### Tasks
-- [ ] Compare query result counts across repeated runs on the same subset
-- [ ] Confirm deterministic results for:
-  - [ ] low-speed threshold query
-  - [ ] time-window query
-  - [ ] borough + threshold query if applicable
-  - [ ] top-N query if deterministic ordering rules are defined
-- [ ] Record any nondeterministic behavior
+- [x] Compare query result counts across repeated runs on the same subset
+- [x] Confirm deterministic results for:
+  - [x] low-speed threshold query
+  - [x] time-window query
+  - [x] borough + threshold query if applicable
+  - [x] top-N query if deterministic ordering rules are defined
+- [x] Record any nondeterministic behavior
 
 #### Agent instructions
 - Add a validation mode or helper script that reruns the same subset query and checks:
-  - [ ] result count consistency
-  - [ ] aggregate consistency
+  - [x] result count consistency
+  - [x] aggregate consistency
 - If mismatches occur, save both outputs and log the issue
 
 #### Deliverable
@@ -589,13 +589,13 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 
 ### 20. Mark These Results as Pre-Baseline Only
 #### Tasks
-- [ ] Add a note in the README or report notes that subset benchmarks are:
-  - [ ] development-stage measurements
-  - [ ] not the final official comparison data
-- [ ] Distinguish clearly between:
-  - [ ] `phase1_dev`
-  - [ ] final `phase1_baseline`
-- [ ] Reserve final full-dataset benchmarking for the official comparison campaign later
+- [x] Add a note in the README or report notes that subset benchmarks are:
+  - [x] development-stage measurements
+  - [x] not the final official comparison data
+- [x] Distinguish clearly between:
+  - [x] `phase1_dev`
+  - [x] final `phase1_baseline`
+- [x] Reserve final full-dataset benchmarking for the official comparison campaign later
 
 #### Agent instructions
 - Ensure output directories and filenames make this distinction obvious
@@ -609,11 +609,11 @@ These tasks should be completed by the coding agent while implementing Phase 1.
 ## Extra Definition of Done for Development-Stage Benchmarking
 This subsection is complete when all of the following are true:
 
-- [ ] Reproducible subset datasets exist
-- [ ] The serial program runs successfully on all selected subset sizes
-- [ ] At least 3 benchmark scenarios run repeatedly on subsets
-- [ ] Raw results are saved to disk
-- [ ] Summary tables are generated
-- [ ] Simple graphs are generated
-- [ ] Development benchmark notes are recorded
-- [ ] Outputs are clearly labeled as pre-baseline and not final full-dataset benchmarks
+- [x] Reproducible subset datasets exist
+- [x] The serial program runs successfully on all selected subset sizes
+- [x] At least 3 benchmark scenarios run repeatedly on subsets
+- [x] Raw results are saved to disk
+- [x] Summary tables are generated
+- [x] Simple graphs are generated
+- [x] Development benchmark notes are recorded
+- [x] Outputs are clearly labeled as pre-baseline and not final full-dataset benchmarks

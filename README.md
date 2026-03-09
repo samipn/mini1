@@ -237,6 +237,20 @@ In Phase 3, these classes may be partially or fully transformed into a more vect
 
 The assignment expects repeated runs and average-based benchmarking rather than single measurements.
 
+## Phase 1 Output Labeling Policy
+To avoid mixing development measurements with official baseline numbers:
+
+- `results/raw/phase1_dev/`, `results/tables/phase1_dev/`, and `results/graphs/phase1_dev/`
+  are **development-stage only** outputs from subset datasets.
+- These `phase1_dev` outputs are **not** final official comparison data.
+- Final official full-dataset Phase 1 baseline outputs are reserved for:
+  - `results/raw/phase1_baseline/`
+  - `results/tables/phase1_baseline/`
+  - `results/graphs/phase1_baseline/`
+
+Until the full-dataset campaign is run, treat all `phase1_dev` numbers as
+pre-baseline diagnostics used for workflow validation and early trend checks.
+
 ## Tooling and Language Constraints
 
 ### Required
