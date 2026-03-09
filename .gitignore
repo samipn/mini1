@@ -16,6 +16,7 @@ Thumbs.db
 
 # Build outputs
 build/
+build_*/
 build-*/
 out/
 bin/
