@@ -258,6 +258,24 @@
     - deeper memory-layout/ownership redesign and high-cardinality compaction
     - broad replacement of STL maps in core runtime paths based solely on micro-benchs
 
+## Phase 2 Notes (Chunk 5: Finalization)
+- Branch: `P2-D31-F`.
+- Closeout actions:
+  - normalized remaining Phase 2 TODO parent checklist items so completion status aligns with implemented work.
+  - marked Phase 2 Definition-of-Done checklist as complete.
+  - kept explicit non-goals and not-applicable alternatives (`std::thread` path) unselected by design.
+- Final verification pass requirements:
+  - clean rebuild from `build/`
+  - full CTest suite pass
+  - Phase 2 dev artifacts remain organized under `phase2_dev` paths and separated from final baseline paths.
+- Verification executed:
+  - clean rebuild completed (`rm -r build`, reconfigure, rebuild)
+  - CTest result: `13/13` tests passed
+  - regenerated Phase 2 summary artifacts:
+    - `results/tables/phase2/summary.csv`
+    - `results/tables/phase2_dev/phase2_dev_summary_20260309T040238Z.csv`
+    - `results/graphs/phase2_dev/*.svg`
+
 ## Pre-baseline classification (D20)
 - All subset benchmark artifacts under:
   - `results/raw/phase1_dev/`

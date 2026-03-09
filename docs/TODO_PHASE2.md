@@ -87,7 +87,7 @@ That keeps the experiment focused and easier to explain.
 - [x] Choose at least 2–3 query paths to parallelize
 - [x] Prioritize:
   - [x] speed-threshold scans
-  - [ ] time-window scans
+  - [x] time-window scans
   - [x] borough + threshold scans
   - [x] aggregations over the full record set
 - [x] Document why these paths were chosen
@@ -142,13 +142,12 @@ That keeps the experiment focused and easier to explain.
 
 ### 6. Parallelize Time-Window Query
 #### Tasks
-- [ ] Implement parallel scan for records in a selected time window
 - [x] Implement parallel scan for records in a selected time window
 - [x] Ensure timestamp comparisons are deterministic
-- [ ] Compare:
+- [x] Compare:
   - [x] record count
-  - [ ] aggregate metrics
-  - [ ] optional sample records
+  - [x] aggregate metrics
+  - [x] optional sample records
 - [x] Benchmark against the same time windows used in Phase 1
 
 #### Deliverable
@@ -158,7 +157,7 @@ That keeps the experiment focused and easier to explain.
 
 ### 7. Parallelize Aggregation Queries
 #### Tasks
-- [ ] Add parallel aggregation for:
+- [x] Add parallel aggregation for:
   - [x] average speed
   - [x] average travel time
   - [x] counts by condition
@@ -189,14 +188,14 @@ That keeps the experiment focused and easier to explain.
 ### 9. Extend the CLI Runner for Parallel Execution
 #### Tasks
 - [x] Implement `apps/run_parallel.cpp`
-- [ ] Accept command-line arguments for:
+- [x] Accept command-line arguments for:
   - [x] traffic dataset path
   - [x] query type
   - [x] thresholds
   - [x] time ranges
   - [x] number of threads
   - [x] repetitions
-- [ ] Print logs showing:
+- [x] Print logs showing:
   - [x] thread count
   - [x] query type
   - [x] dataset size
@@ -211,7 +210,7 @@ That keeps the experiment focused and easier to explain.
 
 ### 10. Add Thread Count Controls
 #### Tasks
-- [ ] Support explicit thread counts such as:
+- [x] Support explicit thread counts such as:
   - [x] 1
   - [x] 2
   - [x] 4
@@ -386,14 +385,14 @@ That keeps the experiment focused and easier to explain.
 ## Definition of Done for Phase 2
 Phase 2 is complete when all of the following are true:
 
-- [ ] The project builds a parallel executable cleanly
-- [ ] At least 2–3 query paths are parallelized
-- [ ] Parallel results are validated against serial output
-- [ ] Benchmarks compare serial and parallel execution directly
-- [ ] Thread-count scaling data is collected
-- [ ] Results are saved to disk
-- [ ] Notes exist explaining both improvements and limitations
-- [ ] The codebase is ready for Phase 3 memory-layout optimization
+- [x] The project builds a parallel executable cleanly
+- [x] At least 2–3 query paths are parallelized
+- [x] Parallel results are validated against serial output
+- [x] Benchmarks compare serial and parallel execution directly
+- [x] Thread-count scaling data is collected
+- [x] Results are saved to disk
+- [x] Notes exist explaining both improvements and limitations
+- [x] The codebase is ready for Phase 3 memory-layout optimization
 
 ---
 
@@ -475,10 +474,10 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 #### Tasks
 - [x] Run the serial query implementation on the small subset
 - [x] Run the parallel query implementation on the small subset
-- [ ] Repeat the same comparison for:
+- [x] Repeat the same comparison for:
   - [x] medium subset
   - [x] large-dev subset
-- [ ] Record for each scenario:
+- [x] Record for each scenario:
   - [x] result count
   - [x] aggregate values if applicable
   - [x] mismatches if found
@@ -497,14 +496,14 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 ### 19. Add Early Parallel Benchmark Scenarios for Subsets
 #### Tasks
 - [x] Define a repeatable Phase 2 subset benchmark set using the same query parameters as Phase 1 where possible
-- [ ] Minimum scenarios:
+- [x] Minimum scenarios:
   - [x] serial ingest + serial low-speed threshold query
   - [x] serial ingest + parallel low-speed threshold query
   - [x] serial ingest + serial time-window query
   - [x] serial ingest + parallel time-window query
   - [x] serial ingest + serial aggregation query
   - [x] serial ingest + parallel aggregation query
-- [ ] If borough filtering exists, include:
+- [x] If borough filtering exists, include:
   - [x] serial ingest + serial borough + threshold query
   - [x] serial ingest + parallel borough + threshold query
 
@@ -521,15 +520,15 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 ### 20. Create a Repeatable Phase 2 Development Benchmark Runner
 #### Tasks
 - [x] Add or extend a script that runs the Phase 2 subset benchmark suite automatically
-- [ ] Support:
+- [x] Support:
   - [x] small subset
   - [x] medium subset
   - [x] large-dev subset
 - [x] Support repeated runs per scenario
 - [x] Support configurable thread counts
-- [ ] Save raw outputs to:
+- [x] Save raw outputs to:
   - [x] `results/raw/phase2_dev/`
-- [ ] Save logs to:
+- [x] Save logs to:
   - [x] `results/raw/logs/`
 
 #### Agent instructions
@@ -550,16 +549,16 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 
 ### 21. Collect Preliminary Serial-vs-Parallel Timing Data
 #### Tasks
-- [ ] Run each selected benchmark scenario at least:
+- [x] Run each selected benchmark scenario at least:
   - [x] `3` times on the small subset
   - [x] `3` times on the medium subset
   - [x] `3` times on the large-dev subset
-- [ ] For parallel runs, test at least:
+- [x] For parallel runs, test at least:
   - [x] `1` thread
   - [x] `2` threads
   - [x] `4` threads
   - [x] `8` threads if reasonable for the VM
-- [ ] Record:
+- [x] Record:
   - [x] ingest time
   - [x] query time
   - [x] total runtime
@@ -584,14 +583,14 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 ### 22. Generate Development Summary Tables for Phase 2
 #### Tasks
 - [x] Add or extend a script to summarize raw Phase 2 development benchmark results
-- [ ] Compute:
+- [x] Compute:
   - [x] mean runtime
   - [x] median runtime
   - [x] minimum runtime
   - [x] maximum runtime
   - [x] standard deviation if enough runs exist
   - [x] speedup relative to serial for the same subset/scenario
-- [ ] Save summary tables to:
+- [x] Save summary tables to:
   - [x] `results/tables/phase2_dev/`
 
 #### Agent instructions
@@ -612,12 +611,12 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 ### 23. Generate Simple Development Graphs for Phase 2
 #### Tasks
 - [x] Add or extend plotting scripts for subset-based parallel benchmark results
-- [ ] Plot at least:
+- [x] Plot at least:
   - [x] query runtime vs thread count
   - [x] speedup vs thread count
   - [x] serial vs parallel runtime by subset size
   - [x] runtime by scenario
-- [ ] Save graphs to:
+- [x] Save graphs to:
   - [x] `results/graphs/phase2_dev/`
 
 #### Agent instructions
@@ -635,7 +634,7 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 ### 24. Add a Phase 2 Development Benchmark Log
 #### Tasks
 - [x] Record each benchmark batch in `report/notes.md` or a dedicated Phase 2 dev benchmark log
-- [ ] For each batch, record:
+- [x] For each batch, record:
   - [x] date/time
   - [x] git branch
   - [x] commit hash if available
@@ -658,7 +657,7 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 ### 25. Add Stability and Determinism Checks for Parallel Runs
 #### Tasks
 - [x] Rerun identical parallel scenarios multiple times on the same subset
-- [ ] Confirm consistency of:
+- [x] Confirm consistency of:
   - [x] result count
   - [x] aggregate values
   - [x] timing distribution within reason
