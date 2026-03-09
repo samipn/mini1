@@ -181,15 +181,15 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P2 maintainability: deduplicate CLI numeric parsing helpers.
   Objective: centralize parse helpers shared by serial/parallel/optimized runners to prevent divergence.
   Evidence: duplicated parse helper logic across app binaries.
-- [ ] P2-D2 build policy: apply strict warning policy to app/test targets in addition to `congestion_core`.
-  Objective: keep warning enforcement consistent across all binaries participating in Phase 2 deliverables.
-  Evidence: warning flags are currently scoped to `congestion_core` target options.
+- [x] P2-D2 build policy: apply strict warning policy to app/test targets in addition to `congestion_core`.
+  Objective/result: warning policy helper is applied across app/test targets in CMake, not only core library target.
+  Evidence: `CMakeLists.txt` (`urbandrop_enable_warnings(...)` for app/test targets).
 - [x] P2-D4 runtime isolation: avoid process-global OpenMP thread mutation in query helpers.
   Objective/result: removed per-call `omp_set_num_threads` usage and switched to scoped `num_threads(...)` clauses in parallel regions.
   Evidence: `src/query/ParallelCongestionQuery.cpp`, `src/query/ParallelTrafficAggregator.cpp`.
-- [ ] P2-D11/D13 evidence policy: separate dev batches (`runs=3`) from deliverable-grade scaling evidence (`runs>=10`).
-  Objective: prevent ambiguity when comparing Phase 2 scaling claims across `phase2_dev` and `phase2` artifact families.
-  Evidence: `phase2_dev` manifests use 3 runs; `results/raw/phase2` contains 10-run sample sets.
+- [x] P2-D11/D13 evidence policy: separate dev batches (`runs=3`) from deliverable-grade scaling evidence (`runs>=10`).
+  Objective/result: Phase 2 dev runner now enforces `runs>=3` (with explicit smoke override), and dedicated baseline runner enforces `runs>=10` in `results/raw/phase2_baseline`.
+  Evidence: `scripts/run_phase2_dev_benchmarks.sh`, `scripts/run_phase2_baseline_benchmarks.sh`.
 - [x] P2-D14 tooling clarity: deprecate or clearly scope legacy `summarize_phase2.py`.
   Objective/result: legacy summarizer now emits explicit deprecation guidance and points to manifest-driven `summarize_phase2_dev.py`.
   Evidence: `scripts/summarize_phase2.py`.

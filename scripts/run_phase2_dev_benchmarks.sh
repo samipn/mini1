@@ -12,6 +12,7 @@ OUT_DIR="${ROOT_DIR}/results/raw/phase2_dev"
 LOG_DIR="${ROOT_DIR}/results/raw/logs"
 RUNS=3
 THREAD_LIST="1,2,4,8,16"
+ALLOW_UNDER_MIN_RUNS=false
 
 SMALL_PATH=""
 MEDIUM_PATH=""
@@ -29,6 +30,7 @@ Options:
   --medium <path>         Medium subset CSV path (100k)
   --large <path>          Large-dev subset CSV path (1M)
   --runs <n>              Benchmark repetitions per scenario (default: 3)
+  --allow-under-min-runs  Allow runs < 3 (smoke/debug only)
   --threads <csv>         Parallel thread list (default: 1,2,4,8,16)
   --out-dir <path>        Raw benchmark output dir (default: results/raw/phase2_dev)
   --log-dir <path>        Log output dir (default: results/raw/logs)
@@ -58,6 +60,10 @@ while [[ $# -gt 0 ]]; do
       RUNS="$2"
       shift 2
       ;;
+    --allow-under-min-runs)
+      ALLOW_UNDER_MIN_RUNS=true
+      shift
+      ;;
     --threads)
       THREAD_LIST="$2"
       shift 2
@@ -81,6 +87,20 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if ! [[ "${RUNS}" =~ ^[0-9]+$ ]]; then
+  echo "[phase2-dev] --runs must be a positive integer." >&2
+  exit 2
+fi
+if [[ "${RUNS}" -lt 1 ]]; then
+  echo "[phase2-dev] --runs must be >= 1." >&2
+  exit 2
+fi
+if [[ "${RUNS}" -lt 3 && "${ALLOW_UNDER_MIN_RUNS}" != "true" ]]; then
+  echo "[phase2-dev] --runs must be >= 3 for deliverable-grade dev benchmarking." >&2
+  echo "[phase2-dev] use --allow-under-min-runs only for smoke/debug runs." >&2
+  exit 2
+fi
 
 if [[ ! -f "${SCENARIO_FILE}" ]]; then
   echo "[phase2-dev] missing scenario file: ${SCENARIO_FILE}" >&2
