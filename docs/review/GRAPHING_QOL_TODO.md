@@ -100,7 +100,7 @@ Purpose: improve graph completeness, visual quality, and interpretability across
 
 ## 8) Testing and CI Guardrails
 - [ ] Add unit tests for plotting data-validation helpers.
-- [ ] Add smoke test that runs each plot script on a tiny fixture summary.
+- [x] Add smoke test that runs each plot script on a tiny fixture summary.
 - [ ] Add regression test to ensure required chart files are produced per phase.
 - [ ] Add CI check that fails if chart generation silently skips expected scenarios.
 - [ ] Add CI check to verify axis labels and titles are non-empty in generated SVG.

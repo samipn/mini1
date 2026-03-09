@@ -1,0 +1,5 @@
+dataset_label,query_type,runs,ingest_mean_ms,total_mean_ms,query_mean_ms
+small,ingest_only,3,10.0,10.1,0.0
+small,speed_below_15,3,10.0,10.5,0.5
+medium,ingest_only,3,20.0,20.1,0.0
+medium,speed_below_15,3,20.0,20.8,0.8

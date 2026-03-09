@@ -1,0 +1,4 @@
+subset_label,scenario_name,mode,thread_count,query_mean_ms,speedup_vs_serial_query,runs
+small,speed_below_15,serial,1,1.000000,1.000000,3
+small,speed_below_15,parallel,1,1.050000,0.952381,3
+small,speed_below_15,parallel,2,0.700000,1.428571,3
