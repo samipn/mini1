@@ -9,6 +9,11 @@ void TrafficDataset::AddRecord(const TrafficRecord& record) {
 
 void TrafficDataset::Reserve(std::size_t size) { records_.reserve(size); }
 
+void TrafficDataset::Clear() {
+  records_.clear();
+  counters_ = IngestionCounters{};
+}
+
 bool TrafficDataset::Empty() const { return records_.empty(); }
 
 std::size_t TrafficDataset::Size() const { return records_.size(); }

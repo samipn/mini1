@@ -10,6 +10,7 @@ namespace urbandrop {
 class TrafficDatasetOptimized {
  public:
   void Reserve(std::size_t size);
+  void Clear();
   void AddRecord(std::int64_t link_id,
                  double speed_mph,
                  double travel_time_seconds,

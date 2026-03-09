@@ -6,6 +6,11 @@ void TrafficDatasetOptimized::Reserve(std::size_t size) {
   columns_.Reserve(size);
 }
 
+void TrafficDatasetOptimized::Clear() {
+  columns_.Clear();
+  counters_ = IngestionCounters{};
+}
+
 void TrafficDatasetOptimized::AddRecord(std::int64_t link_id,
                                         double speed_mph,
                                         double travel_time_seconds,

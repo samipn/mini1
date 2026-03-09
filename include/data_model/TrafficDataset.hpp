@@ -21,6 +21,7 @@ class TrafficDataset {
  public:
   void AddRecord(const TrafficRecord& record);
   void Reserve(std::size_t size);
+  void Clear();
 
   bool Empty() const;
   std::size_t Size() const;

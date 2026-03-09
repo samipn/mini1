@@ -72,6 +72,20 @@ int main() {
       std::cerr << "building stats mismatch\n";
       return EXIT_FAILURE;
     }
+
+    // Reusing stats object should not accumulate across calls.
+    stats.rows_read = 999;
+    stats.rows_accepted = 999;
+    stats.rows_rejected = 999;
+    std::vector<urbandrop::BuildingRecord> buildings_second;
+    if (!urbandrop::BuildingLoader::LoadCSV(WriteBesFixture(), &buildings_second, &stats, &error)) {
+      std::cerr << "building second load failed: " << error << "\n";
+      return EXIT_FAILURE;
+    }
+    if (stats.rows_read != 2 || stats.rows_accepted != 1 || stats.rows_rejected != 1) {
+      std::cerr << "building stats should reset per load\n";
+      return EXIT_FAILURE;
+    }
   }
 
   return EXIT_SUCCESS;

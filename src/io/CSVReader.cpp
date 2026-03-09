@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cerrno>
 #include <chrono>
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -174,6 +176,8 @@ bool CSVReader::LoadTrafficCSV(const std::string& csv_path,
     return false;
   }
 
+  dataset->Clear();
+
   std::ifstream input(csv_path);
   if (!input.is_open()) {
     if (error != nullptr) {
@@ -297,6 +301,8 @@ bool CSVReader::LoadTrafficCSVOptimized(const std::string& csv_path,
     }
     return false;
   }
+
+  dataset->Clear();
 
   std::ifstream input(csv_path);
   if (!input.is_open()) {

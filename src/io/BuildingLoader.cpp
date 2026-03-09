@@ -134,6 +134,8 @@ bool BuildingLoader::LoadCSV(const std::string& csv_path,
     cols[ToLower(headers[i])] = i;
   }
 
+  *out_stats = LoaderStats{};
+
   std::size_t bbl_col = static_cast<std::size_t>(-1);
   std::size_t subgrade_col = static_cast<std::size_t>(-1);
   std::size_t elevation_col = static_cast<std::size_t>(-1);

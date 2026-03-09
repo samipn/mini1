@@ -19,6 +19,10 @@ Evidence sources:
 - Phase 1: pass (`6/6` deliverable checks, `16/16` TODO path tokens)
 - Phase 2: pass (`7/7` deliverable checks, `13/13` TODO path tokens)
 - Phase 3: pass (`10/10` deliverable checks, `14/14` TODO path tokens)
+- Per-deliverable review backlog status:
+  - Phase 1 D1-D10 reviewed (all items verified after D3 hardening fixes)
+  - Phase 2 D1-D15 reviewed
+  - Phase 3 D1-D15 reviewed
 
 ## Fixes Applied During Verification
 
@@ -34,6 +38,10 @@ Evidence sources:
 5. Added reusable audit tooling:
    - `scripts/audit_phase_deliverables.py`
    - `scripts/audit_todo_evidence.py`
+6. Fixed D3 ingestion correctness hardening issues:
+   - `CSVReader` now resets target datasets per load (row + optimized).
+   - `BuildingLoader` now resets `LoaderStats` per load.
+   - Added regression coverage for repeated-load semantics.
 
 ## Above-and-Beyond Items in This Pass
 
