@@ -59,6 +59,9 @@ struct BenchmarkRunResult {
   std::size_t rows_accepted = 0;
   std::size_t rows_rejected = 0;
   std::size_t result_count = 0;
+  bool has_aggregate = false;
+  double average_speed_mph = 0.0;
+  double average_travel_time_seconds = 0.0;
   bool serial_match = true;
 };
 

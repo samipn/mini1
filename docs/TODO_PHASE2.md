@@ -455,15 +455,15 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 
 ### 17. Reuse or Validate Subset Datasets for Phase 2
 #### Tasks
-- [ ] Reuse the reproducible subset datasets created during Phase 1
-- [ ] Confirm subset row counts still match expected sizes
-- [ ] Confirm subset files are accessible to both serial and parallel runners
-- [ ] Record which subset files are used in Phase 2 development tests
+- [x] Reuse the reproducible subset datasets created during Phase 1
+- [x] Confirm subset row counts still match expected sizes
+- [x] Confirm subset files are accessible to both serial and parallel runners
+- [x] Record which subset files are used in Phase 2 development tests
 
 #### Agent instructions
 - Do not regenerate subsets unless the source data changed or earlier subset files are invalid
 - Save a short manifest of subset file names and row counts under:
-  - [ ] `results/raw/phase2_dev/`
+  - [x] `results/raw/phase2_dev/`
 - Use stable file naming across repeated benchmark batches
 
 #### Deliverable
@@ -473,20 +473,20 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 
 ### 18. Add Serial-vs-Parallel Validation Runs on Subsets
 #### Tasks
-- [ ] Run the serial query implementation on the small subset
-- [ ] Run the parallel query implementation on the small subset
+- [x] Run the serial query implementation on the small subset
+- [x] Run the parallel query implementation on the small subset
 - [ ] Repeat the same comparison for:
-  - [ ] medium subset
-  - [ ] large-dev subset
+  - [x] medium subset
+  - [x] large-dev subset
 - [ ] Record for each scenario:
-  - [ ] result count
-  - [ ] aggregate values if applicable
-  - [ ] mismatches if found
+  - [x] result count
+  - [x] aggregate values if applicable
+  - [x] mismatches if found
 
 #### Agent instructions
 - Add a validation mode or helper script that runs serial and parallel back-to-back on the same subset and query scenario
 - Save comparison outputs to:
-  - [ ] `results/raw/phase2_dev/validation/`
+  - [x] `results/raw/phase2_dev/validation/`
 - If mismatches occur, save both raw outputs and log the issue clearly
 
 #### Deliverable
@@ -496,17 +496,17 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 
 ### 19. Add Early Parallel Benchmark Scenarios for Subsets
 #### Tasks
-- [ ] Define a repeatable Phase 2 subset benchmark set using the same query parameters as Phase 1 where possible
+- [x] Define a repeatable Phase 2 subset benchmark set using the same query parameters as Phase 1 where possible
 - [ ] Minimum scenarios:
-  - [ ] serial ingest + serial low-speed threshold query
-  - [ ] serial ingest + parallel low-speed threshold query
-  - [ ] serial ingest + serial time-window query
-  - [ ] serial ingest + parallel time-window query
-  - [ ] serial ingest + serial aggregation query
-  - [ ] serial ingest + parallel aggregation query
+  - [x] serial ingest + serial low-speed threshold query
+  - [x] serial ingest + parallel low-speed threshold query
+  - [x] serial ingest + serial time-window query
+  - [x] serial ingest + parallel time-window query
+  - [x] serial ingest + serial aggregation query
+  - [x] serial ingest + parallel aggregation query
 - [ ] If borough filtering exists, include:
-  - [ ] serial ingest + serial borough + threshold query
-  - [ ] serial ingest + parallel borough + threshold query
+  - [x] serial ingest + serial borough + threshold query
+  - [x] serial ingest + parallel borough + threshold query
 
 #### Agent instructions
 - Keep scenario names stable and machine-readable
@@ -520,28 +520,28 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 
 ### 20. Create a Repeatable Phase 2 Development Benchmark Runner
 #### Tasks
-- [ ] Add or extend a script that runs the Phase 2 subset benchmark suite automatically
+- [x] Add or extend a script that runs the Phase 2 subset benchmark suite automatically
 - [ ] Support:
-  - [ ] small subset
-  - [ ] medium subset
-  - [ ] large-dev subset
-- [ ] Support repeated runs per scenario
-- [ ] Support configurable thread counts
+  - [x] small subset
+  - [x] medium subset
+  - [x] large-dev subset
+- [x] Support repeated runs per scenario
+- [x] Support configurable thread counts
 - [ ] Save raw outputs to:
-  - [ ] `results/raw/phase2_dev/`
+  - [x] `results/raw/phase2_dev/`
 - [ ] Save logs to:
-  - [ ] `results/raw/logs/`
+  - [x] `results/raw/logs/`
 
 #### Agent instructions
 - Implement or extend a script such as:
-  - [ ] `scripts/run_phase2_dev_benchmarks.sh`
+  - [x] `scripts/run_phase2_dev_benchmarks.sh`
 - The script should:
-  - [ ] accept a dataset path
-  - [ ] accept a repetition count
-  - [ ] accept one or more thread counts
-  - [ ] run all selected serial and parallel benchmark scenarios
-  - [ ] save each run result in a machine-readable format
-  - [ ] print a concise summary to console
+  - [x] accept a dataset path
+  - [x] accept a repetition count
+  - [x] accept one or more thread counts
+  - [x] run all selected serial and parallel benchmark scenarios
+  - [x] save each run result in a machine-readable format
+  - [x] print a concise summary to console
 
 #### Deliverable
 - A single command can run the subset-based Phase 2 development benchmark suite
@@ -551,29 +551,29 @@ These tasks should be completed by the coding agent while implementing Phase 2.
 ### 21. Collect Preliminary Serial-vs-Parallel Timing Data
 #### Tasks
 - [ ] Run each selected benchmark scenario at least:
-  - [ ] `3` times on the small subset
-  - [ ] `3` times on the medium subset
-  - [ ] `3` times on the large-dev subset
+  - [x] `3` times on the small subset
+  - [x] `3` times on the medium subset
+  - [x] `3` times on the large-dev subset
 - [ ] For parallel runs, test at least:
-  - [ ] `1` thread
-  - [ ] `2` threads
-  - [ ] `4` threads
-  - [ ] `8` threads if reasonable for the VM
+  - [x] `1` thread
+  - [x] `2` threads
+  - [x] `4` threads
+  - [x] `8` threads if reasonable for the VM
 - [ ] Record:
-  - [ ] ingest time
-  - [ ] query time
-  - [ ] total runtime
-  - [ ] thread count
-  - [ ] records processed per second if available
+  - [x] ingest time
+  - [x] query time
+  - [x] total runtime
+  - [x] thread count
+  - [x] records processed per second if available
 
 #### Agent instructions
 - The coding agent should execute the benchmark runner after changes that affect parallel query logic or reduction strategy
 - Save each batch with labels including:
-  - [ ] git branch
-  - [ ] commit hash if possible
-  - [ ] subset size
-  - [ ] query scenario
-  - [ ] thread count
+  - [x] git branch
+  - [x] commit hash if possible
+  - [x] subset size
+  - [x] query scenario
+  - [x] thread count
 - Prefer CSV output for later summarization
 
 #### Deliverable
