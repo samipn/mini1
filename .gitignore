@@ -81,6 +81,9 @@ results/raw/
 *.db
 *.log
 
+# Keep config scenario CSVs tracked
+!configs/*.csv
+
 # Local notes
 .dev_notes
 .local_config

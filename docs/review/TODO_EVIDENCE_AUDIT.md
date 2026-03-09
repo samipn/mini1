@@ -5,39 +5,20 @@ This checks only `- [x]` lines that include backticked path-like tokens.
 
 ## docs/TODO_PHASE1.md
 
-- Passing tokens: `12/16`
-- Missing tokens: `4`
-
-| Line | Token | Evidence | Checked Item |
-|---|---|---|---|
-| 373 | `data/dev/` | - | - [x] `data/dev/` |
-| 403 | `results/raw/validation/` | - | - [x] `results/raw/validation/` |
-| 454 | `results/raw/phase1_dev/` | - | - [x] `results/raw/phase1_dev/` |
-| 511 | `results/tables/phase1_dev/` | - | - [x] `results/tables/phase1_dev/` |
+- Passing tokens: `16/16`
+- Missing tokens: `0`
 
 ## docs/TODO_PHASE2.md
 
-- Passing tokens: `12/13`
-- Missing tokens: `1`
-
-| Line | Token | Evidence | Checked Item |
-|---|---|---|---|
-| 620 | `results/graphs/phase2_dev/` | - | - [x] `results/graphs/phase2_dev/` |
+- Passing tokens: `13/13`
+- Missing tokens: `0`
 
 ## docs/TODO_PHASE3.md
 
-- Passing tokens: `9/14`
-- Missing tokens: `5`
-
-| Line | Token | Evidence | Checked Item |
-|---|---|---|---|
-| 468 | `results/raw/phase3_dev/` | - | - [x] `results/raw/phase3_dev/` |
-| 490 | `results/raw/phase3_dev/validation/` | - | - [x] `results/raw/phase3_dev/validation/` |
-| 540 | `results/raw/phase3_dev/` | - | - [x] `results/raw/phase3_dev/` |
-| 611 | `results/raw/phase3_dev/memory/` | - | - [x] `results/raw/phase3_dev/memory/` |
-| 713 | `results/raw/phase3_dev/stability/` | - | - [x] `results/raw/phase3_dev/stability/` |
+- Passing tokens: `14/14`
+- Missing tokens: `0`
 
 ## Summary
-- `docs/TODO_PHASE1.md`: 12/16
-- `docs/TODO_PHASE2.md`: 12/13
-- `docs/TODO_PHASE3.md`: 9/14
+- `docs/TODO_PHASE1.md`: 16/16
+- `docs/TODO_PHASE2.md`: 13/13
+- `docs/TODO_PHASE3.md`: 14/14

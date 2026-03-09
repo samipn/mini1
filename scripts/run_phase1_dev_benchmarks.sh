@@ -218,12 +218,23 @@ run_one_scenario() {
     "${log_file}" >> "${MANIFEST_CSV}"
 
   awk -F, -v ts="${TS}" -v branch="${GIT_BRANCH}" -v commit="${GIT_COMMIT}" '
+    NR == 1 {
+      for (i = 1; i <= NF; ++i) {
+        col[$i] = i;
+      }
+      if (!("dataset_label" in col) || !("query_type" in col) || !("run_number" in col) ||
+          !("total_ms" in col) || !("rows_accepted" in col)) {
+        print "[phase1-dev] benchmark CSV missing required columns in " FILENAME > "/dev/stderr";
+        exit 2;
+      }
+      next;
+    }
     NR > 1 {
-      total_ms = $11 + 0.0;
-      rows_accepted = $13 + 0.0;
+      total_ms = $(col["total_ms"]) + 0.0;
+      rows_accepted = $(col["rows_accepted"]) + 0.0;
       rps = (total_ms > 0.0) ? (rows_accepted / (total_ms / 1000.0)) : 0.0;
       printf "%s,%s,%s,%s,%s,%s,%.6f,%s,%.6f\n",
-             ts, branch, commit, $5, $7, $8, total_ms, $13, rps;
+             ts, branch, commit, $(col["dataset_label"]), $(col["query_type"]), $(col["run_number"]), total_ms, $(col["rows_accepted"]), rps;
     }
   ' "${out_csv}" >> "${RPS_CSV}"
 
