@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <sys/wait.h>
@@ -34,6 +35,15 @@ int Run(const std::string& command) {
 }
 
 bool Exists(const std::filesystem::path& path) { return std::filesystem::exists(path); }
+
+bool FileContains(const std::filesystem::path& path, const std::string& needle) {
+  std::ifstream in(path);
+  if (!in.is_open()) {
+    return false;
+  }
+  std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+  return content.find(needle) != std::string::npos;
+}
 
 }  // namespace
 
@@ -85,6 +95,20 @@ int main() {
       !Exists(out_phase3 / "runtime_by_subset_speed_below_15.svg") ||
       !Exists(out_phase3 / "optimized_runtime_vs_threads_speed_below_15.svg")) {
     std::cerr << "phase3 expected graph artifacts missing\n";
+    return EXIT_FAILURE;
+  }
+
+  if (!FileContains(out_phase2 / "runtime_vs_threads_speed_below_15.svg", "What this tests:") ||
+      !FileContains(out_phase2 / "runtime_vs_threads_speed_below_15.svg", "Thread Count") ||
+      !FileContains(out_phase2 / "runtime_vs_threads_speed_below_15.svg", "Mean Query Runtime (ms)")) {
+    std::cerr << "phase2 svg missing expected annotation/axis labels\n";
+    return EXIT_FAILURE;
+  }
+
+  if (!FileContains(out_phase3 / "runtime_by_subset_speed_below_15.svg", "What this tests:") ||
+      !FileContains(out_phase3 / "runtime_by_subset_speed_below_15.svg", "Subset Size") ||
+      !FileContains(out_phase3 / "runtime_by_subset_speed_below_15.svg", "Mean Query Runtime (ms)")) {
+    std::cerr << "phase3 svg missing expected annotation/axis labels\n";
     return EXIT_FAILURE;
   }
 
