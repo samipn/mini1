@@ -66,3 +66,40 @@ for Phase 2 serial-vs-parallel work.
   - No determinism failures detected.
 - Followed a code change:
   - Yes. This batch validated the new Phase 2 stability/determinism checker.
+
+## Batch: 2026-03-09T08:17:03Z
+- Date/time (UTC): `2026-03-09T08:17:03Z`
+- Git branch: `P2-REVIEW-FIX-CHUNK1-20260309`
+- Commit hash: `19c1c15`
+- Subset sizes:
+  - `small` (`10,000` rows)
+  - `medium` (`10,000` rows; smoke-mapped)
+  - `large_dev` (`10,000` rows; smoke-mapped)
+- Scenarios run:
+  - `speed_below_15`
+  - `time_window_all`
+  - `summary`
+  - `borough_manhattan_speed_15`
+- Thread counts tested:
+  - `1`
+  - `2`
+  - `4`
+  - `8`
+  - `16`
+- Repeated runs:
+  - `3` per scenario/mode/thread configuration
+- Raw outputs:
+  - `results/raw/phase2_dev/subset_manifest_20260309T081703Z.csv`
+  - `results/raw/phase2_dev/batch_20260309T081703Z_manifest.csv`
+  - `results/raw/phase2_dev/batch_20260309T081703Z_records_per_second.csv`
+  - `results/raw/phase2_dev/batch_20260309T081703Z_environment.csv`
+  - `results/tables/phase2_dev/phase2_dev_summary_20260309T081703Z.csv`
+  - `results/graphs/phase2_dev/*.svg`
+- Notable observations:
+  - This batch refreshes evidence using the full 16-thread policy (`1,2,4,8,16`).
+  - Summary/plot generation completed successfully against the new manifest.
+  - Intended as smoke-evidence refresh; full-size deliverable-grade baseline still uses separate baseline policy.
+- Failures or anomalies:
+  - No benchmark execution failures.
+- Followed a code change:
+  - Yes. This batch was executed after Phase 2 script/runtime hardening updates.

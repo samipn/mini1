@@ -12,6 +12,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--summary-csv", required=True, help="Summary CSV from summarize_phase2_dev.py")
     parser.add_argument("--output-dir", default="results/graphs/phase2_dev", help="Graph output directory")
     parser.add_argument("--parallel-thread", default="4", help="Parallel thread for comparison charts")
+    parser.add_argument(
+        "--parallel-threads",
+        default="1,2,4,8,16",
+        help="Comma-separated parallel thread counts for all-thread comparison charts",
+    )
     return parser.parse_args()
 
 
@@ -158,6 +163,7 @@ def main() -> int:
     rows = load_rows(Path(args.summary_csv))
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    all_threads = [t.strip() for t in args.parallel_threads.split(",") if t.strip()]
 
     subset_order = ["small", "medium", "large_dev"]
     subset_display = {"small": "10k", "medium": "100k", "large_dev": "1M"}
@@ -224,6 +230,66 @@ def main() -> int:
                 groups=[("serial", serial_vals, "#1f77b4"), (f"parallel t={args.parallel_thread}", parallel_vals, "#ff7f0e")],
             )
             save_svg(out_dir / f"serial_vs_parallel_by_subset_{scenario}.svg", svg)
+
+    # Serial + all configured parallel threads by subset (default includes 16-thread view)
+    for scenario in scenarios:
+        labels: List[str] = []
+        serial_vals: List[float] = []
+        parallel_by_thread: Dict[str, List[float]] = {t: [] for t in all_threads}
+        for subset in subset_order:
+            serial_row = next(
+                (
+                    r
+                    for r in rows
+                    if r["scenario_name"] == scenario
+                    and r["subset_label"] == subset
+                    and r["mode"] == "serial"
+                    and r["thread_count"] == "1"
+                ),
+                None,
+            )
+            if serial_row is None:
+                continue
+
+            candidate_rows: Dict[str, Dict[str, str]] = {}
+            for t in all_threads:
+                candidate = next(
+                    (
+                        r
+                        for r in rows
+                        if r["scenario_name"] == scenario
+                        and r["subset_label"] == subset
+                        and r["mode"] == "parallel"
+                        and r["thread_count"] == t
+                    ),
+                    None,
+                )
+                if candidate is None:
+                    candidate_rows = {}
+                    break
+                candidate_rows[t] = candidate
+
+            if not candidate_rows:
+                continue
+
+            labels.append(subset_display[subset])
+            serial_vals.append(float(serial_row["query_mean_ms"]))
+            for t in all_threads:
+                parallel_by_thread[t].append(float(candidate_rows[t]["query_mean_ms"]))
+
+        if labels:
+            groups = [("serial", serial_vals, "#1f77b4")]
+            palette = ["#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#17becf"]
+            for i, t in enumerate(all_threads):
+                groups.append((f"parallel t={t}", parallel_by_thread[t], palette[i % len(palette)]))
+            svg = grouped_bar_chart(
+                title=f"Serial vs Parallel (All Threads) by Subset ({scenario})",
+                xlabel="Subset Size",
+                ylabel="Mean Query Runtime (ms)",
+                categories=labels,
+                groups=groups,
+            )
+            save_svg(out_dir / f"serial_vs_parallel_all_threads_by_subset_{scenario}.svg", svg)
 
     # Runtime by scenario per subset
     for subset in subset_order:

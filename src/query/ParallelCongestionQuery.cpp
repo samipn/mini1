@@ -44,14 +44,12 @@ std::size_t ParallelCongestionQuery::CountSpeedBelow(const TrafficDataset& datas
   }
 
   const std::size_t threads = NormalizeThreadCount(num_threads, n);
-#if defined(_OPENMP)
-  omp_set_num_threads(static_cast<int>(threads));
-#else
+#if !defined(_OPENMP)
   (void)threads;
 #endif
 
   std::size_t total = 0;
-#pragma omp parallel for reduction(+ : total)
+#pragma omp parallel for num_threads(threads) reduction(+ : total)
   for (std::int64_t i = 0; i < static_cast<std::int64_t>(n); ++i) {
     if (rows[static_cast<std::size_t>(i)].speed_mph < threshold_mph) {
       ++total;
@@ -73,14 +71,12 @@ std::size_t ParallelCongestionQuery::CountBoroughAndSpeedBelow(const TrafficData
 
   const std::size_t threads = NormalizeThreadCount(num_threads, n);
   const std::int16_t borough_code = ToInt(ParseBoroughCode(borough));
-#if defined(_OPENMP)
-  omp_set_num_threads(static_cast<int>(threads));
-#else
+#if !defined(_OPENMP)
   (void)threads;
 #endif
 
   std::size_t total = 0;
-#pragma omp parallel for reduction(+ : total)
+#pragma omp parallel for num_threads(threads) reduction(+ : total)
   for (std::int64_t i = 0; i < static_cast<std::int64_t>(n); ++i) {
     const auto& row = rows[static_cast<std::size_t>(i)];
     const bool borough_matches =
@@ -109,14 +105,12 @@ std::size_t ParallelCongestionQuery::CountTimeWindow(const TrafficDataset& datas
   }
 
   const std::size_t threads = NormalizeThreadCount(num_threads, n);
-#if defined(_OPENMP)
-  omp_set_num_threads(static_cast<int>(threads));
-#else
+#if !defined(_OPENMP)
   (void)threads;
 #endif
 
   std::size_t total = 0;
-#pragma omp parallel for reduction(+ : total)
+#pragma omp parallel for num_threads(threads) reduction(+ : total)
   for (std::int64_t i = 0; i < static_cast<std::int64_t>(n); ++i) {
     const auto ts = rows[static_cast<std::size_t>(i)].timestamp_epoch_seconds;
     if (ts >= start_epoch_seconds && ts <= end_epoch_seconds) {
@@ -139,13 +133,10 @@ std::vector<LinkSpeedStat> ParallelCongestionQuery::TopNSlowestRecurringLinks(
   const auto& rows = dataset.Records();
   const std::size_t count = rows.size();
   const std::size_t threads = NormalizeThreadCount(num_threads, count);
-#if defined(_OPENMP)
-  omp_set_num_threads(static_cast<int>(threads));
-#endif
 
   std::vector<std::unordered_map<std::int64_t, PartialLinkStat>> local_maps(threads);
 
-#pragma omp parallel
+#pragma omp parallel num_threads(threads)
   {
 #if defined(_OPENMP)
     const int tid_raw = omp_get_thread_num();

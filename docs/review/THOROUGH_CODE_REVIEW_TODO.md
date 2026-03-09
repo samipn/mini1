@@ -184,9 +184,9 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P2-D2 build policy: apply strict warning policy to app/test targets in addition to `congestion_core`.
   Objective: keep warning enforcement consistent across all binaries participating in Phase 2 deliverables.
   Evidence: warning flags are currently scoped to `congestion_core` target options.
-- [ ] P2-D4 runtime isolation: avoid process-global OpenMP thread mutation in query helpers.
-  Objective: remove cross-call coupling from `omp_set_num_threads` and prefer scoped `num_threads(...)` usage.
-  Evidence: `ParallelCongestionQuery` and `ParallelTrafficAggregator` set global OpenMP thread count per call.
+- [x] P2-D4 runtime isolation: avoid process-global OpenMP thread mutation in query helpers.
+  Objective/result: removed per-call `omp_set_num_threads` usage and switched to scoped `num_threads(...)` clauses in parallel regions.
+  Evidence: `src/query/ParallelCongestionQuery.cpp`, `src/query/ParallelTrafficAggregator.cpp`.
 - [ ] P2-D11/D13 evidence policy: separate dev batches (`runs=3`) from deliverable-grade scaling evidence (`runs>=10`).
   Objective: prevent ambiguity when comparing Phase 2 scaling claims across `phase2_dev` and `phase2` artifact families.
   Evidence: `phase2_dev` manifests use 3 runs; `results/raw/phase2` contains 10-run sample sets.
@@ -202,12 +202,12 @@ Purpose: track issues found during incremental repository review and convert the
 - [x] P2-D20/D26 path hygiene: enforce clearer dev-vs-baseline output destination policy for phase2 scripts.
   Objective/result: added dedicated baseline runner with default `results/raw/phase2_baseline` output and baseline run-count policy.
   Evidence: `scripts/run_phase2_baseline_benchmarks.sh`.
-- [ ] P2-D24 notes freshness: refresh Phase 2 benchmark log for current 16-thread policy and latest stability batch.
-  Objective: keep report evidence synchronized with current thread scope and newest artifact timestamps.
-  Evidence: `report/phase2_dev_benchmark_log.md` entries primarily document 1/2/4/8-thread runs.
-- [ ] P2-D23 graph defaults: add all-thread comparison views (including 16-thread) by default.
-  Objective: improve out-of-box visibility of full thread-scaling behavior in Phase 2 graphs.
-  Evidence: `plot_phase2_dev.py` default comparative bars focus on one selected thread (`--parallel-thread 4`).
+- [x] P2-D24 notes freshness: refresh Phase 2 benchmark log for current 16-thread policy and latest stability batch.
+  Objective/result: appended new Phase 2 dev benchmark entry with explicit 16-thread scope and fresh manifest/summary/graph artifacts.
+  Evidence: `report/phase2_dev_benchmark_log.md` (`2026-03-09T08:17:03Z` entry).
+- [x] P2-D23 graph defaults: add all-thread comparison views (including 16-thread) by default.
+  Objective/result: plotting now generates default all-thread serial-vs-parallel comparison charts using `1,2,4,8,16`.
+  Evidence: `scripts/plot_phase2_dev.py` (`--parallel-threads` default and `serial_vs_parallel_all_threads_by_subset_*.svg` outputs).
 
 ### Phase 3 (D1-D15)
 - [x] D1 baseline freeze/comparison reviewed.
