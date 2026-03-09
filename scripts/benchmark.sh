@@ -9,8 +9,41 @@ OPTIMIZED_BINARY="${BUILD_DIR}/run_optimized"
 
 DATASET_PATH="${1:-/datasets/i4gi-tjb9.csv}"
 RUNS="${2:-10}"
-OUT_DIR="${3:-${ROOT_DIR}/results/raw}"
+OUT_DIR="${3:-${ROOT_DIR}/results/raw/mixed_benchmark}"
 THREAD_LIST="${4:-1,2,4,8,16}"
+ALLOW_PHASE_DIRS="${URBANDROP_ALLOW_PHASE_DIRS:-0}"
+
+print_usage() {
+  cat <<'USAGE'
+Usage: scripts/benchmark.sh [dataset_path] [runs] [out_dir] [thread_list]
+
+This script runs mixed serial/parallel/optimized benchmarks.
+It is not intended for phase-scoped dev/baseline output directories.
+
+Set URBANDROP_ALLOW_PHASE_DIRS=1 to bypass output directory guardrails.
+USAGE
+}
+
+for arg in "$@"; do
+  if [[ "${arg}" == "--help" ]]; then
+    print_usage
+    exit 0
+  fi
+done
+
+if [[ "${OUT_DIR}" == "${ROOT_DIR}/results/raw" || \
+      "${OUT_DIR}" == "${ROOT_DIR}/results/raw/phase1_dev" || \
+      "${OUT_DIR}" == "${ROOT_DIR}/results/raw/phase1_baseline" || \
+      "${OUT_DIR}" == "${ROOT_DIR}/results/raw/phase2_dev" || \
+      "${OUT_DIR}" == "${ROOT_DIR}/results/raw/phase2_baseline" || \
+      "${OUT_DIR}" == "${ROOT_DIR}/results/raw/phase3_dev" || \
+      "${OUT_DIR}" == "${ROOT_DIR}/results/raw/phase3_baseline" ]]; then
+  if [[ "${ALLOW_PHASE_DIRS}" != "1" ]]; then
+    echo "[benchmark] refusing OUT_DIR=${OUT_DIR} to avoid mixing phase-scoped artifacts." >&2
+    echo "[benchmark] use dedicated phase scripts for phase outputs, or set URBANDROP_ALLOW_PHASE_DIRS=1 to override." >&2
+    exit 2
+  fi
+fi
 
 mkdir -p "${OUT_DIR}"
 

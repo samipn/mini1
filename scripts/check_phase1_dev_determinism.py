@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -116,6 +117,42 @@ def unique_int(rows: List[Dict[str, str]], key: str) -> Tuple[bool, List[int]]:
     return len(values) == 1, values
 
 
+def run_topn_signatures(
+    binary: Path,
+    subset_path: Path,
+    scenario: Scenario,
+    repeats: int,
+) -> Tuple[bool, List[str], str]:
+    signatures: List[str] = []
+    rank_pattern = re.compile(r"^\s*rank=(\d+)\s+link_id=([-]?\d+)\s+samples=(\d+)\s+avg_speed_mph=(.+)$")
+
+    for _ in range(repeats):
+        cmd = [
+            str(binary),
+            "--traffic",
+            str(subset_path),
+            "--query",
+            scenario.query_type,
+            *scenario.extra_args,
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if proc.returncode != 0:
+            return False, [], "top_n payload command returned nonzero"
+
+        rank_lines: List[str] = []
+        for line in proc.stdout.splitlines():
+            matched = rank_pattern.match(line.strip())
+            if not matched:
+                continue
+            rank_lines.append(
+                "|".join([matched.group(1), matched.group(2), matched.group(3), matched.group(4).strip()])
+            )
+        signatures.append(";".join(rank_lines))
+
+    unique = sorted(set(signatures))
+    return len(unique) == 1, unique, "top_n payload/order mismatch across runs" if len(unique) != 1 else ""
+
+
 def main() -> int:
     args = parse_args()
     root = Path.cwd()
@@ -198,6 +235,7 @@ def main() -> int:
 
             status = "PASS"
             reasons = []
+            topn_signature_values = ""
             if len(rows) != args.runs:
                 status = "FAIL"
                 reasons.append(f"expected {args.runs} rows but found {len(rows)}")
@@ -207,6 +245,14 @@ def main() -> int:
             if not read_ok or not accepted_ok or not rejected_ok:
                 status = "FAIL"
                 reasons.append("ingest aggregate mismatch across runs")
+            if scenario.query_type == "top_n_slowest":
+                topn_ok, topn_values, topn_reason = run_topn_signatures(
+                    binary, subset_path, scenario, args.runs
+                )
+                topn_signature_values = "|".join(topn_values)
+                if not topn_ok:
+                    status = "FAIL"
+                    reasons.append(topn_reason)
             if status == "FAIL":
                 has_mismatch = True
 
@@ -217,12 +263,13 @@ def main() -> int:
                     "status": status,
                     "reason": "; ".join(reasons) if reasons else "consistent",
                     "result_counts": "|".join(map(str, result_values)),
-                    "rows_read_values": "|".join(map(str, read_values)),
-                    "rows_accepted_values": "|".join(map(str, accepted_values)),
-                    "rows_rejected_values": "|".join(map(str, rejected_values)),
-                    "csv_output": str(csv_out),
-                    "log_output": str(log_out),
-                }
+                        "rows_read_values": "|".join(map(str, read_values)),
+                        "rows_accepted_values": "|".join(map(str, accepted_values)),
+                        "rows_rejected_values": "|".join(map(str, rejected_values)),
+                        "topn_signature_values": topn_signature_values,
+                        "csv_output": str(csv_out),
+                        "log_output": str(log_out),
+                    }
             )
 
     with summary_csv.open("w", newline="", encoding="utf-8") as fh:
@@ -237,6 +284,7 @@ def main() -> int:
                 "rows_read_values",
                 "rows_accepted_values",
                 "rows_rejected_values",
+                "topn_signature_values",
                 "csv_output",
                 "log_output",
             ],
@@ -266,6 +314,8 @@ def main() -> int:
                 f"rows_accepted=`{row['rows_accepted_values']}`, "
                 f"rows_rejected=`{row['rows_rejected_values']}`\n"
             )
+            if row.get("topn_signature_values"):
+                fh.write(f"  - top_n payload signatures: `{row['topn_signature_values']}`\n")
             fh.write(f"  - csv: `{row['csv_output']}`\n")
             fh.write(f"  - log: `{row['log_output']}`\n")
         fh.write("\n")

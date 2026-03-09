@@ -98,9 +98,9 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P1-D9 notes freshness: keep Phase 1 benchmark log aligned with current scenario config and artifacts.
   Objective: maintain traceable and current benchmark-history entries (scenario names, branch/commit, timestamps).
   Evidence: `report/phase1_dev_benchmark_log.md` scenario set differs from `configs/phase1_dev_scenarios.csv`.
-- [ ] P1-D10 operational clarity: provide explicit serial-only baseline benchmark entrypoint.
-  Objective: reduce confusion from mixed-phase benchmark script usage when running Phase 1 baseline workflows.
-  Evidence: `scripts/benchmark.sh` currently runs serial + parallel + optimized paths.
+- [x] P1-D10 operational clarity: provide explicit serial-only baseline benchmark entrypoint.
+  Objective/result: added dedicated serial baseline wrapper with baseline-grade run policy and explicit smoke override.
+  Evidence: `scripts/run_phase1_baseline.sh`.
 - [ ] P1-D12 evidence integrity: enforce/verify subset-validation artifact presence.
   Objective: ensure D12 claims are backed by current timestamped logs under `results/raw/validation/`.
   Evidence: validation runner exists, but snapshot currently has no validation logs.
@@ -125,12 +125,12 @@ Purpose: track issues found during incremental repository review and convert the
 - [x] P1-D18 notes freshness: append benchmark-log entries for latest local Phase 1 dev artifacts.
   Objective/result: benchmark log now includes the `2026-03-09T06:10:31Z` smoke batch with current scenario names and artifact links.
   Evidence: `report/phase1_dev_benchmark_log.md`.
-- [ ] P1-D19 determinism depth: verify top-N payload/order stability, not only counts.
-  Objective: catch nondeterministic top-N member/order regressions in repeated subset runs.
-  Evidence: current determinism checker validates `result_count`/ingest aggregates only.
-- [ ] P1-D20 operational guardrails: enforce dev-vs-baseline output path separation in benchmark entrypoints.
-  Objective: reduce operator-error risk of mixing pre-baseline and baseline artifacts.
-  Evidence: broad `scripts/benchmark.sh` defaults to `results/raw` and mixes cross-phase outputs.
+- [x] P1-D19 determinism depth: verify top-N payload/order stability, not only counts.
+  Objective/result: determinism checker now computes and compares top-N rank/value signatures across repeated runs.
+  Evidence: `scripts/check_phase1_dev_determinism.py` (`topn_signature_values` in summary/report output).
+- [x] P1-D20 operational guardrails: enforce dev-vs-baseline output path separation in benchmark entrypoints.
+  Objective/result: mixed benchmark entrypoint now rejects phase-scoped output dirs unless explicit override env var is set.
+  Evidence: `scripts/benchmark.sh` (`URBANDROP_ALLOW_PHASE_DIRS=1` escape hatch).
 
 ### Phase 2 (D1-D15)
 - [x] D1 baseline lock reviewed.
