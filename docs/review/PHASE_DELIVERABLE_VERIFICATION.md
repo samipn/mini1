@@ -20,7 +20,7 @@ Evidence sources:
 - Phase 2: pass (`7/7` deliverable checks, `13/13` TODO path tokens)
 - Phase 3: pass (`10/10` deliverable checks, `14/14` TODO path tokens)
 - Per-deliverable review backlog status:
-  - Phase 1 D1-D10 reviewed (all items verified after D3 hardening fixes)
+  - Phase 1 D1-D10 reviewed (with open operational hardening gaps)
   - Phase 2 D1-D15 reviewed
   - Phase 3 D1-D15 reviewed
 
@@ -54,3 +54,12 @@ Evidence sources:
 
 Some evidence artifacts are generated under ignored directories (for example `results/raw/...`).
 They exist locally for verification but are not committed to git by design.
+
+## Open Hardening Gaps Discovered After Verification
+
+1. `run_serial` can abort on malformed numeric inputs due uncaught `stoull` exceptions.
+2. `run_phase1_dev_benchmarks.sh` can overwrite per-scenario raw CSVs across batches due non-unique output naming.
+3. `run_parallel` can abort on malformed numeric inputs due uncaught `stoull` exceptions.
+4. `run_optimized` can abort on malformed numeric inputs due uncaught `stoull` exceptions.
+
+These are tracked in `docs/review/THOROUGH_CODE_REVIEW_TODO.md` under Phase 1/2/3 open gaps.
