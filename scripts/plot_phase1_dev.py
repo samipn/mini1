@@ -7,6 +7,13 @@ import math
 from pathlib import Path
 from typing import Dict, List
 
+from plot_common import (
+    add_common_figure_text,
+    save_matplotlib_figure,
+    utc_now_iso,
+    write_chart_manifest,
+)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -26,6 +33,11 @@ def parse_args() -> argparse.Namespace:
         "--dry-run",
         action="store_true",
         help="Validate summary dataset/scenario mapping without generating plots.",
+    )
+    parser.add_argument(
+        "--allow-partial",
+        action="store_true",
+        help="Allow missing subset/scenario combinations and render partial graphs (default: fail fast).",
     )
     return parser.parse_args()
 
@@ -97,6 +109,10 @@ def main() -> int:
     subset_labels = subset_order
     ingest_only_map: Dict[str, float] = {}
     total_only_map: Dict[str, float] = {}
+    generated_utc = utc_now_iso()
+    runs_values = sorted({r.get("runs", "").strip() for r in rows if r.get("runs", "").strip()})
+    runs_text = ",".join(runs_values) if runs_values else "unknown"
+    subtitle = f"Phase 1 Dev | subsets={','.join(subset_order)} | runs={runs_text}"
 
     scenario_means: Dict[str, List[float]] = {name: [] for name in scenario_names}
 
@@ -105,15 +121,26 @@ def main() -> int:
 
         ingest_row = next((r for r in subset_rows if r["query_type"] == "ingest_only"), None)
         if ingest_row is None:
+            if args.allow_partial:
+                ingest_only_map[subset] = math.nan
+                total_only_map[subset] = math.nan
+                continue
             raise SystemExit(f"Missing ingest_only row for dataset_label={subset}")
         ingest_only_map[subset] = float(ingest_row["ingest_mean_ms"])
         total_only_map[subset] = float(ingest_row["total_mean_ms"])
 
         for scenario in scenario_names:
             scenario_row = next((r for r in subset_rows if r["query_type"] == scenario), None)
+            if scenario_row is None and not args.allow_partial:
+                raise SystemExit(
+                    f"Missing scenario row for dataset_label={subset}, query_type={scenario}. "
+                    "Use --allow-partial to render partial charts."
+                )
             scenario_means[scenario].append(
                 float(scenario_row["query_mean_ms"]) if scenario_row is not None else math.nan
             )
+
+    manifest_rows: List[Dict[str, str]] = []
 
     # Graph 1: ingest time vs subset size
     fig1, ax1 = plt.subplots(figsize=(8, 5))
@@ -128,10 +155,30 @@ def main() -> int:
     ax1.set_xlabel("Subset Size")
     ax1.set_ylabel("Ingest Mean Runtime (ms)")
     ax1.grid(True, alpha=0.3)
-    fig1.tight_layout()
-    fig1_path = output_dir / "ingest_time_vs_subset_size.png"
-    fig1.savefig(fig1_path, dpi=150)
+    add_common_figure_text(
+        fig1,
+        ax1,
+        subtitle=subtitle,
+        what_tested="How ingest runtime scales with subset size (ingest_only rows).",
+        source_summary=summary_csv,
+        generated_utc=generated_utc,
+    )
+    fig1.tight_layout(rect=(0, 0.03, 1, 0.92))
+    fig1_paths = save_matplotlib_figure(fig1, output_dir, "ingest_time_vs_subset_size", dpi=150)
     plt.close(fig1)
+    for p in fig1_paths:
+        manifest_rows.append(
+            {
+                "chart_id": "phase1_ingest_vs_subset",
+                "file_path": str(p),
+                "phase": "phase1",
+                "what_tested": "Ingest runtime scaling by subset size.",
+                "x_axis": "Subset Size",
+                "y_axis": "Ingest Mean Runtime (ms)",
+                "source_summary_csv": str(summary_csv),
+                "generated_utc": generated_utc,
+            }
+        )
 
     # Graph 2: total runtime vs subset size (ingest-only scenario)
     fig2, ax2 = plt.subplots(figsize=(8, 5))
@@ -146,10 +193,30 @@ def main() -> int:
     ax2.set_xlabel("Subset Size")
     ax2.set_ylabel("Total Mean Runtime (ms)")
     ax2.grid(True, alpha=0.3)
-    fig2.tight_layout()
-    fig2_path = output_dir / "total_runtime_vs_subset_size.png"
-    fig2.savefig(fig2_path, dpi=150)
+    add_common_figure_text(
+        fig2,
+        ax2,
+        subtitle=subtitle,
+        what_tested="End-to-end ingest-only total runtime by subset size.",
+        source_summary=summary_csv,
+        generated_utc=generated_utc,
+    )
+    fig2.tight_layout(rect=(0, 0.03, 1, 0.92))
+    fig2_paths = save_matplotlib_figure(fig2, output_dir, "total_runtime_vs_subset_size", dpi=150)
     plt.close(fig2)
+    for p in fig2_paths:
+        manifest_rows.append(
+            {
+                "chart_id": "phase1_total_ingest_only_vs_subset",
+                "file_path": str(p),
+                "phase": "phase1",
+                "what_tested": "Total ingest-only runtime scaling by subset size.",
+                "x_axis": "Subset Size",
+                "y_axis": "Total Mean Runtime (ms)",
+                "source_summary_csv": str(summary_csv),
+                "generated_utc": generated_utc,
+            }
+        )
 
     # Graph 3: query runtime by scenario across subset sizes
     fig3, ax3 = plt.subplots(figsize=(10, 6))
@@ -166,15 +233,37 @@ def main() -> int:
     ax3.set_xlabel("Subset Size")
     ax3.set_ylabel("Query Mean Runtime (ms)")
     ax3.grid(True, alpha=0.3)
-    ax3.legend()
-    fig3.tight_layout()
-    fig3_path = output_dir / "query_runtime_by_scenario.png"
-    fig3.savefig(fig3_path, dpi=150)
+    ax3.legend(title="Scenario")
+    add_common_figure_text(
+        fig3,
+        ax3,
+        subtitle=subtitle,
+        what_tested="Query runtime behavior by scenario across subset sizes.",
+        source_summary=summary_csv,
+        generated_utc=generated_utc,
+    )
+    fig3.tight_layout(rect=(0, 0.03, 1, 0.92))
+    fig3_paths = save_matplotlib_figure(fig3, output_dir, "query_runtime_by_scenario", dpi=150)
     plt.close(fig3)
+    for p in fig3_paths:
+        manifest_rows.append(
+            {
+                "chart_id": "phase1_query_runtime_by_scenario",
+                "file_path": str(p),
+                "phase": "phase1",
+                "what_tested": "Query runtime by scenario across subset sizes.",
+                "x_axis": "Subset Size",
+                "y_axis": "Query Mean Runtime (ms)",
+                "source_summary_csv": str(summary_csv),
+                "generated_utc": generated_utc,
+            }
+        )
 
-    print(f"[plot_phase1_dev] wrote: {fig1_path}")
-    print(f"[plot_phase1_dev] wrote: {fig2_path}")
-    print(f"[plot_phase1_dev] wrote: {fig3_path}")
+    manifest_path = output_dir / "chart_manifest.csv"
+    write_chart_manifest(manifest_path, manifest_rows)
+    for row in manifest_rows:
+        print(f"[plot_phase1_dev] wrote: {row['file_path']}")
+    print(f"[plot_phase1_dev] wrote: {manifest_path}")
     return 0
 
 
