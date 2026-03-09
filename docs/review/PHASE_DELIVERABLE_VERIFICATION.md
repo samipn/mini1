@@ -26,6 +26,8 @@ Evidence sources:
     - D1-D5 reviewed (open correctness/robustness gaps identified)
     - D6-D10 reviewed (open performance/measurement hardening gaps identified)
     - D11-D15 reviewed (open attribution/evidence-integrity gaps identified)
+    - D18-D24 reviewed (open validation robustness and artifact-freshness gaps identified)
+    - D25-D29 reviewed (open graph evidence/log freshness/attribution rigor gaps identified)
 
 ## Fixes Applied During Verification
 
@@ -72,5 +74,10 @@ They exist locally for verification but are not committed to git by design.
 10. Phase 3 dev benchmark runner does not enforce deliverable-grade run count (`>=10`), allowing underpowered batches.
 11. Benchmark harness comparison CSVs do not currently carry memory metrics directly.
 12. Phase 3 benchmark notes/log metadata can drift from current thread policy and newest artifacts.
+13. Phase 3 subset-validation script uses fixed benchmark CSV column positions, creating schema-fragile checks.
+14. Phase 3 scenario set currently omits top-N validation even though top-N query mode exists.
+15. Phase 3 summary/graph artifacts can lag behind newest raw batch manifests without detection.
+16. Phase 3 memory probe can emit invalid-run rows that appear usable (for example malformed command path cases).
+17. Phase 3 graph artifact presence is currently inconsistent with TODO completion claims.
 
 Previously identified CLI numeric-parse abort issues and Phase 1 benchmark output overwrite risk have been fixed on this branch. Remaining gaps are tracked in `docs/review/THOROUGH_CODE_REVIEW_TODO.md`.

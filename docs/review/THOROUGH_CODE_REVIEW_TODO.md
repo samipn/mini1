@@ -207,3 +207,21 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P3-D15 notes freshness: sync benchmark log metadata with current thread policy/artifacts.
   Objective: keep Phase 3 report evidence aligned with latest branch/commit/thread configurations (including 16-thread runs).
   Evidence: `report/phase3_dev_benchmark_log.md` thread list is stale vs current batch manifests.
+- [ ] P3-D19 robustness: replace fixed-column CSV extraction in subset validation with header-based parsing.
+  Objective: prevent validation drift when benchmark CSV schema changes.
+  Evidence: `run_phase3_subset_validation.sh` uses positional fields (`$19/$21/$22/$6`).
+- [ ] P3-D19 coverage: include `top_n_slowest` scenario in Phase 3 validation suite.
+  Objective: ensure “top-N outputs if applicable” is exercised in cross-mode subset validation.
+  Evidence: `configs/phase3_dev_scenarios.conf` currently excludes top-N scenarios.
+- [ ] P3-D24 freshness gate: enforce summary/graph generation against latest raw batch.
+  Objective: fail fast when summary tables/graphs lag behind newest manifests.
+  Evidence: latest summary CSV timestamp is older than latest batch manifest.
+- [ ] P3-D25 artifact presence: ensure graph outputs are generated and verified after each benchmark summary run.
+  Objective: maintain concrete graph evidence instead of stale TODO completion state.
+  Evidence: `results/graphs/phase3_dev/` currently contains only `.gitkeep`.
+- [ ] P3-D25 memory plotting correctness: select memory rows by explicit batch key.
+  Objective: avoid mixing unmatched memory rows when plotting from multi-row memory CSV inputs.
+  Evidence: `plot_phase3_dev.py` currently picks first row per mode via `next(...)`.
+- [ ] P3-D29 ergonomics: add baseline-specific summary/completeness wrappers or strict path guards.
+  Objective: reduce operator-error risk between `phase3_dev` and `phase3_baseline` output paths.
+  Evidence: baseline flow still reuses `phase3_dev`-named tooling with caller-managed output paths.
