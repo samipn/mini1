@@ -287,32 +287,73 @@ These limits are stated in the mini handout.
 
 The assignment requires all three components and emphasizes that the one-slide presentation must communicate a single meaningful finding rather than act as a project summary.
 
-## Repository Starter Structure
+## Repository Structure (Current)
 
 ```text
 .
 ├── CMakeLists.txt
+├── README.md
+├── configs/
+│   ├── phase1_dev_scenarios.csv
+│   └── phase2_dev_scenarios.conf
+├── docs/
+│   ├── TODO_PHASE1.md
+│   ├── TODO_PHASE2.md
+│   ├── TODO_PHASE3.md
+│   └── review/
 ├── include/
+│   ├── benchmark/
 │   ├── data_model/
 │   ├── io/
-│   ├── query/
-│   └── benchmark/
+│   └── query/
 ├── src/
+│   ├── benchmark/
 │   ├── data_model/
 │   ├── io/
-│   ├── query/
-│   └── benchmark/
+│   └── query/
 ├── apps/
 │   ├── run_serial.cpp
 │   ├── run_parallel.cpp
-│   └── run_optimized.cpp
+│   ├── run_optimized.cpp
+│   ├── run_index_experiments.cpp
+│   └── run_optimized_support_experiments.cpp
+├── tests/
+│   ├── fixtures/
+│   └── test_*.cpp
 ├── scripts/
 │   ├── benchmark.sh
-│   └── plot_results.py
+│   ├── plot_common.py
+│   ├── plot_phase1_dev.py
+│   ├── plot_phase2_dev.py
+│   ├── plot_phase3_dev.py
+│   ├── summarize_phase1_dev.py
+│   ├── summarize_phase2_dev.py
+│   ├── summarize_phase3_dev.py
+│   ├── run_phase1_dev_benchmarks.sh
+│   ├── run_phase1_baseline.sh
+│   ├── run_phase2_dev_benchmarks.sh
+│   ├── run_phase2_baseline_benchmarks.sh
+│   ├── run_phase3_dev_benchmarks.sh
+│   ├── run_phase3_baseline_benchmarks.sh
+│   └── check_phase*_determinism.py
+├── data/
+│   └── subsets/
 ├── results/
 │   ├── raw/
 │   ├── tables/
 │   └── graphs/
+│       ├── phase1_dev/
+│       ├── phase1_baseline/
+│       ├── phase2_dev/
+│       ├── phase3_dev/
+│       └── phase3_baseline/
 └── report/
     ├── notes.md
-    └── citations.md
+    ├── citations.md
+    ├── phase1_dev_benchmark_log.md
+    └── phase2_dev_benchmark_log.md
+```
+
+Notes:
+- `results/raw`, `results/tables`, and `results/graphs` are generated artifacts.
+- For repo hygiene, generated benchmark outputs are generally not committed except placeholders (`.gitkeep`) and selected review evidence docs.
