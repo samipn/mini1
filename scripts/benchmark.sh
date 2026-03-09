@@ -48,8 +48,7 @@ fi
 mkdir -p "${OUT_DIR}"
 
 if [[ ! -x "${SERIAL_BINARY}" || ! -x "${PARALLEL_BINARY}" || ! -x "${OPTIMIZED_BINARY}" ]]; then
-  cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Release
-  cmake --build "${BUILD_DIR}" -j
+  "${ROOT_DIR}/scripts/configure_openmp_build.sh" --build-dir "${BUILD_DIR}" --build-type Release
 fi
 
 COMMON=(--traffic "${DATASET_PATH}" --benchmark-runs "${RUNS}" --dataset-label "traffic_$(basename "${DATASET_PATH}")")

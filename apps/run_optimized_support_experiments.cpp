@@ -1,7 +1,10 @@
 #include <chrono>
+#include <cerrno>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <unordered_set>
 
@@ -31,6 +34,23 @@ std::string EscapeCsv(const std::string& value) {
 }  // namespace
 
 int main(int argc, char** argv) {
+  auto parse_size_t = [](const std::string& value, std::size_t* out) -> bool {
+    if (out == nullptr || value.empty()) {
+      return false;
+    }
+    errno = 0;
+    char* end = nullptr;
+    const unsigned long long parsed = std::strtoull(value.c_str(), &end, 10);
+    if (errno != 0 || end == value.c_str() || *end != '\0') {
+      return false;
+    }
+    if (parsed > static_cast<unsigned long long>(std::numeric_limits<std::size_t>::max())) {
+      return false;
+    }
+    *out = static_cast<std::size_t>(parsed);
+    return true;
+  };
+
   std::string traffic_csv;
   std::size_t repeats = 5;
   std::string out_csv = "results/raw/phase3_dev/optimized_support_benchmark.csv";
@@ -40,17 +60,27 @@ int main(int argc, char** argv) {
     if (arg == "--traffic" && i + 1 < argc) {
       traffic_csv = argv[++i];
     } else if (arg == "--repeats" && i + 1 < argc) {
-      repeats = static_cast<std::size_t>(std::stoull(argv[++i]));
+      if (!parse_size_t(argv[++i], &repeats)) {
+        std::cerr << "invalid --repeats value\n";
+        return 2;
+      }
     } else if (arg == "--output" && i + 1 < argc) {
       out_csv = argv[++i];
     } else if (arg == "--help") {
       std::cout << "Usage: run_optimized_support_experiments --traffic <path> [--repeats <n>] [--output <csv>]\n";
       return 0;
+    } else {
+      std::cerr << "unknown or incomplete argument: " << arg << "\n";
+      return 2;
     }
   }
 
   if (traffic_csv.empty()) {
     std::cerr << "--traffic is required\n";
+    return 2;
+  }
+  if (repeats == 0) {
+    std::cerr << "--repeats must be > 0\n";
     return 2;
   }
 

@@ -81,5 +81,20 @@ int main() {
     return EXIT_FAILURE;
   }
 
+  const std::string unknown_query_cmd =
+      "./run_optimized --traffic " + qcsv + " --query no_such_query --load-mode row_convert > /dev/null 2>&1";
+  if (Run(unknown_query_cmd) != 2) {
+    std::cerr << "run_optimized should reject unknown query types\n";
+    return EXIT_FAILURE;
+  }
+
+  const std::string row_convert_benchmark_cmd =
+      "./run_optimized --traffic " + qcsv +
+      " --query summary --load-mode row_convert --benchmark-runs 2 > /dev/null 2>&1";
+  if (Run(row_convert_benchmark_cmd) != 2) {
+    std::cerr << "run_optimized should reject benchmark harness options in row_convert mode\n";
+    return EXIT_FAILURE;
+  }
+
   return EXIT_SUCCESS;
 }

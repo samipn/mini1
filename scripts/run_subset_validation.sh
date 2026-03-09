@@ -103,8 +103,7 @@ fi
 
 if [[ ! -x "${BINARY}" ]]; then
   echo "[validation] build binary not found, building run_serial..."
-  cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Release
-  cmake --build "${BUILD_DIR}" -j
+  "${ROOT_DIR}/scripts/configure_openmp_build.sh" --build-dir "${BUILD_DIR}" --build-type Release
 fi
 
 for required in "${SMALL_PATH}" "${MEDIUM_PATH}" "${LARGE_PATH}"; do

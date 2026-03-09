@@ -15,6 +15,11 @@ RUNS=3
 THREAD_LIST="1,2,4,8,16"
 OPTIMIZATION_STEP="soa_encoded_hotloop"
 VALIDATE_SERIAL=0
+ALLOW_LOW_RUNS=0
+EVIDENCE_TIER="deliverable"
+TIMEOUT_SECONDS=0
+DATASET_PATH=""
+DATASET_LABEL=""
 
 SMALL_PATH=""
 MEDIUM_PATH=""
@@ -33,9 +38,13 @@ Options:
   --large <path>          Large-dev subset CSV path (1M)
   --runs <n>              Benchmark repetitions per scenario (default: 3)
   --threads <csv>         Parallel thread list (default: 1,2,4,8,16)
+  --timeout-seconds <n>   Per scenario timeout (0 disables; default: 0)
+  --dataset-path <path>   Run only one dataset path (overrides --small/--medium/--large)
+  --dataset-label <name>  Label to use with --dataset-path (default: custom)
   --out-dir <path>        Raw benchmark output dir (default: results/raw/phase3_dev)
   --log-dir <path>        Log output dir (default: results/raw/logs)
   --optimization-step <label>  Label for optimization attribution (default: soa_encoded_hotloop)
+  --allow-low-runs       Permit --runs < 3 and mark outputs as exploratory evidence
   --validate-serial       Enable serial parity validation during benchmark runs (default: off)
   --no-validate-serial    Disable serial parity validation during benchmark runs
   --help                  Show this help
@@ -68,6 +77,18 @@ while [[ $# -gt 0 ]]; do
       THREAD_LIST="$2"
       shift 2
       ;;
+    --timeout-seconds)
+      TIMEOUT_SECONDS="$2"
+      shift 2
+      ;;
+    --dataset-path)
+      DATASET_PATH="$2"
+      shift 2
+      ;;
+    --dataset-label)
+      DATASET_LABEL="$2"
+      shift 2
+      ;;
     --out-dir)
       OUT_DIR="$2"
       shift 2
@@ -79,6 +100,10 @@ while [[ $# -gt 0 ]]; do
     --optimization-step)
       OPTIMIZATION_STEP="$2"
       shift 2
+      ;;
+    --allow-low-runs)
+      ALLOW_LOW_RUNS=1
+      shift 1
       ;;
     --validate-serial)
       VALIDATE_SERIAL=1
@@ -100,6 +125,22 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if ! [[ "${RUNS}" =~ ^[0-9]+$ ]] || [[ "${RUNS}" -eq 0 ]]; then
+  echo "[phase3-dev] --runs must be a positive integer" >&2
+  exit 2
+fi
+if [[ "${RUNS}" -lt 3 ]]; then
+  if [[ "${ALLOW_LOW_RUNS}" -ne 1 ]]; then
+    echo "[phase3-dev] --runs < 3 is not deliverable-grade. Re-run with --allow-low-runs for exploratory batches." >&2
+    exit 2
+  fi
+  EVIDENCE_TIER="exploratory"
+fi
+if ! [[ "${TIMEOUT_SECONDS}" =~ ^[0-9]+$ ]]; then
+  echo "[phase3-dev] --timeout-seconds must be a non-negative integer" >&2
+  exit 2
+fi
+
 if [[ ! -f "${SCENARIO_FILE}" ]]; then
   echo "[phase3-dev] missing scenario file: ${SCENARIO_FILE}" >&2
   exit 1
@@ -107,8 +148,7 @@ fi
 
 if [[ ! -x "${SERIAL_BINARY}" || ! -x "${PARALLEL_BINARY}" || ! -x "${OPTIMIZED_BINARY}" ]]; then
   echo "[phase3-dev] building binaries..."
-  cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Release
-  cmake --build "${BUILD_DIR}" -j
+  "${ROOT_DIR}/scripts/configure_openmp_build.sh" --build-dir "${BUILD_DIR}" --build-type Release
 fi
 
 mkdir -p "${OUT_DIR}" "${LOG_DIR}"
@@ -118,22 +158,36 @@ find_single_match() {
   find "${SUBSETS_DIR}" -maxdepth 1 -type f -name "${pattern}" | sort | head -n 1
 }
 
-if [[ -z "${SMALL_PATH}" ]]; then
-  SMALL_PATH="$(find_single_match "*_subset_10000.csv")"
-fi
-if [[ -z "${MEDIUM_PATH}" ]]; then
-  MEDIUM_PATH="$(find_single_match "*_subset_100000.csv")"
-fi
-if [[ -z "${LARGE_PATH}" ]]; then
-  LARGE_PATH="$(find_single_match "*_subset_1000000.csv")"
-fi
-
-for required in "${SMALL_PATH}" "${MEDIUM_PATH}" "${LARGE_PATH}"; do
-  if [[ -z "${required}" || ! -f "${required}" ]]; then
-    echo "[phase3-dev] missing subset file. Provide --small/--medium/--large or check --subsets-dir." >&2
+declare -a LABELS=()
+declare -a PATHS=()
+if [[ -n "${DATASET_PATH}" ]]; then
+  if [[ ! -f "${DATASET_PATH}" ]]; then
+    echo "[phase3-dev] dataset not found: ${DATASET_PATH}" >&2
     exit 1
   fi
-done
+  LABELS+=("${DATASET_LABEL:-custom}")
+  PATHS+=("${DATASET_PATH}")
+else
+  if [[ -z "${SMALL_PATH}" ]]; then
+    SMALL_PATH="$(find_single_match "*_subset_10000.csv")"
+  fi
+  if [[ -z "${MEDIUM_PATH}" ]]; then
+    MEDIUM_PATH="$(find_single_match "*_subset_100000.csv")"
+  fi
+  if [[ -z "${LARGE_PATH}" ]]; then
+    LARGE_PATH="$(find_single_match "*_subset_1000000.csv")"
+  fi
+
+  for required in "${SMALL_PATH}" "${MEDIUM_PATH}" "${LARGE_PATH}"; do
+    if [[ -z "${required}" || ! -f "${required}" ]]; then
+      echo "[phase3-dev] missing subset file. Provide --small/--medium/--large or check --subsets-dir." >&2
+      exit 1
+    fi
+  done
+
+  LABELS=("small" "medium" "large_dev")
+  PATHS=("${SMALL_PATH}" "${MEDIUM_PATH}" "${LARGE_PATH}")
+fi
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 SAFE_BRANCH="$(git -C "${ROOT_DIR}" branch --show-current | tr '/ ' '__')"
@@ -150,7 +204,7 @@ batch_utc,subset_label,dataset_path,expected_data_rows,actual_data_rows,serial_a
 CSV
 
 cat > "${BATCH_MANIFEST}" <<CSV
-batch_utc,git_branch,git_commit,optimization_step,subset_label,scenario_name,mode,thread_list,dataset_path,benchmark_runs,validation_enabled,output_csv,log_file
+batch_utc,git_branch,git_commit,optimization_step,evidence_tier,subset_label,scenario_name,mode,thread_list,dataset_path,benchmark_runs,validation_enabled,output_csv,log_file
 CSV
 
 cat > "${RPS_CSV}" <<CSV
@@ -173,10 +227,10 @@ compiler_bin="${CXX:-c++}"
 compiler_version="$(${compiler_bin} --version 2>/dev/null | head -n 1 || echo unknown)"
 
 cat > "${ENV_CSV}" <<CSV
-batch_utc,host,os_kernel,cpu_model,logical_cores,mem_total_kb,compiler,compiler_version,git_branch,git_commit,thread_list,benchmark_runs,validation_enabled,optimization_step
+batch_utc,host,os_kernel,cpu_model,logical_cores,mem_total_kb,compiler,compiler_version,git_branch,git_commit,thread_list,benchmark_runs,validation_enabled,optimization_step,evidence_tier
 CSV
 
-printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
+printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
   "${TS}" \
   "$(csv_escape "$(hostname 2>/dev/null || echo unknown)")" \
   "$(csv_escape "$(uname -sr 2>/dev/null || echo unknown)")" \
@@ -190,7 +244,8 @@ printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
   "$(csv_escape "${THREAD_LIST}")" \
   "${RUNS}" \
   "${VALIDATE_SERIAL}" \
-  "$(csv_escape "${OPTIMIZATION_STEP}")" >> "${ENV_CSV}"
+  "$(csv_escape "${OPTIMIZATION_STEP}")" \
+  "${EVIDENCE_TIER}" >> "${ENV_CSV}"
 
 calc_rows() {
   local file="$1"
@@ -209,6 +264,8 @@ append_scenario_args() {
   local start_epoch="$3"
   local end_epoch="$4"
   local borough="$5"
+  local top_n="$6"
+  local min_link_samples="$7"
 
   if [[ -n "${threshold}" ]]; then
     out_ref+=(--threshold "${threshold}")
@@ -221,6 +278,12 @@ append_scenario_args() {
   fi
   if [[ -n "${borough}" ]]; then
     out_ref+=(--borough "${borough}")
+  fi
+  if [[ -n "${top_n}" ]]; then
+    out_ref+=(--top-n "${top_n}")
+  fi
+  if [[ -n "${min_link_samples}" ]]; then
+    out_ref+=(--min-link-samples "${min_link_samples}")
   fi
 }
 
@@ -241,6 +304,14 @@ run_access_probe() {
   local rc=$?
   rm -f "${tmp_csv}"
   return ${rc}
+}
+
+run_with_optional_timeout() {
+  if [[ "${TIMEOUT_SECONDS}" -gt 0 ]]; then
+    timeout --signal=TERM --kill-after=20 "${TIMEOUT_SECONDS}" "$@"
+  else
+    "$@"
+  fi
 }
 
 emit_rps_rows() {
@@ -281,6 +352,8 @@ run_scenario() {
   local start_epoch="$7"
   local end_epoch="$8"
   local borough="$9"
+  local top_n="${10}"
+  local min_link_samples="${11}"
 
   local out_csv="${OUT_DIR}/${subset_label}_${scenario_name}_${mode}_${SAFE_BRANCH}_${GIT_COMMIT}_${TS}.csv"
   local log_file="${LOG_DIR}/phase3_dev_${subset_label}_${scenario_name}_${mode}_${TS}.log"
@@ -334,7 +407,7 @@ run_scenario() {
   if [[ "${mode}" != "serial" && "${VALIDATE_SERIAL}" == "1" ]]; then
     cmd+=(--validate-serial)
   fi
-  append_scenario_args cmd "${threshold}" "${start_epoch}" "${end_epoch}" "${borough}"
+  append_scenario_args cmd "${threshold}" "${start_epoch}" "${end_epoch}" "${borough}" "${top_n}" "${min_link_samples}"
 
   echo "[phase3-dev] mode=${mode} subset=${subset_label} scenario=${scenario_name}"
 
@@ -348,27 +421,23 @@ run_scenario() {
       if [[ -f "${out_csv}" ]]; then
         tcmd+=(--benchmark-append)
       fi
-      "${tcmd[@]}" >>"${log_file}" 2>&1
+      run_with_optional_timeout "${tcmd[@]}" >>"${log_file}" 2>&1
     done
   else
-    "${cmd[@]}" >"${log_file}" 2>&1
+    run_with_optional_timeout "${cmd[@]}" >"${log_file}" 2>&1
   fi
 
-  printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
-    "${TS}" "${GIT_BRANCH}" "${GIT_COMMIT}" "${OPTIMIZATION_STEP}" "${subset_label}" "${scenario_name}" \
+  printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
+    "${TS}" "${GIT_BRANCH}" "${GIT_COMMIT}" "${OPTIMIZATION_STEP}" "${EVIDENCE_TIER}" "${subset_label}" "${scenario_name}" \
     "${mode}" "${thread_field}" "${dataset_path}" "${RUNS}" "${VALIDATE_SERIAL}" "${out_csv}" "${log_file}" >> "${BATCH_MANIFEST}"
 
   emit_rps_rows "${out_csv}" "${subset_label}" "${scenario_name}" "${mode}"
 }
 
-declare -a LABELS=("small" "medium" "large_dev")
-declare -a PATHS=("${SMALL_PATH}" "${MEDIUM_PATH}" "${LARGE_PATH}")
-declare -a EXPECTED=("10000" "100000" "1000000")
-
 for i in "${!LABELS[@]}"; do
   subset_label="${LABELS[$i]}"
   dataset_path="${PATHS[$i]}"
-  expected_rows="${EXPECTED[$i]}"
+  expected_rows="$(calc_rows "${dataset_path}")"
   actual_rows="$(calc_rows "${dataset_path}")"
 
   serial_access_ok="false"
@@ -394,14 +463,14 @@ for i in "${!LABELS[@]}"; do
   subset_label="${LABELS[$i]}"
   dataset_path="${PATHS[$i]}"
 
-  while IFS=',' read -r scenario_name query_type threshold start_epoch end_epoch borough; do
+  while IFS=',' read -r scenario_name query_type threshold start_epoch end_epoch borough top_n min_link_samples; do
     if [[ "${scenario_name}" == "scenario_name" ]]; then
       continue
     fi
-    run_scenario "serial" "${subset_label}" "${dataset_path}" "${scenario_name}" "${query_type}" "${threshold}" "${start_epoch}" "${end_epoch}" "${borough}"
-    run_scenario "parallel" "${subset_label}" "${dataset_path}" "${scenario_name}" "${query_type}" "${threshold}" "${start_epoch}" "${end_epoch}" "${borough}"
-    run_scenario "optimized_serial" "${subset_label}" "${dataset_path}" "${scenario_name}" "${query_type}" "${threshold}" "${start_epoch}" "${end_epoch}" "${borough}"
-    run_scenario "optimized_parallel" "${subset_label}" "${dataset_path}" "${scenario_name}" "${query_type}" "${threshold}" "${start_epoch}" "${end_epoch}" "${borough}"
+    run_scenario "serial" "${subset_label}" "${dataset_path}" "${scenario_name}" "${query_type}" "${threshold}" "${start_epoch}" "${end_epoch}" "${borough}" "${top_n}" "${min_link_samples}"
+    run_scenario "parallel" "${subset_label}" "${dataset_path}" "${scenario_name}" "${query_type}" "${threshold}" "${start_epoch}" "${end_epoch}" "${borough}" "${top_n}" "${min_link_samples}"
+    run_scenario "optimized_serial" "${subset_label}" "${dataset_path}" "${scenario_name}" "${query_type}" "${threshold}" "${start_epoch}" "${end_epoch}" "${borough}" "${top_n}" "${min_link_samples}"
+    run_scenario "optimized_parallel" "${subset_label}" "${dataset_path}" "${scenario_name}" "${query_type}" "${threshold}" "${start_epoch}" "${end_epoch}" "${borough}" "${top_n}" "${min_link_samples}"
   done < "${SCENARIO_FILE}"
 done
 

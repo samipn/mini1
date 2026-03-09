@@ -117,8 +117,7 @@ fi
 
 if [[ ! -x "${BINARY}" ]]; then
   echo "[phase1-dev] building run_serial..."
-  cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Release
-  cmake --build "${BUILD_DIR}" -j
+  "${ROOT_DIR}/scripts/configure_openmp_build.sh" --build-dir "${BUILD_DIR}" --build-type Release
 fi
 
 mkdir -p "${OUT_DIR}" "${LOG_DIR}"

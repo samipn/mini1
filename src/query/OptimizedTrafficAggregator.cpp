@@ -1,7 +1,6 @@
 #include "query/OptimizedTrafficAggregator.hpp"
 
 #include <algorithm>
-#include <functional>
 
 #if defined(_OPENMP)
 #include <omp.h>
@@ -10,8 +9,9 @@
 namespace urbandrop {
 namespace {
 
+template <typename Predicate>
 AggregateStats SummarizeConditional(const TrafficDatasetOptimized& dataset,
-                                    const std::function<bool(std::size_t)>& predicate,
+                                    const Predicate& predicate,
                                     std::size_t num_threads,
                                     bool use_parallel) {
   AggregateStats stats;

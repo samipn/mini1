@@ -2,6 +2,29 @@
 
 This log records development-stage (**pre-baseline**) subset benchmark batches for Phase 3 serial-vs-parallel-vs-optimized work.
 
+## Current Policy Snapshot (2026-03-09 UTC)
+- Source runner defaults:
+  - `scripts/run_phase3_dev_benchmarks.sh`
+- Current default thread list:
+  - `1,2,4,8,16`
+- Current scenario config:
+  - `configs/phase3_dev_scenarios.conf`
+  - includes `speed_below_15`, `time_window_all`, `summary`, `borough_manhattan_speed_15`, `top_5_slowest_links`
+- Current reporting pipeline:
+  - `scripts/run_phase3_dev_reporting.sh`
+  - validates completeness, regenerates summary tables, regenerates graphs, and fails on missing graph artifacts
+- Current baseline reporting guardrail:
+  - `scripts/run_phase3_baseline_reporting.sh` (baseline-path guard by default)
+
+## Latest Raw Batch Snapshot
+- Latest manifest currently present:
+  - `results/raw/phase3_dev/batch_20260309T061031Z_manifest.csv`
+- Modes:
+  - `serial`, `parallel`, `optimized_serial`, `optimized_parallel`
+- Thread list values found in manifest:
+  - `1` (serial/optimized_serial rows)
+  - `1;2;4;8;16` (parallel/optimized_parallel rows)
+
 ## Batch: 2026-03-09T05:00:44Z
 - Date/time (UTC): `2026-03-09T05:00:44Z`
 - Git branch: `P3-D6-10`

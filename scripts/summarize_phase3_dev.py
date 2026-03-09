@@ -20,6 +20,16 @@ def parse_args() -> argparse.Namespace:
         default="4",
         help="Parallel thread count baseline for speedup_vs_parallel",
     )
+    parser.add_argument(
+        "--memory-csv",
+        default="",
+        help="Optional memory probe CSV from run_phase3_memory_probe.sh",
+    )
+    parser.add_argument(
+        "--allow-stale-manifest",
+        action="store_true",
+        help="Allow summarizing a manifest that is not the latest batch manifest in its directory.",
+    )
     return parser.parse_args()
 
 
@@ -48,14 +58,40 @@ def load_manifest(path: Path) -> List[Dict[str, str]]:
     return rows
 
 
+def ensure_latest_manifest(manifest_path: Path, allow_stale: bool) -> None:
+    if allow_stale:
+        return
+    candidates = sorted(manifest_path.parent.glob("batch_*_manifest.csv"))
+    if not candidates:
+        return
+    latest = max(candidates, key=lambda p: p.name)
+    if manifest_path.resolve() != latest.resolve():
+        raise SystemExit(
+            "Stale manifest selected. "
+            f"Requested: {manifest_path.name}, latest: {latest.name}. "
+            "Use the latest manifest or pass --allow-stale-manifest."
+        )
+
+
+def load_memory_rows(path: Path) -> List[Dict[str, str]]:
+    if not path:
+        return []
+    if not path.is_file():
+        raise SystemExit(f"Memory CSV not found: {path}")
+    with path.open("r", newline="", encoding="utf-8") as fh:
+        return list(csv.DictReader(fh))
+
+
 def main() -> int:
     args = parse_args()
     manifest_path = Path(args.manifest)
+    ensure_latest_manifest(manifest_path, args.allow_stale_manifest)
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / args.output_file
 
     manifest_rows = load_manifest(manifest_path)
+    memory_rows = load_memory_rows(Path(args.memory_csv)) if args.memory_csv else []
 
     grouped: Dict[Tuple[str, str, str, str, str], Dict[str, List[float]]] = defaultdict(
         lambda: {
@@ -73,6 +109,7 @@ def main() -> int:
             "validation_enabled": [],
         }
     )
+    key_meta: Dict[Tuple[str, str, str, str, str], Dict[str, str]] = {}
 
     serial_baseline_means: Dict[Tuple[str, str], float] = {}
     parallel_baseline_means: Dict[Tuple[str, str], float] = {}
@@ -91,6 +128,13 @@ def main() -> int:
             for row in csv.DictReader(fh):
                 thread_count = row["thread_count"].strip()
                 key = (subset, scenario, mode, thread_count, optimization_step)
+                if key not in key_meta:
+                    key_meta[key] = {
+                        "batch_utc": entry.get("batch_utc", ""),
+                        "git_branch": entry.get("git_branch", ""),
+                        "git_commit": entry.get("git_commit", ""),
+                        "evidence_tier": entry.get("evidence_tier", "unknown"),
+                    }
 
                 ingest_ms = float(row["ingest_ms"])
                 query_ms = float(row["query_ms"])
@@ -122,6 +166,17 @@ def main() -> int:
         if mode == "parallel" and thread_count == args.parallel_thread_baseline:
             parallel_baseline_means[(subset, scenario)] = mean_q
 
+    memory_index: Dict[Tuple[str, str, str, str, str], Dict[str, str]] = {}
+    for row in memory_rows:
+        mk = (
+            row.get("batch_utc", "").strip(),
+            row.get("git_commit", "").strip(),
+            row.get("optimization_step", "").strip(),
+            row.get("mode", "").strip(),
+            row.get("thread_count", "").strip(),
+        )
+        memory_index[mk] = row
+
     with out_path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
         writer.writerow(
@@ -131,6 +186,10 @@ def main() -> int:
                 "mode",
                 "thread_count",
                 "optimization_step",
+                "batch_utc",
+                "git_branch",
+                "git_commit",
+                "evidence_tier",
                 "runs",
                 "ingest_mean_ms",
                 "ingest_median_ms",
@@ -157,12 +216,16 @@ def main() -> int:
                 "avg_travel_time_mean",
                 "speedup_vs_serial_query",
                 "speedup_vs_parallel_query",
+                "memory_max_rss_kb",
+                "memory_exit_code",
+                "memory_status",
             ]
         )
 
         for key in sorted(grouped.keys()):
             subset, scenario, mode, thread_count, optimization_step = key
             metrics = grouped[key]
+            meta = key_meta.get(key, {})
             ingest = summarize(metrics["ingest_ms"])
             query = summarize(metrics["query_ms"])
             total = summarize(metrics["total_ms"])
@@ -174,7 +237,30 @@ def main() -> int:
             serial_sp = speedup(serial_baseline_means.get((subset, scenario), math.nan), query[0])
             parallel_sp = speedup(parallel_baseline_means.get((subset, scenario), math.nan), query[0])
 
-            row = [subset, scenario, mode, thread_count, optimization_step, runs]
+            mem_key = (
+                meta.get("batch_utc", "").strip(),
+                meta.get("git_commit", "").strip(),
+                optimization_step.strip(),
+                mode.strip(),
+                thread_count.strip(),
+            )
+            mem_row = memory_index.get(mem_key, {})
+            memory_max_rss = mem_row.get("max_rss_kb", "")
+            memory_exit_code = mem_row.get("exit_code", "")
+            memory_status = mem_row.get("status", "")
+
+            row = [
+                subset,
+                scenario,
+                mode,
+                thread_count,
+                optimization_step,
+                meta.get("batch_utc", ""),
+                meta.get("git_branch", ""),
+                meta.get("git_commit", ""),
+                meta.get("evidence_tier", "unknown"),
+                runs,
+            ]
             for stats in (ingest, query, total):
                 row.extend([f"{value:.6f}" for value in stats])
             row.append(f"{validation[0]:.6f}")
@@ -187,6 +273,9 @@ def main() -> int:
             row.append(f"{statistics.fmean(metrics['avg_travel']):.6f}")
             row.append(f"{serial_sp:.6f}" if not math.isnan(serial_sp) else "nan")
             row.append(f"{parallel_sp:.6f}" if not math.isnan(parallel_sp) else "nan")
+            row.append(memory_max_rss)
+            row.append(memory_exit_code)
+            row.append(memory_status)
             writer.writerow(row)
 
     print(f"[summarize_phase3_dev] wrote summary: {out_path}")

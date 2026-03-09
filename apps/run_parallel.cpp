@@ -219,9 +219,12 @@ int main(int argc, char** argv) {
     return 2;
   }
 
-  std::cout << "[parallel] model=openmp";
+  std::cout << "[parallel] model=";
 #if defined(_OPENMP)
-  std::cout << " max_threads=" << omp_get_max_threads();
+  std::cout << "openmp"
+            << " max_threads=" << omp_get_max_threads();
+#else
+  std::cout << "serial_fallback";
 #endif
   std::cout << "\n";
 

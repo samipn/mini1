@@ -249,54 +249,54 @@ Purpose: track issues found during incremental repository review and convert the
   Objective/result: added negative CLI regression assertions for malformed numeric arguments.
   Objective: assert graceful failure behavior for invalid numeric args in optimized CLI.
   Evidence: `tests/test_run_optimized_cli.cpp`.
-- [ ] P3-D5 correctness: reject unknown query types in `run_optimized` row-convert mode.
-  Objective: ensure unknown query types return nonzero and never silently report `result_count=0`.
-  Evidence: `apps/run_optimized.cpp` row-convert branch currently falls through to success.
-- [ ] P3-D3 robustness: make `TrafficColumns::AddRecord` exception-safe for SoA alignment.
-  Objective: prevent partial-column append on interning/allocation failure to preserve index alignment invariants.
-  Evidence: `src/data_model/TrafficColumns.cpp` pushes base columns before `InternLinkName`.
-- [ ] P3-D2 evidence: strengthen hotspot proof artifacts.
-  Objective: add profiler/timing artifact references for hotspot selection or adjust docs wording to “timing-based identification only”.
-  Evidence: D2 TODO claim references profiling confirmation but profiler outputs are not currently part of artifact chain.
-- [ ] P3-D4 behavior consistency: define and enforce row-convert benchmarking semantics.
-  Objective: either route row-convert through benchmark harness for repeated runs/CSV output/validation, or document explicit limitations.
-  Evidence: `apps/run_optimized.cpp` direct mode uses harness; row-convert mode does not.
-- [ ] P3-D6 hot-loop overhead: remove `std::function` predicate dispatch from optimized aggregation scans.
-  Objective: avoid per-row type-erased predicate calls in optimized query loops and enforce inlined/specialized hot paths.
-  Evidence: `src/query/OptimizedTrafficAggregator.cpp` uses `std::function<bool(std::size_t)>` in `SummarizeConditional`.
-- [ ] P3-D7 measurement integrity: memory probe should surface command failures explicitly.
-  Objective: stop swallowing probe command failures (or record `exit_code/status`) so memory artifacts cannot silently include failed runs.
-  Evidence: `scripts/run_phase3_memory_probe.sh` runs probes with `/usr/bin/time ... || true` and always appends CSV rows.
-- [ ] P3-D8 hardening/tests: guard `run_optimized_support_experiments` numeric parsing and add negative test coverage.
-  Objective: invalid `--repeats` should return usage error instead of process abort.
-  Evidence: `apps/run_optimized_support_experiments.cpp` uses unguarded `std::stoull` for `--repeats`.
-- [ ] P3-D12 attribution rigor: add automated step-isolated benchmark campaign.
-  Objective: generate reproducible side-by-side results for each optimization stage (row baseline, columnar only, +encoding, +hot-loop, +parallel) instead of relying on a single step label per batch.
-  Evidence: `run_phase3_dev_benchmarks.sh` carries one `optimization_step` label per run set.
-- [ ] P3-D12 measurement policy: enforce deliverable-grade run counts for attribution/final tables.
-  Objective: prevent low-repeat batches from being mixed into deliverable evidence without explicit downgrade label.
-  Evidence: `run_phase3_dev_benchmarks.sh` default `RUNS=3`; observed manifest batches with `benchmark_runs=1`.
-- [ ] P3-D11 benchmark completeness: connect memory metrics directly to benchmark rows.
-  Objective: include memory usage in comparable benchmark schema (or provide deterministic join keys with memory probe outputs).
-  Evidence: Benchmark CSV header lacks memory fields while memory probe writes separate CSV.
-- [ ] P3-D15 notes freshness: sync benchmark log metadata with current thread policy/artifacts.
-  Objective: keep Phase 3 report evidence aligned with latest branch/commit/thread configurations (including 16-thread runs).
-  Evidence: `report/phase3_dev_benchmark_log.md` thread list is stale vs current batch manifests.
-- [ ] P3-D19 robustness: replace fixed-column CSV extraction in subset validation with header-based parsing.
-  Objective: prevent validation drift when benchmark CSV schema changes.
-  Evidence: `run_phase3_subset_validation.sh` uses positional fields (`$19/$21/$22/$6`).
-- [ ] P3-D19 coverage: include `top_n_slowest` scenario in Phase 3 validation suite.
-  Objective: ensure “top-N outputs if applicable” is exercised in cross-mode subset validation.
-  Evidence: `configs/phase3_dev_scenarios.conf` currently excludes top-N scenarios.
-- [ ] P3-D24 freshness gate: enforce summary/graph generation against latest raw batch.
-  Objective: fail fast when summary tables/graphs lag behind newest manifests.
-  Evidence: latest summary CSV timestamp is older than latest batch manifest.
-- [ ] P3-D25 artifact presence: ensure graph outputs are generated and verified after each benchmark summary run.
-  Objective: maintain concrete graph evidence instead of stale TODO completion state.
-  Evidence: `results/graphs/phase3_dev/` currently contains only `.gitkeep`.
-- [ ] P3-D25 memory plotting correctness: select memory rows by explicit batch key.
-  Objective: avoid mixing unmatched memory rows when plotting from multi-row memory CSV inputs.
-  Evidence: `plot_phase3_dev.py` currently picks first row per mode via `next(...)`.
-- [ ] P3-D29 ergonomics: add baseline-specific summary/completeness wrappers or strict path guards.
-  Objective: reduce operator-error risk between `phase3_dev` and `phase3_baseline` output paths.
-  Evidence: baseline flow still reuses `phase3_dev`-named tooling with caller-managed output paths.
+- [x] P3-D5 correctness: reject unknown query types in `run_optimized` row-convert mode.
+  Objective/result: unknown `--query` values now fail fast with exit code 2 before execution in both direct and row-convert paths.
+  Evidence: `apps/run_optimized.cpp`, `tests/test_run_optimized_cli.cpp`.
+- [x] P3-D3 robustness: make `TrafficColumns::AddRecord` exception-safe for SoA alignment.
+  Objective/result: pre-reserve and upfront interning now prevent partial row append; dictionary/map updates are rollback-safe on interning failure.
+  Evidence: `src/data_model/TrafficColumns.cpp`.
+- [x] P3-D2 evidence: strengthen hotspot proof artifacts.
+  Objective/result: clarified D2 as timing-based hotspot identification and added an explicit evidence map tying scenario config, raw manifests, and summaries.
+  Evidence: `docs/TODO_PHASE3.md`, `docs/review/PHASE3_D2_HOTPATH_EVIDENCE.md`.
+- [x] P3-D4 behavior consistency: define and enforce row-convert benchmarking semantics.
+  Objective/result: row-convert mode now explicitly rejects benchmark-harness-only flags (`--benchmark-runs != 1`, `--benchmark-out`, `--benchmark-append`, `--validate-serial`, `--expect-accepted`) to prevent silent partial behavior.
+  Evidence: `apps/run_optimized.cpp`, `tests/test_run_optimized_cli.cpp`.
+- [x] P3-D6 hot-loop overhead: remove `std::function` predicate dispatch from optimized aggregation scans.
+  Objective/result: aggregation helper is now templated predicate-based, removing type-erased per-row call overhead in hot scan loops.
+  Evidence: `src/query/OptimizedTrafficAggregator.cpp`.
+- [x] P3-D7 measurement integrity: memory probe should surface command failures explicitly.
+  Objective/result: memory probe now records `exit_code` and `status`, emits `log_file`, and prints failure diagnostics while still preserving row-level artifacts.
+  Evidence: `scripts/run_phase3_memory_probe.sh`.
+- [x] P3-D8 hardening/tests: guard `run_optimized_support_experiments` numeric parsing and add negative test coverage.
+  Objective/result: invalid/zero `--repeats` and unknown args now return exit code 2; negative CLI test coverage added.
+  Evidence: `apps/run_optimized_support_experiments.cpp`, `tests/test_run_optimized_support_experiments_cli.cpp`, `CMakeLists.txt`.
+- [x] P3-D12 attribution rigor: add automated step-isolated benchmark campaign.
+  Objective/result: added scripted step-matrix runner that executes labeled baseline/dev step batches and records campaign-level artifact links for side-by-side analysis.
+  Evidence: `scripts/run_phase3_step_matrix.sh`.
+- [x] P3-D12 measurement policy: enforce deliverable-grade run counts for attribution/final tables.
+  Objective/result: benchmark runner now rejects `--runs < 3` unless `--allow-low-runs` is explicitly provided; manifests/environment capture `evidence_tier` (`deliverable` vs `exploratory`).
+  Evidence: `scripts/run_phase3_dev_benchmarks.sh`, `tests/test_phase3_benchmark_policy_cli.cpp`.
+- [x] P3-D11 benchmark completeness: connect memory metrics directly to benchmark rows.
+  Objective/result: summary pipeline now supports deterministic memory joins keyed by `(batch_utc, git_commit, optimization_step, mode, thread_count)` and emits memory columns in Phase 3 summary output.
+  Evidence: `scripts/run_phase3_memory_probe.sh`, `scripts/summarize_phase3_dev.py`.
+- [x] P3-D15 notes freshness: sync benchmark log metadata with current thread policy/artifacts.
+  Objective/result: refreshed Phase 3 benchmark log with current thread/scenario/reporting policy snapshot and latest raw batch metadata including 16-thread coverage.
+  Evidence: `report/phase3_dev_benchmark_log.md`.
+- [x] P3-D19 robustness: replace fixed-column CSV extraction in subset validation with header-based parsing.
+  Objective/result: subset validation now extracts fields by header names (including per-thread lookup), eliminating positional coupling.
+  Evidence: `scripts/run_phase3_subset_validation.sh`.
+- [x] P3-D19 coverage: include `top_n_slowest` scenario in Phase 3 validation suite.
+  Objective/result: added top-N scenario to Phase 3 scenario config and extended scenario-argument plumbing (`top_n`, `min_link_samples`) in benchmark and validation scripts.
+  Evidence: `configs/phase3_dev_scenarios.conf`, `scripts/run_phase3_dev_benchmarks.sh`, `scripts/run_phase3_subset_validation.sh`.
+- [x] P3-D24 freshness gate: enforce summary/graph generation against latest raw batch.
+  Objective/result: summary generation now fails by default when `--manifest` is not the latest `batch_*_manifest.csv` in the raw directory (opt-out via `--allow-stale-manifest`).
+  Evidence: `scripts/summarize_phase3_dev.py`, `tests/test_phase3_reporting_guards.cpp`.
+- [x] P3-D25 artifact presence: ensure graph outputs are generated and verified after each benchmark summary run.
+  Objective/result: added reporting pipeline script that runs completeness+summary+plot and fails if chart manifest or SVG outputs are missing.
+  Evidence: `scripts/run_phase3_dev_reporting.sh`.
+- [x] P3-D25 memory plotting correctness: select memory rows by explicit batch key.
+  Objective/result: plotting now requires deterministic memory-batch selection when multiple `batch_utc` values exist and filters rows by both batch key and mode/thread.
+  Evidence: `scripts/plot_phase3_dev.py`, `tests/test_phase3_reporting_guards.cpp`.
+- [x] P3-D29 ergonomics: add baseline-specific summary/completeness wrappers or strict path guards.
+  Objective/result: added baseline reporting wrapper with baseline-path guard and baseline output defaults to reduce dev/baseline mix-ups.
+  Evidence: `scripts/run_phase3_baseline_reporting.sh`, `tests/test_phase3_workflow_cli.cpp`.

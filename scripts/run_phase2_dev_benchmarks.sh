@@ -13,6 +13,9 @@ LOG_DIR="${ROOT_DIR}/results/raw/logs"
 RUNS=3
 THREAD_LIST="1,2,4,8,16"
 ALLOW_UNDER_MIN_RUNS=false
+TIMEOUT_SECONDS=0
+DATASET_PATH=""
+DATASET_LABEL=""
 
 SMALL_PATH=""
 MEDIUM_PATH=""
@@ -32,6 +35,9 @@ Options:
   --runs <n>              Benchmark repetitions per scenario (default: 3)
   --allow-under-min-runs  Allow runs < 3 (smoke/debug only)
   --threads <csv>         Parallel thread list (default: 1,2,4,8,16)
+  --timeout-seconds <n>   Per scenario timeout (0 disables; default: 0)
+  --dataset-path <path>   Run only one dataset path (overrides --small/--medium/--large)
+  --dataset-label <name>  Label to use with --dataset-path (default: custom)
   --out-dir <path>        Raw benchmark output dir (default: results/raw/phase2_dev)
   --log-dir <path>        Log output dir (default: results/raw/logs)
   --help                  Show this help
@@ -68,6 +74,18 @@ while [[ $# -gt 0 ]]; do
       THREAD_LIST="$2"
       shift 2
       ;;
+    --timeout-seconds)
+      TIMEOUT_SECONDS="$2"
+      shift 2
+      ;;
+    --dataset-path)
+      DATASET_PATH="$2"
+      shift 2
+      ;;
+    --dataset-label)
+      DATASET_LABEL="$2"
+      shift 2
+      ;;
     --out-dir)
       OUT_DIR="$2"
       shift 2
@@ -101,6 +119,10 @@ if [[ "${RUNS}" -lt 3 && "${ALLOW_UNDER_MIN_RUNS}" != "true" ]]; then
   echo "[phase2-dev] use --allow-under-min-runs only for smoke/debug runs." >&2
   exit 2
 fi
+if ! [[ "${TIMEOUT_SECONDS}" =~ ^[0-9]+$ ]]; then
+  echo "[phase2-dev] --timeout-seconds must be a non-negative integer." >&2
+  exit 2
+fi
 
 if [[ ! -f "${SCENARIO_FILE}" ]]; then
   echo "[phase2-dev] missing scenario file: ${SCENARIO_FILE}" >&2
@@ -109,8 +131,7 @@ fi
 
 if [[ ! -x "${SERIAL_BINARY}" || ! -x "${PARALLEL_BINARY}" ]]; then
   echo "[phase2-dev] building run_serial/run_parallel..."
-  cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Release
-  cmake --build "${BUILD_DIR}" -j
+  "${ROOT_DIR}/scripts/configure_openmp_build.sh" --build-dir "${BUILD_DIR}" --build-type Release
 fi
 
 mkdir -p "${OUT_DIR}" "${LOG_DIR}"
@@ -120,22 +141,36 @@ find_single_match() {
   find "${SUBSETS_DIR}" -maxdepth 1 -type f -name "${pattern}" | sort | head -n 1
 }
 
-if [[ -z "${SMALL_PATH}" ]]; then
-  SMALL_PATH="$(find_single_match "*_subset_10000.csv")"
-fi
-if [[ -z "${MEDIUM_PATH}" ]]; then
-  MEDIUM_PATH="$(find_single_match "*_subset_100000.csv")"
-fi
-if [[ -z "${LARGE_PATH}" ]]; then
-  LARGE_PATH="$(find_single_match "*_subset_1000000.csv")"
-fi
-
-for required in "${SMALL_PATH}" "${MEDIUM_PATH}" "${LARGE_PATH}"; do
-  if [[ -z "${required}" || ! -f "${required}" ]]; then
-    echo "[phase2-dev] missing subset file. Provide --small/--medium/--large or check --subsets-dir." >&2
+declare -a LABELS=()
+declare -a PATHS=()
+if [[ -n "${DATASET_PATH}" ]]; then
+  if [[ ! -f "${DATASET_PATH}" ]]; then
+    echo "[phase2-dev] dataset not found: ${DATASET_PATH}" >&2
     exit 1
   fi
-done
+  LABELS+=("${DATASET_LABEL:-custom}")
+  PATHS+=("${DATASET_PATH}")
+else
+  if [[ -z "${SMALL_PATH}" ]]; then
+    SMALL_PATH="$(find_single_match "*_subset_10000.csv")"
+  fi
+  if [[ -z "${MEDIUM_PATH}" ]]; then
+    MEDIUM_PATH="$(find_single_match "*_subset_100000.csv")"
+  fi
+  if [[ -z "${LARGE_PATH}" ]]; then
+    LARGE_PATH="$(find_single_match "*_subset_1000000.csv")"
+  fi
+
+  for required in "${SMALL_PATH}" "${MEDIUM_PATH}" "${LARGE_PATH}"; do
+    if [[ -z "${required}" || ! -f "${required}" ]]; then
+      echo "[phase2-dev] missing subset file. Provide --small/--medium/--large or check --subsets-dir." >&2
+      exit 1
+    fi
+  done
+
+  LABELS=("small" "medium" "large_dev")
+  PATHS=("${SMALL_PATH}" "${MEDIUM_PATH}" "${LARGE_PATH}")
+fi
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 SAFE_BRANCH="$(git -C "${ROOT_DIR}" branch --show-current | tr '/ ' '__')"
@@ -213,6 +248,14 @@ run_access_probe() {
   fi
 }
 
+run_with_optional_timeout() {
+  if [[ "${TIMEOUT_SECONDS}" -gt 0 ]]; then
+    timeout --signal=TERM --kill-after=20 "${TIMEOUT_SECONDS}" "$@"
+  else
+    "$@"
+  fi
+}
+
 emit_rps_rows() {
   local csv_file="$1"
   local subset_label="$2"
@@ -279,7 +322,7 @@ run_serial_scenario() {
   fi
 
   echo "[phase2-dev] serial subset=${subset_label} scenario=${scenario_name}"
-  "${cmd[@]}" >"${log_file}" 2>&1
+  run_with_optional_timeout "${cmd[@]}" >"${log_file}" 2>&1
 
   printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
     "${TS}" "${GIT_BRANCH}" "${GIT_COMMIT}" "${subset_label}" "${scenario_name}" \
@@ -329,7 +372,7 @@ run_parallel_scenario() {
   fi
 
   echo "[phase2-dev] parallel subset=${subset_label} scenario=${scenario_name} threads=${THREAD_LIST}"
-  "${cmd[@]}" >"${log_file}" 2>&1
+  run_with_optional_timeout "${cmd[@]}" >"${log_file}" 2>&1
 
   printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
     "${TS}" "${GIT_BRANCH}" "${GIT_COMMIT}" "${subset_label}" "${scenario_name}" \
@@ -338,14 +381,10 @@ run_parallel_scenario() {
   emit_rps_rows "${out_csv}" "${subset_label}" "${scenario_name}" "parallel"
 }
 
-declare -a LABELS=("small" "medium" "large_dev")
-declare -a PATHS=("${SMALL_PATH}" "${MEDIUM_PATH}" "${LARGE_PATH}")
-declare -a EXPECTED=("10000" "100000" "1000000")
-
 for i in "${!LABELS[@]}"; do
   subset_label="${LABELS[$i]}"
   dataset_path="${PATHS[$i]}"
-  expected_rows="${EXPECTED[$i]}"
+  expected_rows="$(calc_rows "${dataset_path}")"
   actual_rows="$(calc_rows "${dataset_path}")"
 
   serial_access_ok="false"

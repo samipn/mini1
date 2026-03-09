@@ -76,7 +76,8 @@ The goal is to isolate which changes actually matter.
   - [x] borough + threshold filters
   - [x] aggregations over large record ranges
 - [x] Record why these paths were chosen
-- [x] If available, use profiling tools or timing breakdowns to confirm hotspots
+- [x] Use timing breakdowns (and profiling tools when available) to confirm hotspots
+  - Current evidence path is timing-based and documented in `docs/review/PHASE3_D2_HOTPATH_EVIDENCE.md`
 
 #### Deliverable
 - A short written list of the hot paths chosen for optimization

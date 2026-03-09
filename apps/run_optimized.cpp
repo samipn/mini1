@@ -77,6 +77,12 @@ bool ParseSizeT(const std::string& value, std::size_t* out) {
   return true;
 }
 
+bool IsSupportedQueryType(const std::string& query_type) {
+  return query_type == "speed_below" || query_type == "borough_speed_below" ||
+         query_type == "time_window" || query_type == "summary" ||
+         query_type == "top_n_slowest";
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -185,6 +191,18 @@ int main(int argc, char** argv) {
   }
   if (load_mode != "direct" && load_mode != "row_convert") {
     std::cerr << "--load-mode must be direct or row_convert\n";
+    return 2;
+  }
+  if (load_mode == "row_convert") {
+    if (benchmark_runs != 1 || !benchmark_out_csv.empty() || benchmark_append || validate_serial ||
+        has_expected_accepted) {
+      std::cerr << "row_convert mode does not support benchmark harness options "
+                   "(--benchmark-runs/--benchmark-out/--benchmark-append/--validate-serial/--expect-accepted)\n";
+      return 2;
+    }
+  }
+  if (!IsSupportedQueryType(query_type)) {
+    std::cerr << "unknown --query type: " << query_type << "\n";
     return 2;
   }
 
@@ -334,6 +352,9 @@ int main(int argc, char** argv) {
                           : urbandrop::OptimizedCongestionQuery::TopNSlowestRecurringLinks(
                                 dataset, top_n, min_link_samples);
     result_count = topn.size();
+  } else {
+    std::cerr << "unknown --query type: " << query_type << "\n";
+    return 2;
   }
 
   std::cout << "[query] completed result_count=" << result_count;
