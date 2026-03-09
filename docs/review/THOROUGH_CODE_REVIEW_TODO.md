@@ -25,12 +25,13 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] Separate “implemented” vs “fully benchmark-validated” in Phase 3 TODO wording.
 - [x] Add a compact artifact map linking scripts -> generated CSV -> generated graph outputs.
 - [ ] Confirm each claimed deliverable has a corresponding source file and artifact.
+  Current evidence: `docs/review/PHASE_DELIVERABLE_AUDIT.md` (phase1 4/6, phase2 7/7, phase3 7/10).
 
 ## 4) Missing Details
-- [ ] Add memory-usage graph generation from `results/raw/phase3_dev/memory/*.csv`.
+- [x] Add memory-usage graph generation from `results/raw/phase3_dev/memory/*.csv`.
 - [x] Document benchmark caveat in one place: validation affects timing if enabled.
 - [x] Record exact machine/compiler config in benchmark logs for each batch.
-- [ ] Add final baseline directory plan and script (`phase3_baseline`) distinct from `phase3_dev`.
+- [x] Add final baseline directory plan and script (`phase3_baseline`) distinct from `phase3_dev`.
 
 ## 5) Going Above and Beyond
 - [ ] Add per-query profiler integration option (e.g., perf/callgrind wrapper script).
