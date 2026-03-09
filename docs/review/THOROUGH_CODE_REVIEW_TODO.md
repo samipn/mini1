@@ -71,12 +71,21 @@ Purpose: track issues found during incremental repository review and convert the
   Objective/result: scenario completeness verified via `configs/phase1_dev_scenarios.csv` and smoke benchmark artifact generation.
 
 #### Phase 1 Open Gaps (from deep review)
+- [ ] P1-D3 operational correctness: define and enforce loader output-vector reset semantics.
+  Objective: avoid silent duplicate accumulation when calling `GarageLoader::LoadCSV` / `BuildingLoader::LoadCSV` repeatedly with the same output vector.
+  Evidence: both loaders reset stats but append to `out_records` without clearing.
 - [x] P1-D6 hardening: prevent `run_serial` aborts on malformed numeric CLI inputs.
   Objective/result: replaced exception-throwing `stoull` parsing with guarded parse helper; invalid numeric args now return code 2.
   Evidence: `apps/run_serial.cpp` (`--progress-every`, `--sample`, `--top-n`, `--min-link-samples`, `--benchmark-runs`, `--expect-accepted`).
 - [x] P1-D10 reproducibility: avoid overwrite-prone output naming in phase1 benchmark runner.
   Objective/result: per-scenario output naming now includes branch/commit/timestamp; manifest rows remain immutable across batches.
   Evidence: `scripts/run_phase1_dev_benchmarks.sh:173`.
+- [ ] P1-D1 build policy: apply strict warning configuration to app/test targets as well.
+  Objective: keep warning policy consistent across all compiled binaries, not only library objects.
+  Evidence: warning flags are attached to `congestion_core` target but not explicitly to executable targets.
+- [ ] P1-D2/D5 API invariant: borough representation normalization for direct-record query correctness.
+  Objective: prevent false negatives in borough-filter query when records are inserted with `borough` text but unset `borough_code`.
+  Evidence: `TrafficDataset::AddRecord` does not normalize borough fields; borough query prefers code for known borough strings.
 - [ ] P1-D3 maintainability: remove loader parsing redundancy.
   Objective: centralize shared CSV parse/timestamp helper logic used by `CSVReader`, `GarageLoader`, and `BuildingLoader`.
   Evidence: duplicated helpers across `src/io/CSVReader.cpp`, `src/io/GarageLoader.cpp`, `src/io/BuildingLoader.cpp`.
