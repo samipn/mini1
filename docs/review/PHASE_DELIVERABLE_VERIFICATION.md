@@ -115,3 +115,5 @@ They exist locally for verification but are not committed to git by design.
 40. Phase 2 dev-vs-baseline path separation is documented but not strongly enforced by script defaults.
 
 Previously identified CLI numeric-parse abort issues and Phase 1 benchmark output overwrite risk have been fixed on this branch. Remaining gaps are tracked in `docs/review/THOROUGH_CODE_REVIEW_TODO.md`.
+
+Update: subsequent Phase 1 fix chunks resolved the previously reported determinism scenario-source drift and Phase 1 summary label-fallback issue.

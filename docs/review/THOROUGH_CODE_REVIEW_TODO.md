@@ -104,18 +104,18 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P1-D12 evidence integrity: enforce/verify subset-validation artifact presence.
   Objective: ensure D12 claims are backed by current timestamped logs under `results/raw/validation/`.
   Evidence: validation runner exists, but snapshot currently has no validation logs.
-- [ ] P1-D13 scenario integrity: make determinism checks use the same scenario source as benchmark runs.
-  Objective: prevent drift between hardcoded determinism scenarios and `configs/phase1_dev_scenarios.csv`.
-  Evidence: `scripts/check_phase1_dev_determinism.py` scenarios differ from `configs/phase1_dev_scenarios.csv`.
-- [ ] P1-D14 policy guard: enforce minimum repeat count for deliverable-grade subset benchmark runs.
-  Objective: prevent accidental `--runs < 3` batches from being treated as D15 evidence.
-  Evidence: `scripts/run_phase1_dev_benchmarks.sh` accepts arbitrary run counts without floor checks.
+- [x] P1-D13 scenario integrity: make determinism checks use the same scenario source as benchmark runs.
+  Objective/result: determinism checker now loads scenarios from `configs/phase1_dev_scenarios.csv` (configurable via `--scenario-file`) instead of hardcoded scenario definitions.
+  Evidence: `scripts/check_phase1_dev_determinism.py`.
+- [x] P1-D14 policy guard: enforce minimum repeat count for deliverable-grade subset benchmark runs.
+  Objective/result: `run_phase1_dev_benchmarks.sh` now enforces `--runs >= 3` by default with explicit smoke override via `--allow-under-min-runs`.
+  Evidence: `scripts/run_phase1_dev_benchmarks.sh`.
 - [ ] P1-D15 evidence rigor: ensure latest subset timing artifacts satisfy minimum repeat expectations.
   Objective: align D15 status with local evidence by generating/retaining batches with at least 3 runs per scenario/subset.
   Evidence: latest `phase1_dev` manifest/summary rows in snapshot show `runs=1`.
-- [ ] P1-D16 summary robustness: handle dataset-label drift between runner outputs and summary defaults.
-  Objective: make default `summarize_phase1_dev.py` succeed against current phase1_dev artifacts (or enforce canonical labels at source).
-  Evidence: defaults expect `small/medium/large_dev`, current snapshot contains `small_smoke`.
+- [x] P1-D16 summary robustness: handle dataset-label drift between runner outputs and summary defaults.
+  Objective/result: summarizer now falls back to all discovered dataset labels when requested defaults are absent, so default invocation remains usable on smoke-labeled batches.
+  Evidence: `scripts/summarize_phase1_dev.py`.
 - [ ] P1-D17 graph robustness: remove hardcoded subset/scenario assumptions in plotting.
   Objective: derive labels/scenarios dynamically from summary CSV so graph generation remains stable when scenarios evolve.
   Evidence: `plot_phase1_dev.py` hardcodes `small/medium/large_dev` and fixed scenario names.

@@ -17,20 +17,52 @@ class Scenario:
     extra_args: List[str]
 
 
-SCENARIOS: List[Scenario] = [
-    Scenario("speed_below_8mph", "speed_below", ["--threshold", "8"]),
-    Scenario(
-        "time_window_full",
-        "time_window",
-        ["--start-epoch", "0", "--end-epoch", "4102444800"],
-    ),
-    Scenario(
-        "borough_manhattan_speed_below_8mph",
-        "borough_speed_below",
-        ["--borough", "Manhattan", "--threshold", "8"],
-    ),
-    Scenario("top10_slowest", "top_n_slowest", ["--top-n", "10", "--min-link-samples", "1"]),
-]
+def parse_scenarios(path: Path) -> List[Scenario]:
+    if not path.is_file():
+        raise SystemExit(f"Scenario file not found: {path}")
+
+    scenarios: List[Scenario] = []
+    with path.open("r", newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        required = {"scenario_name", "query_type"}
+        missing = required.difference(set(reader.fieldnames or []))
+        if missing:
+            raise SystemExit(
+                f"Scenario file missing required columns: {sorted(missing)} in {path}"
+            )
+
+        for row in reader:
+            query_type = (row.get("query_type", "") or "").strip()
+            if not query_type:
+                continue
+            scenario_name = (row.get("scenario_name", "") or query_type).strip()
+            extra_args: List[str] = []
+
+            threshold = (row.get("threshold", "") or "").strip()
+            start_epoch = (row.get("start_epoch", "") or "").strip()
+            end_epoch = (row.get("end_epoch", "") or "").strip()
+            borough = (row.get("borough", "") or "").strip()
+            top_n = (row.get("top_n", "") or "").strip()
+            min_link_samples = (row.get("min_link_samples", "") or "").strip()
+
+            if threshold:
+                extra_args.extend(["--threshold", threshold])
+            if start_epoch:
+                extra_args.extend(["--start-epoch", start_epoch])
+            if end_epoch:
+                extra_args.extend(["--end-epoch", end_epoch])
+            if borough:
+                extra_args.extend(["--borough", borough])
+            if top_n:
+                extra_args.extend(["--top-n", top_n])
+            if min_link_samples:
+                extra_args.extend(["--min-link-samples", min_link_samples])
+
+            scenarios.append(Scenario(scenario_name, query_type, extra_args))
+
+    if not scenarios:
+        raise SystemExit(f"No scenarios found in {path}")
+    return scenarios
 
 
 def parse_args() -> argparse.Namespace:
@@ -57,6 +89,11 @@ def parse_args() -> argparse.Namespace:
         "--output-dir",
         default="results/raw/correctness",
         help="Directory for correctness outputs/reports.",
+    )
+    parser.add_argument(
+        "--scenario-file",
+        default="configs/phase1_dev_scenarios.csv",
+        help="Scenario CSV used by run_phase1_dev_benchmarks.sh (default: configs/phase1_dev_scenarios.csv).",
     )
     return parser.parse_args()
 
@@ -85,6 +122,7 @@ def main() -> int:
     binary = (root / args.binary).resolve()
     subsets_dir = (root / args.subsets_dir).resolve()
     output_dir = (root / args.output_dir).resolve()
+    scenario_file = (root / args.scenario_file).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if args.runs < 2:
@@ -93,6 +131,8 @@ def main() -> int:
         raise SystemExit(f"run_serial binary not found: {binary}")
     if not subsets_dir.is_dir():
         raise SystemExit(f"subsets directory not found: {subsets_dir}")
+
+    scenarios = parse_scenarios(scenario_file)
 
     subset_map = {
         "small": first_match(subsets_dir, "*_subset_10000.csv"),
@@ -108,7 +148,7 @@ def main() -> int:
     has_mismatch = False
 
     for subset_label, subset_path in subset_map.items():
-        for scenario in SCENARIOS:
+        for scenario in scenarios:
             csv_out = output_dir / f"determinism_{subset_label}_{scenario.name}_{ts}.csv"
             log_out = output_dir / f"determinism_{subset_label}_{scenario.name}_{ts}.log"
 
@@ -120,12 +160,12 @@ def main() -> int:
                 str(args.runs),
                 "--dataset-label",
                 subset_label,
-                "--query",
-                scenario.query_type,
-                *scenario.extra_args,
                 "--benchmark-out",
                 str(csv_out),
             ]
+            if scenario.query_type != "ingest_only":
+                cmd.extend(["--query", scenario.query_type])
+            cmd.extend(scenario.extra_args)
 
             proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
             log_out.write_text(proc.stdout + "\n" + proc.stderr, encoding="utf-8")
@@ -209,6 +249,7 @@ def main() -> int:
         fh.write(f"- Batch UTC: `{ts}`\n")
         fh.write(f"- Binary: `{binary}`\n")
         fh.write(f"- Subsets dir: `{subsets_dir}`\n")
+        fh.write(f"- Scenario file: `{scenario_file}`\n")
         fh.write(f"- Runs per scenario: `{args.runs}`\n")
         fh.write(f"- Summary CSV: `{summary_csv}`\n")
         fh.write(f"- Status: `{'FAIL' if has_mismatch else 'PASS'}`\n\n")
