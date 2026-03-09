@@ -120,3 +120,4 @@ Update: subsequent Phase 1 fix chunks resolved the previously reported determini
 Update: additional Phase 1 hardening chunks resolved serial baseline entrypoint clarity (`run_phase1_baseline.sh`), top-N determinism payload/order checks, and mixed-entrypoint output-path guardrails.
 Update: Phase 1 maintenance/evidence chunk centralized CSV parse helpers, refreshed subset validation logs (`results/raw/validation/*_20260309T075859Z.log`), and logged a fresh `runs=3` benchmark batch (`batch_20260309T075912Z_manifest.csv`).
 Update: baseline evidence was refreshed with a full `runs=10` Phase 1 baseline batch (`results/raw/phase1_baseline/batch_20260309T080046Z_manifest.csv`).
+Update: Phase 2 chunk-1 hardening resolved `run_parallel` default query behavior, rejected `0` in explicit `--thread-list`, and added guarded parsing for `run_index_experiments --repeats` with CLI coverage.

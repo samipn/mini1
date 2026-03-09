@@ -86,7 +86,7 @@ bool ParseThreadList(const std::string& value, std::vector<std::size_t>* out) {
       continue;
     }
     std::int64_t thread_count = 0;
-    if (!ParseInt64(token, &thread_count) || thread_count < 0) {
+    if (!ParseInt64(token, &thread_count) || thread_count <= 0) {
       return false;
     }
     parsed.push_back(static_cast<std::size_t>(thread_count));
@@ -104,7 +104,7 @@ bool ParseThreadList(const std::string& value, std::vector<std::size_t>* out) {
 
 int main(int argc, char** argv) {
   std::string traffic_csv;
-  std::string query_type = "speed_below";
+  std::string query_type = "summary";
   std::string borough;
   std::size_t threads = 0;
   std::vector<std::size_t> thread_list;

@@ -172,12 +172,12 @@ Purpose: track issues found during incremental repository review and convert the
   Objective/result: added negative CLI regression assertions for malformed numeric arguments.
   Objective: assert graceful failure behavior for invalid numeric args in parallel CLI.
   Evidence: `tests/test_run_parallel_cli.cpp`.
-- [ ] P2-D9 operational consistency: align default query behavior in `run_parallel`.
-  Objective: make `run_parallel --traffic <path>` produce a useful default run without contradictory required flags.
-  Evidence: `apps/run_parallel.cpp` default `query_type=speed_below` and threshold requirement check.
-- [ ] P2-D10 thread-list policy: reject `0` in explicit `--thread-list` entries.
-  Objective: enforce explicit positive thread counts and avoid ambiguous `threads=0` output semantics.
-  Evidence: `apps/run_parallel.cpp` ParseThreadList currently allows `0`.
+- [x] P2-D9 operational consistency: align default query behavior in `run_parallel`.
+  Objective/result: default query now uses `summary`, so `run_parallel --traffic <path>` executes without requiring extra query-specific flags.
+  Evidence: `apps/run_parallel.cpp` default `query_type`.
+- [x] P2-D10 thread-list policy: reject `0` in explicit `--thread-list` entries.
+  Objective/result: explicit `--thread-list` entries now require strictly positive thread counts; `0` is rejected with exit code 2.
+  Evidence: `apps/run_parallel.cpp` (`ParseThreadList`), `tests/test_run_parallel_cli.cpp`.
 - [ ] P2 maintainability: deduplicate CLI numeric parsing helpers.
   Objective: centralize parse helpers shared by serial/parallel/optimized runners to prevent divergence.
   Evidence: duplicated parse helper logic across app binaries.
@@ -193,9 +193,9 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P2-D14 tooling clarity: deprecate or clearly scope legacy `summarize_phase2.py`.
   Objective: avoid analysis drift from parallel maintenance of fixed-file and manifest-driven summary pipelines.
   Evidence: both `scripts/summarize_phase2.py` and `scripts/summarize_phase2_dev.py` are active.
-- [ ] P2-D16 hardening: guard numeric parsing for `run_index_experiments --repeats`.
-  Objective: invalid repeat values should return usage error, not process abort.
-  Evidence: `apps/run_index_experiments.cpp` uses unguarded `std::stoull`.
+- [x] P2-D16 hardening: guard numeric parsing for `run_index_experiments --repeats`.
+  Objective/result: replaced unguarded `std::stoull` with checked parsing; invalid values now return exit code 2.
+  Evidence: `apps/run_index_experiments.cpp`, `tests/test_run_index_experiments_cli.cpp`.
 - [ ] P2-D18 robustness: replace fixed-column parsing in subset validation script with header-based extraction.
   Objective: keep validation resilient to benchmark CSV schema changes.
   Evidence: `scripts/run_phase2_subset_validation.sh` uses positional fields (`$19/$21/$22/$6`).
