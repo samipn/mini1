@@ -143,12 +143,13 @@ That keeps the experiment focused and easier to explain.
 ### 6. Parallelize Time-Window Query
 #### Tasks
 - [ ] Implement parallel scan for records in a selected time window
-- [ ] Ensure timestamp comparisons are deterministic
+- [x] Implement parallel scan for records in a selected time window
+- [x] Ensure timestamp comparisons are deterministic
 - [ ] Compare:
-  - [ ] record count
+  - [x] record count
   - [ ] aggregate metrics
   - [ ] optional sample records
-- [ ] Benchmark against the same time windows used in Phase 1
+- [x] Benchmark against the same time windows used in Phase 1
 
 #### Deliverable
 - Parallel time-range query matches serial behavior
@@ -158,13 +159,13 @@ That keeps the experiment focused and easier to explain.
 ### 7. Parallelize Aggregation Queries
 #### Tasks
 - [ ] Add parallel aggregation for:
-  - [ ] average speed
-  - [ ] average travel time
-  - [ ] counts by condition
-- [ ] Use thread-local accumulators
-- [ ] Reduce safely after the parallel region
-- [ ] Verify numerical behavior is acceptable
-- [ ] Note if floating-point reduction order changes tiny decimal results
+  - [x] average speed
+  - [x] average travel time
+  - [x] counts by condition
+- [x] Use thread-local accumulators
+- [x] Reduce safely after the parallel region
+- [x] Verify numerical behavior is acceptable
+- [x] Note if floating-point reduction order changes tiny decimal results
 
 #### Deliverable
 - Parallel aggregations produce acceptable and explainable results
@@ -173,11 +174,11 @@ That keeps the experiment focused and easier to explain.
 
 ### 8. Evaluate Top-N or Ranking Queries Carefully
 #### Tasks
-- [ ] Decide whether top-N slowest query should be parallelized in Phase 2
-- [ ] If yes:
-  - [ ] compute thread-local candidates
-  - [ ] merge and rank after parallel scan
-- [ ] Compare ranking output to serial result
+- [x] Decide whether top-N slowest query should be parallelized in Phase 2
+- [x] If yes:
+  - [x] compute thread-local candidates
+  - [x] merge and rank after parallel scan
+- [x] Compare ranking output to serial result
 - [ ] If too complex or too slow, document why and defer deeper optimization to Phase 3
 
 #### Deliverable
@@ -187,21 +188,21 @@ That keeps the experiment focused and easier to explain.
 
 ### 9. Extend the CLI Runner for Parallel Execution
 #### Tasks
-- [ ] Implement `apps/run_parallel.cpp`
+- [x] Implement `apps/run_parallel.cpp`
 - [ ] Accept command-line arguments for:
-  - [ ] traffic dataset path
-  - [ ] query type
-  - [ ] thresholds
-  - [ ] time ranges
-  - [ ] number of threads
-  - [ ] repetitions
+  - [x] traffic dataset path
+  - [x] query type
+  - [x] thresholds
+  - [x] time ranges
+  - [x] number of threads
+  - [x] repetitions
 - [ ] Print logs showing:
-  - [ ] thread count
-  - [ ] query type
-  - [ ] dataset size
-  - [ ] query start/end
-  - [ ] elapsed time
-- [ ] Return nonzero exit code on failure
+  - [x] thread count
+  - [x] query type
+  - [x] dataset size
+  - [x] query start/end
+  - [x] elapsed time
+- [x] Return nonzero exit code on failure
 
 #### Deliverable
 - Parallel executable runs benchmarkable workloads with configurable thread counts
@@ -211,14 +212,14 @@ That keeps the experiment focused and easier to explain.
 ### 10. Add Thread Count Controls
 #### Tasks
 - [ ] Support explicit thread counts such as:
-  - [ ] 1
-  - [ ] 2
-  - [ ] 4
-  - [ ] 8
-  - [ ] maximum available reasonable count
-- [ ] Ensure `1 thread` mode can be compared against serial behavior
-- [ ] Record thread count in benchmark outputs
-- [ ] Avoid auto-tuning that changes behavior between runs
+  - [x] 1
+  - [x] 2
+  - [x] 4
+  - [x] 8
+  - [x] maximum available reasonable count
+- [x] Ensure `1 thread` mode can be compared against serial behavior
+- [x] Record thread count in benchmark outputs
+- [x] Avoid auto-tuning that changes behavior between runs
 
 #### Deliverable
 - Benchmark runs can compare scaling across thread counts
