@@ -124,6 +124,15 @@ Purpose: track issues found during incremental repository review and convert the
   Objective/result: added negative CLI regression assertions for malformed numeric arguments.
   Objective: assert graceful failure behavior for invalid numeric args in parallel CLI.
   Evidence: `tests/test_run_parallel_cli.cpp`.
+- [ ] P2-D9 operational consistency: align default query behavior in `run_parallel`.
+  Objective: make `run_parallel --traffic <path>` produce a useful default run without contradictory required flags.
+  Evidence: `apps/run_parallel.cpp` default `query_type=speed_below` and threshold requirement check.
+- [ ] P2-D10 thread-list policy: reject `0` in explicit `--thread-list` entries.
+  Objective: enforce explicit positive thread counts and avoid ambiguous `threads=0` output semantics.
+  Evidence: `apps/run_parallel.cpp` ParseThreadList currently allows `0`.
+- [ ] P2 maintainability: deduplicate CLI numeric parsing helpers.
+  Objective: centralize parse helpers shared by serial/parallel/optimized runners to prevent divergence.
+  Evidence: duplicated parse helper logic across app binaries.
 
 ### Phase 3 (D1-D15)
 - [x] D1 baseline freeze/comparison reviewed.

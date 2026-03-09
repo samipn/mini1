@@ -21,7 +21,7 @@ Evidence sources:
 - Phase 3: pass (`10/10` deliverable checks, `14/14` TODO path tokens)
 - Per-deliverable review backlog status:
   - Phase 1 D1-D10 reviewed (with open operational hardening gaps)
-  - Phase 2 D1-D15 reviewed
+  - Phase 2 D1-D15 reviewed (with open operational consistency gaps)
   - Phase 3 D1-D15 reviewed
 
 ## Fixes Applied During Verification
@@ -58,5 +58,7 @@ They exist locally for verification but are not committed to git by design.
 ## Open Hardening Gaps Discovered After Verification
 
 1. Shared CSV/parse helper duplication across `CSVReader`, `GarageLoader`, `BuildingLoader` (maintainability risk).
+2. `run_parallel` default query behavior is operationally inconsistent (`speed_below` default but no default threshold).
+3. `run_parallel` allows `0` in explicit `--thread-list` values, causing ambiguous `threads=0` reporting.
 
 Previously identified CLI numeric-parse abort issues and Phase 1 benchmark output overwrite risk have been fixed on this branch. Remaining gaps are tracked in `docs/review/THOROUGH_CODE_REVIEW_TODO.md`.
