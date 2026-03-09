@@ -49,6 +49,7 @@ add_library(congestion_core
   src/data_model/TrafficDatasetOptimized.cpp
   src/benchmark/BenchmarkHarness.cpp
   src/io/CSVReader.cpp
+  src/io/CsvParseUtils.cpp
   src/io/GarageLoader.cpp
   src/io/BuildingLoader.cpp
   src/query/TimeWindowQuery.cpp

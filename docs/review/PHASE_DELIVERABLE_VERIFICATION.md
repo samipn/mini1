@@ -118,3 +118,4 @@ Previously identified CLI numeric-parse abort issues and Phase 1 benchmark outpu
 
 Update: subsequent Phase 1 fix chunks resolved the previously reported determinism scenario-source drift, Phase 1 summary label-fallback issue, and Phase 1 plotting rigidity/dependency-message clarity gaps.
 Update: additional Phase 1 hardening chunks resolved serial baseline entrypoint clarity (`run_phase1_baseline.sh`), top-N determinism payload/order checks, and mixed-entrypoint output-path guardrails.
+Update: Phase 1 maintenance/evidence chunk centralized CSV parse helpers, refreshed subset validation logs (`results/raw/validation/*_20260309T075859Z.log`), and logged a fresh `runs=3` benchmark batch (`batch_20260309T075912Z_manifest.csv`).

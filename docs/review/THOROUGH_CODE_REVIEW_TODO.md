@@ -86,33 +86,33 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P1-D2/D5 API invariant: borough representation normalization for direct-record query correctness.
   Objective: prevent false negatives in borough-filter query when records are inserted with `borough` text but unset `borough_code`.
   Evidence: `TrafficDataset::AddRecord` does not normalize borough fields; borough query prefers code for known borough strings.
-- [ ] P1-D3 maintainability: remove loader parsing redundancy.
-  Objective: centralize shared CSV parse/timestamp helper logic used by `CSVReader`, `GarageLoader`, and `BuildingLoader`.
-  Evidence: duplicated helpers across `src/io/CSVReader.cpp`, `src/io/GarageLoader.cpp`, `src/io/BuildingLoader.cpp`.
+- [x] P1-D3 maintainability: remove loader parsing redundancy.
+  Objective/result: centralized shared CSV parse/numeric/timestamp helper logic and switched `CSVReader`, `GarageLoader`, and `BuildingLoader` to shared helpers.
+  Evidence: `include/io/CsvParseUtils.hpp`, `src/io/CsvParseUtils.cpp`, updated loader/reader sources.
 - [x] P1 test depth: add explicit negative CLI tests for malformed numeric parameters.
   Objective/result: regression coverage added to assert graceful failure (exit code 2), no crash.
   Evidence: `tests/test_run_serial_benchmark_cli.cpp`.
 - [ ] P1-D10 evidence rigor: enforce deliverable-grade run count policy for baseline claims.
   Objective: prevent single-run/smoke batches from being treated as Phase 1 baseline evidence.
   Evidence: latest Phase 1 dev manifest/summary rows show `runs=1`.
-- [ ] P1-D9 notes freshness: keep Phase 1 benchmark log aligned with current scenario config and artifacts.
-  Objective: maintain traceable and current benchmark-history entries (scenario names, branch/commit, timestamps).
-  Evidence: `report/phase1_dev_benchmark_log.md` scenario set differs from `configs/phase1_dev_scenarios.csv`.
+- [x] P1-D9 notes freshness: keep Phase 1 benchmark log aligned with current scenario config and artifacts.
+  Objective/result: appended latest `runs=3` Phase 1 dev batch entry with scenario names matching current config and current branch/commit metadata.
+  Evidence: `report/phase1_dev_benchmark_log.md` (`2026-03-09T07:59:12Z` entry).
 - [x] P1-D10 operational clarity: provide explicit serial-only baseline benchmark entrypoint.
   Objective/result: added dedicated serial baseline wrapper with baseline-grade run policy and explicit smoke override.
   Evidence: `scripts/run_phase1_baseline.sh`.
-- [ ] P1-D12 evidence integrity: enforce/verify subset-validation artifact presence.
-  Objective: ensure D12 claims are backed by current timestamped logs under `results/raw/validation/`.
-  Evidence: validation runner exists, but snapshot currently has no validation logs.
+- [x] P1-D12 evidence integrity: enforce/verify subset-validation artifact presence.
+  Objective/result: reran subset validation flow and refreshed timestamped logs for small/medium/large-dev datasets.
+  Evidence: `results/raw/validation/validation_{small,medium,large_dev}_20260309T075859Z.log`.
 - [x] P1-D13 scenario integrity: make determinism checks use the same scenario source as benchmark runs.
   Objective/result: determinism checker now loads scenarios from `configs/phase1_dev_scenarios.csv` (configurable via `--scenario-file`) instead of hardcoded scenario definitions.
   Evidence: `scripts/check_phase1_dev_determinism.py`.
 - [x] P1-D14 policy guard: enforce minimum repeat count for deliverable-grade subset benchmark runs.
   Objective/result: `run_phase1_dev_benchmarks.sh` now enforces `--runs >= 3` by default with explicit smoke override via `--allow-under-min-runs`.
   Evidence: `scripts/run_phase1_dev_benchmarks.sh`.
-- [ ] P1-D15 evidence rigor: ensure latest subset timing artifacts satisfy minimum repeat expectations.
-  Objective: align D15 status with local evidence by generating/retaining batches with at least 3 runs per scenario/subset.
-  Evidence: latest `phase1_dev` manifest/summary rows in snapshot show `runs=1`.
+- [x] P1-D15 evidence rigor: ensure latest subset timing artifacts satisfy minimum repeat expectations.
+  Objective/result: generated fresh Phase 1 dev benchmark batch with `--runs 3` using the current scenario config.
+  Evidence: `results/raw/phase1_dev/batch_20260309T075912Z_manifest.csv` (benchmark_runs=`3`).
 - [x] P1-D16 summary robustness: handle dataset-label drift between runner outputs and summary defaults.
   Objective/result: summarizer now falls back to all discovered dataset labels when requested defaults are absent, so default invocation remains usable on smoke-labeled batches.
   Evidence: `scripts/summarize_phase1_dev.py`.
