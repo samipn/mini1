@@ -220,6 +220,44 @@
 - Added dedicated Phase 2 dev benchmark log:
   - `report/phase2_dev_benchmark_log.md`
 
+## Phase 2 Notes (Chunk 4: Indexed Joins + Boost Evaluation)
+- Branch: `P2-D27-30`.
+- Added optional index/materialization infrastructure:
+  - `include/query/CrossDatasetIndex.hpp`
+  - `src/query/CrossDatasetIndex.cpp`
+  - supports optional link-id count index (`traffic link_id -> count`)
+  - supports BBL indexes (`garage bbl -> count`, `building bbl -> count`)
+  - supports materialized shared-BBL relationship rows and borough rollups
+- Added experiment runner:
+  - `apps/run_index_experiments.cpp`
+  - `scripts/run_phase2_index_experiments.sh`
+  - compares baseline repeated scans vs indexed lookups and writes benchmark CSV rows
+- Added correctness test:
+  - `tests/test_cross_dataset_index.cpp`
+- CMake integration:
+  - `run_index_experiments` executable
+  - `test_cross_dataset_index` in CTest
+- Bench result sample (subset + synthetic garage/BES fixture):
+  - output: `results/raw/phase2/index_lookup_benchmark.csv`
+  - observed on this run:
+    - baseline repeated link-id scans were slower than indexed link-id lookups
+    - index build cost was measurable but small relative to repeated scan overhead
+- Selective Boost evaluation:
+  - measured optional prototype timings when headers are available for:
+    - `boost::container::flat_map`
+    - `boost::unordered::unordered_flat_map`
+    - `boost::dynamic_bitset`
+  - fallback behavior preserves STL-only execution when Boost components are unavailable.
+- Keep/defer decisions:
+  - Kept in Phase 2:
+    - optional index prototypes
+    - benchmarkable scan-vs-index comparison path
+    - lightweight materialized relationship statistics
+  - Deferred to Phase 3:
+    - making indexed/materialized paths default for all query flows
+    - deeper memory-layout/ownership redesign and high-cardinality compaction
+    - broad replacement of STL maps in core runtime paths based solely on micro-benchs
+
 ## Pre-baseline classification (D20)
 - All subset benchmark artifacts under:
   - `results/raw/phase1_dev/`
