@@ -10,7 +10,7 @@ OPTIMIZED_BINARY="${BUILD_DIR}/run_optimized"
 DATASET_PATH="${1:-/datasets/i4gi-tjb9.csv}"
 RUNS="${2:-10}"
 OUT_DIR="${3:-${ROOT_DIR}/results/raw}"
-THREAD_LIST="${4:-1,2,4,8}"
+THREAD_LIST="${4:-1,2,4,8,16}"
 
 mkdir -p "${OUT_DIR}"
 

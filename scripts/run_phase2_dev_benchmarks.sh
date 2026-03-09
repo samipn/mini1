@@ -11,7 +11,7 @@ SUBSETS_DIR="${ROOT_DIR}/data/subsets"
 OUT_DIR="${ROOT_DIR}/results/raw/phase2_dev"
 LOG_DIR="${ROOT_DIR}/results/raw/logs"
 RUNS=3
-THREAD_LIST="1,2,4,8"
+THREAD_LIST="1,2,4,8,16"
 
 SMALL_PATH=""
 MEDIUM_PATH=""
@@ -29,7 +29,7 @@ Options:
   --medium <path>         Medium subset CSV path (100k)
   --large <path>          Large-dev subset CSV path (1M)
   --runs <n>              Benchmark repetitions per scenario (default: 3)
-  --threads <csv>         Parallel thread list (default: 1,2,4,8)
+  --threads <csv>         Parallel thread list (default: 1,2,4,8,16)
   --out-dir <path>        Raw benchmark output dir (default: results/raw/phase2_dev)
   --log-dir <path>        Log output dir (default: results/raw/logs)
   --help                  Show this help

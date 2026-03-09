@@ -9,7 +9,7 @@ SCENARIO_FILE="${ROOT_DIR}/configs/phase2_dev_scenarios.conf"
 
 SUBSETS_DIR="${ROOT_DIR}/data/subsets"
 OUT_DIR="${ROOT_DIR}/results/raw/phase2_dev/validation"
-THREAD_LIST="1,2,4,8"
+THREAD_LIST="1,2,4,8,16"
 
 SMALL_PATH=""
 MEDIUM_PATH=""
@@ -26,7 +26,7 @@ Options:
   --small <path>          Small subset CSV path (10k)
   --medium <path>         Medium subset CSV path (100k)
   --large <path>          Large-dev subset CSV path (1M)
-  --threads <csv>         Thread list for parallel validation (default: 1,2,4,8)
+  --threads <csv>         Thread list for parallel validation (default: 1,2,4,8,16)
   --out-dir <path>        Validation output dir (default: results/raw/phase2_dev/validation)
   --help                  Show this help
 USAGE

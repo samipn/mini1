@@ -92,7 +92,7 @@ int main() {
 
   const std::string summary_cmd =
       "./run_parallel --traffic " + qcsv +
-      " --query summary --thread-list 1,2,4,8 --benchmark-runs 2 --validate-serial --benchmark-out " +
+      " --query summary --thread-list 1,2,4,8,16 --benchmark-runs 2 --validate-serial --benchmark-out " +
       ShellQuote(out_path) + " > /dev/null";
   if (Run(summary_cmd) != 0) {
     std::cerr << "run_parallel summary/thread-list failed\n";

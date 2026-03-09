@@ -64,6 +64,8 @@ struct BenchmarkRunResult {
   double average_speed_mph = 0.0;
   double average_travel_time_seconds = 0.0;
   bool serial_match = true;
+  double validation_ms = 0.0;
+  double validation_ingest_ms = 0.0;
 };
 
 class BenchmarkHarness {

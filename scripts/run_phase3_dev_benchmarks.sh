@@ -12,8 +12,9 @@ SUBSETS_DIR="${ROOT_DIR}/data/subsets"
 OUT_DIR="${ROOT_DIR}/results/raw/phase3_dev"
 LOG_DIR="${ROOT_DIR}/results/raw/logs"
 RUNS=3
-THREAD_LIST="1,2,4,8"
+THREAD_LIST="1,2,4,8,16"
 OPTIMIZATION_STEP="soa_encoded_hotloop"
+VALIDATE_SERIAL=0
 
 SMALL_PATH=""
 MEDIUM_PATH=""
@@ -31,10 +32,12 @@ Options:
   --medium <path>         Medium subset CSV path (100k)
   --large <path>          Large-dev subset CSV path (1M)
   --runs <n>              Benchmark repetitions per scenario (default: 3)
-  --threads <csv>         Parallel thread list (default: 1,2,4,8)
+  --threads <csv>         Parallel thread list (default: 1,2,4,8,16)
   --out-dir <path>        Raw benchmark output dir (default: results/raw/phase3_dev)
   --log-dir <path>        Log output dir (default: results/raw/logs)
   --optimization-step <label>  Label for optimization attribution (default: soa_encoded_hotloop)
+  --validate-serial       Enable serial parity validation during benchmark runs (default: off)
+  --no-validate-serial    Disable serial parity validation during benchmark runs
   --help                  Show this help
 USAGE
 }
@@ -76,6 +79,14 @@ while [[ $# -gt 0 ]]; do
     --optimization-step)
       OPTIMIZATION_STEP="$2"
       shift 2
+      ;;
+    --validate-serial)
+      VALIDATE_SERIAL=1
+      shift 1
+      ;;
+    --no-validate-serial)
+      VALIDATE_SERIAL=0
+      shift 1
       ;;
     --help)
       usage
@@ -138,7 +149,7 @@ batch_utc,subset_label,dataset_path,expected_data_rows,actual_data_rows,serial_a
 CSV
 
 cat > "${BATCH_MANIFEST}" <<CSV
-batch_utc,git_branch,git_commit,optimization_step,subset_label,scenario_name,mode,thread_list,dataset_path,benchmark_runs,output_csv,log_file
+batch_utc,git_branch,git_commit,optimization_step,subset_label,scenario_name,mode,thread_list,dataset_path,benchmark_runs,validation_enabled,output_csv,log_file
 CSV
 
 cat > "${RPS_CSV}" <<CSV
@@ -248,7 +259,6 @@ run_scenario() {
       --benchmark-runs "${RUNS}"
       --dataset-label "${subset_label}"
       --benchmark-out "${out_csv}"
-      --validate-serial
     )
   elif [[ "${mode}" == "optimized_serial" ]]; then
     cmd=(
@@ -258,7 +268,6 @@ run_scenario() {
       --benchmark-runs "${RUNS}"
       --dataset-label "${subset_label}"
       --benchmark-out "${out_csv}"
-      --validate-serial
     )
   else
     thread_field="${THREAD_LIST//,/;}"
@@ -270,12 +279,14 @@ run_scenario() {
       --benchmark-runs "${RUNS}"
       --dataset-label "${subset_label}"
       --benchmark-out "${out_csv}"
-      --validate-serial
     )
   fi
 
   if [[ "${query_type}" != "ingest_only" ]]; then
     cmd+=(--query "${query_type}")
+  fi
+  if [[ "${mode}" != "serial" && "${VALIDATE_SERIAL}" == "1" ]]; then
+    cmd+=(--validate-serial)
   fi
   append_scenario_args cmd "${threshold}" "${start_epoch}" "${end_epoch}" "${borough}"
 
@@ -297,9 +308,9 @@ run_scenario() {
     "${cmd[@]}" >"${log_file}" 2>&1
   fi
 
-  printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
+  printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
     "${TS}" "${GIT_BRANCH}" "${GIT_COMMIT}" "${OPTIMIZATION_STEP}" "${subset_label}" "${scenario_name}" \
-    "${mode}" "${thread_field}" "${dataset_path}" "${RUNS}" "${out_csv}" "${log_file}" >> "${BATCH_MANIFEST}"
+    "${mode}" "${thread_field}" "${dataset_path}" "${RUNS}" "${VALIDATE_SERIAL}" "${out_csv}" "${log_file}" >> "${BATCH_MANIFEST}"
 
   emit_rps_rows "${out_csv}" "${subset_label}" "${scenario_name}" "${mode}"
 }
