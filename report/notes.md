@@ -118,7 +118,43 @@
   - thread count is emitted in benchmark-style run logs per query execution
 
 ## Phase 2 D6-D10 caveats
-- Full parallel benchmark CSV integration into `BenchmarkHarness` is still a later step (Phase 2 D12), so run-level thread data is currently captured in CLI logs rather than harness output files.
+- Full parallel benchmark CSV integration into `BenchmarkHarness` was completed in D11-D15.
+
+## Phase 2 Notes (D11-D15)
+- Branch: `P2-D11-15`.
+- Correctness validation coverage is now enforced in both test and benchmark paths:
+  - `test_parallel_query_correctness` verifies serial-vs-parallel parity for speed threshold, borough+threshold, time window, summary aggregate, and top-N.
+  - `BenchmarkHarness::RunParallel` can run serial validation back-to-back (`validate_parallel_against_serial`) and fail fast on mismatch.
+- `BenchmarkHarness` was extended for parallel experiments:
+  - execution mode metadata (`serial` or `parallel`)
+  - explicit `thread_count` per run
+  - serial-validation status (`serial_match`)
+  - graph-friendly CSV output for both serial and parallel runs
+- `run_parallel` benchmark mode now uses the shared harness and supports:
+  - `--benchmark-out`, `--benchmark-append`, `--dataset-label`, `--expect-accepted`
+  - thread sweep via `--thread-list`
+  - validation gate via `--validate-serial`
+- Benchmark pipeline updates:
+  - `scripts/benchmark.sh` now runs serial+parallel scenario pairs with thread sweeps.
+  - `scripts/summarize_phase2.py` computes grouped runtime stats and serial-relative speedup.
+- Development benchmark batch executed on `2026-03-09`:
+  - dataset: first 1000 data rows from `/datasets/i4gi-tjb9.csv` (`/tmp/traffic_1000.csv`)
+  - runs per scenario: `10`
+  - thread counts: `1,2,4,8`
+  - raw outputs: `results/raw/phase2/*.csv`
+  - summary output: `results/tables/phase2/summary.csv`
+- Observations from this batch (query-time focused):
+  - no strong speedup on the 1000-row subset; ingest dominates end-to-end runtime.
+  - most parallel query modes were slower than serial baseline at all tested thread counts.
+  - occasional high-latency outliers appeared at high thread counts (especially 8 threads), indicating overhead/imbalance sensitivity on small workloads.
+- Interpreted overhead causes:
+  - thread startup/scheduling overhead dominates small scans.
+  - reduction/merge overhead can exceed useful work at low record counts.
+  - higher thread counts amplify jitter and synchronization overhead on this subset scale.
+- Numerical behavior:
+  - no material serial-vs-parallel aggregate mismatches observed in validation runs (floating-point tolerance `1e-9`).
+- Ingestion parallelization status:
+  - not attempted in this chunk; ingestion remains serial by design to preserve experiment focus.
 
 ## Pre-baseline classification (D20)
 - All subset benchmark artifacts under:
