@@ -91,7 +91,34 @@
 
 ## Phase 2 D1-D5 caveats
 - Current parallel scan API returns counts rather than full materialized record vectors to keep first-pass thread safety simple.
-- Time-window query parallelization is deferred to the next Phase 2 increment (outside D1-D5).
+- Time-window query parallelization was deferred at D1-D5 and is now implemented in D6-D10.
+
+## Phase 2 Notes (D6-D10)
+- Continued branch: `P2-D6-10`.
+- OpenMP stack retained and extended (no fallback to `std::thread` in query execution paths).
+- Added parallel time-window support:
+  - count-based scan with OpenMP reduction
+  - deterministic inclusive range comparisons
+  - serial-vs-parallel parity checks in tests and CLI validation mode
+- Added parallel aggregation expansions:
+  - full dataset aggregation
+  - speed-threshold conditional aggregation
+  - borough+threshold conditional aggregation
+  - time-window conditional aggregation
+- Top-N decision/result for Phase 2:
+  - implemented parallel top-N slowest recurring links using thread-local maps + merge + sort
+  - validated output parity against serial top-N in tests and `--validate-serial`
+- Extended `run_parallel` CLI:
+  - new query modes: `time_window`, `top_n_slowest`
+  - new args: `--start-epoch`, `--end-epoch`, `--top-n`, `--min-link-samples`, `--thread-list`
+  - logs now include query start/end, elapsed time, dataset accepted row count, query type, and thread count
+- Thread-count controls:
+  - supports explicit `--threads` and deterministic `--thread-list` sweeps (for example `1,2,4,8`)
+  - no auto-tuning between runs unless user requests thread `0` default behavior
+  - thread count is emitted in benchmark-style run logs per query execution
+
+## Phase 2 D6-D10 caveats
+- Full parallel benchmark CSV integration into `BenchmarkHarness` is still a later step (Phase 2 D12), so run-level thread data is currently captured in CLI logs rather than harness output files.
 
 ## Pre-baseline classification (D20)
 - All subset benchmark artifacts under:

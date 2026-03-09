@@ -28,6 +28,7 @@ std::string WriteFixtureCsv() {
   out << "2,25.0,20.0,ok,2024-01-01T00:01:00,200,Queens,Link B\n";
   out << "3,12.0,40.0,ok,2024-01-01T00:02:00,100,Manhattan,Link A\n";
   out << "4,18.0,50.0,ok,2024-01-01T00:03:00,300,Brooklyn,Link C\n";
+  out << "5,22.0,45.0,ok,2024-01-01T00:04:00,300,Brooklyn,Link C\n";
   return path.string();
 }
 
@@ -61,10 +62,27 @@ int main() {
     return EXIT_FAILURE;
   }
 
+  const std::string time_cmd =
+      "./run_parallel --traffic " + qcsv +
+      " --query time_window --start-epoch 1704067200 --end-epoch 1704067380 --threads 2 --validate-serial > /dev/null";
+  if (Run(time_cmd) != 0) {
+    std::cerr << "run_parallel time_window failed\n";
+    return EXIT_FAILURE;
+  }
+
+  const std::string topn_cmd =
+      "./run_parallel --traffic " + qcsv +
+      " --query top_n_slowest --top-n 2 --min-link-samples 1 --threads 2 --validate-serial > /dev/null";
+  if (Run(topn_cmd) != 0) {
+    std::cerr << "run_parallel top_n_slowest failed\n";
+    return EXIT_FAILURE;
+  }
+
   const std::string summary_cmd =
-      "./run_parallel --traffic " + qcsv + " --query summary --threads 2 --validate-serial > /dev/null";
+      "./run_parallel --traffic " + qcsv +
+      " --query summary --thread-list 1,2,4,8 --benchmark-runs 2 --validate-serial > /dev/null";
   if (Run(summary_cmd) != 0) {
-    std::cerr << "run_parallel summary failed\n";
+    std::cerr << "run_parallel summary/thread-list failed\n";
     return EXIT_FAILURE;
   }
 
