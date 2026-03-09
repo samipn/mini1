@@ -430,3 +430,342 @@ These items were identified during late Phase 1 review and are appended for Phas
 - [ ] Keep Boost usage only where measured wins are reproducible and clearly justified in benchmark notes.
 
 ---
+
+---
+
+## Phase 3 Baseline Comparative Testing and Early Data Collection
+## Purpose
+These tasks are for **development-stage optimized-layout benchmarking on subset datasets**, not the final full-dataset benchmark campaign.
+
+The goal is to:
+- verify that optimized-layout results match earlier correct behavior,
+- establish repeatable serial-vs-parallel-vs-optimized benchmark workflows,
+- collect preliminary evidence about memory-layout tradeoffs,
+- and ensure the final benchmark harness is stable before running the full dataset later.
+
+These tasks should be completed by the coding agent while implementing Phase 3.
+
+### Rules for This Section
+- Use **subset datasets only**
+- Use the **same subset files** already used in Phase 1 and Phase 2 development benchmarking
+- Keep query definitions identical across serial, parallel, and optimized modes where possible
+- Save all raw outputs for later comparison
+- Do **not** treat these results as final project conclusions
+- Keep optimized experiments attributable to specific changes whenever possible
+
+---
+
+### 18. Reuse or Validate Subset Datasets for Phase 3
+#### Tasks
+- [ ] Reuse the reproducible subset datasets created earlier
+- [ ] Confirm subset row counts still match expected sizes
+- [ ] Confirm subset files are accessible to serial, parallel, and optimized runners
+- [ ] Record which subset files are used in Phase 3 development tests
+
+#### Agent instructions
+- Do not regenerate subsets unless necessary
+- Save a short manifest of subset file names and row counts under:
+  - [ ] `results/raw/phase3_dev/`
+- Keep naming stable across repeated benchmark batches
+
+#### Deliverable
+- Phase 3 development benchmarks use consistent subset inputs
+
+---
+
+### 19. Add Cross-Mode Validation Runs on Subsets
+#### Tasks
+- [ ] Run the serial implementation on each selected subset
+- [ ] Run the parallel implementation on each selected subset
+- [ ] Run the optimized implementation on each selected subset
+- [ ] Compare for each scenario:
+  - [ ] result count
+  - [ ] aggregate values
+  - [ ] top-N outputs if applicable
+  - [ ] mismatch reports if found
+
+#### Agent instructions
+- Add a validation mode or helper script that runs serial, parallel, and optimized versions back-to-back on the same subset and scenario
+- Save comparison outputs to:
+  - [ ] `results/raw/phase3_dev/validation/`
+- If mismatches occur, save all raw outputs and log the issue clearly
+
+#### Deliverable
+- Optimized subset results are checked against earlier correct behavior
+
+---
+
+### 20. Add Early Optimized Benchmark Scenarios for Subsets
+#### Tasks
+- [ ] Define a repeatable Phase 3 subset benchmark set using the same query parameters as earlier phases
+- [ ] Minimum scenarios:
+  - [ ] serial ingest + serial low-speed threshold query
+  - [ ] parallel query version of the same workload
+  - [ ] optimized serial query version of the same workload
+  - [ ] optimized parallel query version if supported
+  - [ ] serial ingest + serial time-window query
+  - [ ] optimized serial time-window query
+  - [ ] serial ingest + serial aggregation query
+  - [ ] optimized serial aggregation query
+- [ ] If borough filtering exists, include optimized comparison variants there too
+
+#### Agent instructions
+- Keep scenario names stable and machine-readable
+- Use the same thresholds and time windows unless a new experiment is explicitly documented
+- Tag every result row with:
+  - [ ] implementation mode
+  - [ ] subset size
+  - [ ] query scenario
+  - [ ] thread count if applicable
+
+#### Deliverable
+- A stable early benchmark set exists for subset-based optimized testing
+
+---
+
+### 21. Create a Repeatable Phase 3 Development Benchmark Runner
+#### Tasks
+- [ ] Add or extend a script that runs the Phase 3 subset benchmark suite automatically
+- [ ] Support:
+  - [ ] small subset
+  - [ ] medium subset
+  - [ ] large-dev subset
+- [ ] Support repeated runs per scenario
+- [ ] Support implementation modes:
+  - [ ] serial
+  - [ ] parallel
+  - [ ] optimized
+  - [ ] optimized parallel if supported
+- [ ] Save raw outputs to:
+  - [ ] `results/raw/phase3_dev/`
+- [ ] Save logs to:
+  - [ ] `results/raw/logs/`
+
+#### Agent instructions
+- Implement or extend a script such as:
+  - [ ] `scripts/run_phase3_dev_benchmarks.sh`
+- The script should:
+  - [ ] accept a dataset path
+  - [ ] accept a repetition count
+  - [ ] accept thread counts if needed
+  - [ ] run all selected comparison scenarios
+  - [ ] save each run result in a machine-readable format
+  - [ ] print a concise summary to console
+
+#### Deliverable
+- A single command can run the subset-based Phase 3 development benchmark suite
+
+---
+
+### 22. Collect Preliminary Optimized Timing and Comparison Data
+#### Tasks
+- [ ] Run each selected benchmark scenario at least:
+  - [ ] `3` times on the small subset
+  - [ ] `3` times on the medium subset
+  - [ ] `3` times on the large-dev subset
+- [ ] For optimized parallel runs, test at least:
+  - [ ] `1` thread
+  - [ ] `2` threads
+  - [ ] `4` threads
+  - [ ] `8` threads if reasonable
+- [ ] Record:
+  - [ ] ingest time
+  - [ ] query time
+  - [ ] total runtime
+  - [ ] implementation mode
+  - [ ] thread count
+  - [ ] records processed per second if available
+  - [ ] memory usage if available in your harness
+
+#### Agent instructions
+- The coding agent should execute the benchmark runner after changes affecting:
+  - [ ] data layout
+  - [ ] encoded field handling
+  - [ ] hot-loop logic
+  - [ ] optimized query logic
+- Save each batch with labels including:
+  - [ ] git branch
+  - [ ] commit hash if possible
+  - [ ] subset size
+  - [ ] scenario
+  - [ ] implementation mode
+  - [ ] thread count if applicable
+- Prefer CSV output for later summarization
+
+#### Deliverable
+- Preliminary timing and comparison data exists for subset-based Phase 3 scenarios
+
+---
+
+### 23. Collect Preliminary Memory-Tradeoff Data
+#### Tasks
+- [ ] Measure memory usage on subset workloads for:
+  - [ ] row-oriented serial implementation
+  - [ ] row-oriented parallel implementation if useful
+  - [ ] optimized implementation
+- [ ] Record memory-related metrics such as:
+  - [ ] peak RSS
+  - [ ] approximate bytes per record if estimated
+  - [ ] effect of encoded categorical fields if measured
+- [ ] Save raw memory-related outputs to:
+  - [ ] `results/raw/phase3_dev/memory/`
+
+#### Agent instructions
+- Extend the benchmark harness or helper scripts to collect memory data if practical
+- If exact memory instrumentation is difficult, record at least one consistent proxy or observation method and document it clearly
+- Keep measurement method consistent across comparison runs
+
+#### Deliverable
+- Preliminary memory-tradeoff evidence exists for Phase 3 development
+
+---
+
+### 24. Generate Development Summary Tables for Phase 3
+#### Tasks
+- [ ] Add or extend a script to summarize raw Phase 3 development benchmark results
+- [ ] Compute:
+  - [ ] mean runtime
+  - [ ] median runtime
+  - [ ] minimum runtime
+  - [ ] maximum runtime
+  - [ ] standard deviation if enough runs exist
+  - [ ] speedup relative to serial baseline for the same subset/scenario
+  - [ ] speedup relative to Phase 2 parallel where applicable
+- [ ] Save summary tables to:
+  - [ ] `results/tables/phase3_dev/`
+
+#### Agent instructions
+- Implement or extend a helper such as:
+  - [ ] `scripts/summarize_phase3_dev.py`
+- Read raw CSV benchmark outputs
+- Produce grouped tables by:
+  - [ ] subset size
+  - [ ] scenario
+  - [ ] implementation mode
+  - [ ] thread count
+- Do not delete raw files after summarization
+
+#### Deliverable
+- Development-stage optimized summary tables exist and are easy to inspect
+
+---
+
+### 25. Generate Simple Development Graphs for Phase 3
+#### Tasks
+- [ ] Add or extend plotting scripts for optimized benchmark results
+- [ ] Plot at least:
+  - [ ] serial vs parallel vs optimized runtime by subset size
+  - [ ] speedup by implementation mode
+  - [ ] optimized runtime vs thread count if optimized parallel is supported
+  - [ ] memory usage comparison by implementation mode if available
+- [ ] Save graphs to:
+  - [ ] `results/graphs/phase3_dev/`
+
+#### Agent instructions
+- Use Python for graph generation
+- Keep graphs simple and readable
+- Label axes clearly
+- Include subset size, implementation mode, scenario, and thread count where relevant
+- Save plots to files rather than only displaying interactively
+
+#### Deliverable
+- Early Phase 3 graphs exist to show optimization trends before full-dataset testing
+
+---
+
+### 26. Add a Phase 3 Development Benchmark Log
+#### Tasks
+- [ ] Record each benchmark batch in `report/notes.md` or a dedicated Phase 3 dev benchmark log
+- [ ] For each batch, record:
+  - [ ] date/time
+  - [ ] git branch
+  - [ ] commit hash if available
+  - [ ] subset size
+  - [ ] benchmark scenarios run
+  - [ ] implementation modes tested
+  - [ ] thread counts tested if applicable
+  - [ ] notable observations
+  - [ ] failures or anomalies
+- [ ] Record whether the benchmark batch followed a layout or optimization change
+
+#### Agent instructions
+- The coding agent should append a short notes entry after completing a benchmark batch
+- Include enough detail to trace performance changes back to specific optimization steps
+
+#### Deliverable
+- Development benchmark history is documented and traceable for Phase 3
+
+---
+
+### 27. Add Stability Checks for Optimized Runs
+#### Tasks
+- [ ] Rerun identical optimized scenarios multiple times on the same subset
+- [ ] Confirm consistency of:
+  - [ ] result count
+  - [ ] aggregate values
+  - [ ] timing distribution within reason
+- [ ] Check for obvious optimized-path corruption or mismatch
+- [ ] Record any acceptable numerical variation
+
+#### Agent instructions
+- Add a helper mode or script that reruns the same optimized scenario multiple times and compares outputs
+- Save mismatches and timing anomalies to:
+  - [ ] `results/raw/phase3_dev/stability/`
+
+#### Deliverable
+- Optimized subset benchmarks are shown to be stable enough for development use
+
+---
+
+### 28. Attribute Performance Changes to Specific Optimization Steps
+#### Tasks
+- [ ] Label benchmark batches by optimization step where practical, such as:
+  - [ ] columnar layout only
+  - [ ] encoded categorical fields
+  - [ ] reduced string comparisons
+  - [ ] optimized query rewrite
+  - [ ] optimized parallel query
+- [ ] Keep benchmark outputs attributable to one major change whenever possible
+- [ ] Record when multiple changes were introduced together
+
+#### Agent instructions
+- The coding agent should include an `optimization_step` field in benchmark outputs or summary tables where possible
+- Use stable labels so later report writing is easier
+
+#### Deliverable
+- Phase 3 development evidence can be tied to specific design decisions
+
+---
+
+### 29. Mark These Results as Pre-Baseline Only
+#### Tasks
+- [ ] Add a note in the README or report notes that Phase 3 subset benchmarks are:
+  - [ ] development-stage measurements
+  - [ ] not the final official comparison data
+- [ ] Distinguish clearly between:
+  - [ ] `phase3_dev`
+  - [ ] final `phase3_baseline`
+- [ ] Reserve final full-dataset comparison runs for the official benchmark campaign later
+
+#### Agent instructions
+- Ensure output directories and filenames make this distinction obvious
+- Do not mix subset-development outputs with final benchmark outputs
+
+#### Deliverable
+- Early Phase 3 data collection is organized without being confused with final results
+
+---
+
+## Extra Definition of Done for Development-Stage Optimized Benchmarking
+This subsection is complete when all of the following are true:
+
+- [ ] Reproducible subset datasets are reused successfully
+- [ ] Serial, parallel, and optimized programs all run successfully on selected subset sizes
+- [ ] At least 3 benchmark scenarios run repeatedly across implementation modes
+- [ ] Multiple thread counts are tested where applicable
+- [ ] Raw results are saved to disk
+- [ ] Summary tables are generated
+- [ ] Simple graphs are generated
+- [ ] Development benchmark notes are recorded
+- [ ] Outputs are clearly labeled as pre-baseline and not final full-dataset benchmarks
+- [ ] At least some benchmark results are attributable to specific optimization steps

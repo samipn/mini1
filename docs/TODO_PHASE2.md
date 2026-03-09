@@ -427,3 +427,281 @@ These items were identified during late Phase 1 review and are appended here for
 - [ ] If index/materialization complexity grows or memory overhead is high, defer final design to Phase 3 and track benchmarks proving why.
 
 ---
+
+---
+
+## Phase 2 Baseline Comparative Testing and Early Data Collection
+## Purpose
+These tasks are for **development-stage parallel benchmarking on subset datasets**, not the final full-dataset benchmark campaign.
+
+The goal is to:
+- verify that parallel results match serial results,
+- establish repeatable serial-vs-parallel benchmark workflows,
+- collect preliminary scaling data,
+- and ensure the benchmark harness is stable before running the full dataset later.
+
+These tasks should be completed by the coding agent while implementing Phase 2.
+
+### Rules for This Section
+- Use **subset datasets only**
+- Use the **same subset files** already created for Phase 1 development benchmarking
+- Keep serial and parallel query definitions identical
+- Keep benchmark commands and output formats stable across runs
+- Save all raw outputs for later comparison
+- Do **not** treat these results as final project conclusions
+
+---
+
+### 17. Reuse or Validate Subset Datasets for Phase 2
+#### Tasks
+- [ ] Reuse the reproducible subset datasets created during Phase 1
+- [ ] Confirm subset row counts still match expected sizes
+- [ ] Confirm subset files are accessible to both serial and parallel runners
+- [ ] Record which subset files are used in Phase 2 development tests
+
+#### Agent instructions
+- Do not regenerate subsets unless the source data changed or earlier subset files are invalid
+- Save a short manifest of subset file names and row counts under:
+  - [ ] `results/raw/phase2_dev/`
+- Use stable file naming across repeated benchmark batches
+
+#### Deliverable
+- Phase 2 development benchmarks use consistent subset inputs
+
+---
+
+### 18. Add Serial-vs-Parallel Validation Runs on Subsets
+#### Tasks
+- [ ] Run the serial query implementation on the small subset
+- [ ] Run the parallel query implementation on the small subset
+- [ ] Repeat the same comparison for:
+  - [ ] medium subset
+  - [ ] large-dev subset
+- [ ] Record for each scenario:
+  - [ ] result count
+  - [ ] aggregate values if applicable
+  - [ ] mismatches if found
+
+#### Agent instructions
+- Add a validation mode or helper script that runs serial and parallel back-to-back on the same subset and query scenario
+- Save comparison outputs to:
+  - [ ] `results/raw/phase2_dev/validation/`
+- If mismatches occur, save both raw outputs and log the issue clearly
+
+#### Deliverable
+- Parallel subset results are checked against serial baseline behavior
+
+---
+
+### 19. Add Early Parallel Benchmark Scenarios for Subsets
+#### Tasks
+- [ ] Define a repeatable Phase 2 subset benchmark set using the same query parameters as Phase 1 where possible
+- [ ] Minimum scenarios:
+  - [ ] serial ingest + serial low-speed threshold query
+  - [ ] serial ingest + parallel low-speed threshold query
+  - [ ] serial ingest + serial time-window query
+  - [ ] serial ingest + parallel time-window query
+  - [ ] serial ingest + serial aggregation query
+  - [ ] serial ingest + parallel aggregation query
+- [ ] If borough filtering exists, include:
+  - [ ] serial ingest + serial borough + threshold query
+  - [ ] serial ingest + parallel borough + threshold query
+
+#### Agent instructions
+- Keep scenario names stable and machine-readable
+- Use the same thresholds and time windows previously defined unless a new experiment is explicitly documented
+- Record thread count in every parallel scenario name or output row
+
+#### Deliverable
+- A stable early benchmark set exists for subset-based serial-vs-parallel testing
+
+---
+
+### 20. Create a Repeatable Phase 2 Development Benchmark Runner
+#### Tasks
+- [ ] Add or extend a script that runs the Phase 2 subset benchmark suite automatically
+- [ ] Support:
+  - [ ] small subset
+  - [ ] medium subset
+  - [ ] large-dev subset
+- [ ] Support repeated runs per scenario
+- [ ] Support configurable thread counts
+- [ ] Save raw outputs to:
+  - [ ] `results/raw/phase2_dev/`
+- [ ] Save logs to:
+  - [ ] `results/raw/logs/`
+
+#### Agent instructions
+- Implement or extend a script such as:
+  - [ ] `scripts/run_phase2_dev_benchmarks.sh`
+- The script should:
+  - [ ] accept a dataset path
+  - [ ] accept a repetition count
+  - [ ] accept one or more thread counts
+  - [ ] run all selected serial and parallel benchmark scenarios
+  - [ ] save each run result in a machine-readable format
+  - [ ] print a concise summary to console
+
+#### Deliverable
+- A single command can run the subset-based Phase 2 development benchmark suite
+
+---
+
+### 21. Collect Preliminary Serial-vs-Parallel Timing Data
+#### Tasks
+- [ ] Run each selected benchmark scenario at least:
+  - [ ] `3` times on the small subset
+  - [ ] `3` times on the medium subset
+  - [ ] `3` times on the large-dev subset
+- [ ] For parallel runs, test at least:
+  - [ ] `1` thread
+  - [ ] `2` threads
+  - [ ] `4` threads
+  - [ ] `8` threads if reasonable for the VM
+- [ ] Record:
+  - [ ] ingest time
+  - [ ] query time
+  - [ ] total runtime
+  - [ ] thread count
+  - [ ] records processed per second if available
+
+#### Agent instructions
+- The coding agent should execute the benchmark runner after changes that affect parallel query logic or reduction strategy
+- Save each batch with labels including:
+  - [ ] git branch
+  - [ ] commit hash if possible
+  - [ ] subset size
+  - [ ] query scenario
+  - [ ] thread count
+- Prefer CSV output for later summarization
+
+#### Deliverable
+- Preliminary timing and scaling data exists for subset-based Phase 2 scenarios
+
+---
+
+### 22. Generate Development Summary Tables for Phase 2
+#### Tasks
+- [ ] Add or extend a script to summarize raw Phase 2 development benchmark results
+- [ ] Compute:
+  - [ ] mean runtime
+  - [ ] median runtime
+  - [ ] minimum runtime
+  - [ ] maximum runtime
+  - [ ] standard deviation if enough runs exist
+  - [ ] speedup relative to serial for the same subset/scenario
+- [ ] Save summary tables to:
+  - [ ] `results/tables/phase2_dev/`
+
+#### Agent instructions
+- Implement or extend a helper such as:
+  - [ ] `scripts/summarize_phase2_dev.py`
+- Read raw CSV benchmark outputs
+- Produce grouped tables by:
+  - [ ] subset size
+  - [ ] query scenario
+  - [ ] thread count
+- Do not delete raw files after summarization
+
+#### Deliverable
+- Development-stage serial-vs-parallel summary tables exist and are easy to inspect
+
+---
+
+### 23. Generate Simple Development Graphs for Phase 2
+#### Tasks
+- [ ] Add or extend plotting scripts for subset-based parallel benchmark results
+- [ ] Plot at least:
+  - [ ] query runtime vs thread count
+  - [ ] speedup vs thread count
+  - [ ] serial vs parallel runtime by subset size
+  - [ ] runtime by scenario
+- [ ] Save graphs to:
+  - [ ] `results/graphs/phase2_dev/`
+
+#### Agent instructions
+- Use Python for graph generation
+- Keep graphs simple and readable
+- Label axes clearly
+- Include subset size, thread count, and scenario labels
+- Save plots to files rather than only showing interactively
+
+#### Deliverable
+- Early Phase 2 graphs exist to show scaling trends before full-dataset testing
+
+---
+
+### 24. Add a Phase 2 Development Benchmark Log
+#### Tasks
+- [ ] Record each benchmark batch in `report/notes.md` or a dedicated Phase 2 dev benchmark log
+- [ ] For each batch, record:
+  - [ ] date/time
+  - [ ] git branch
+  - [ ] commit hash if available
+  - [ ] subset size
+  - [ ] benchmark scenarios run
+  - [ ] thread counts tested
+  - [ ] notable observations
+  - [ ] failures or anomalies
+- [ ] Record whether the benchmark batch followed a code change
+
+#### Agent instructions
+- The coding agent should append a short notes entry after completing a benchmark batch
+- Include enough detail to trace performance changes back to code changes or thread-model changes
+
+#### Deliverable
+- Development benchmark history is documented and traceable for Phase 2
+
+---
+
+### 25. Add Stability and Determinism Checks for Parallel Runs
+#### Tasks
+- [ ] Rerun identical parallel scenarios multiple times on the same subset
+- [ ] Confirm consistency of:
+  - [ ] result count
+  - [ ] aggregate values
+  - [ ] timing distribution within reason
+- [ ] Check for obvious nondeterministic result corruption
+- [ ] Record any floating-point variation if present
+
+#### Agent instructions
+- Add a helper mode or script that reruns the same scenario multiple times and compares outputs
+- Save mismatches and timing anomalies to:
+  - [ ] `results/raw/phase2_dev/stability/`
+
+#### Deliverable
+- Parallel subset benchmarks are shown to be stable enough for development use
+
+---
+
+### 26. Mark These Results as Pre-Baseline Only
+#### Tasks
+- [ ] Add a note in the README or report notes that Phase 2 subset benchmarks are:
+  - [ ] development-stage measurements
+  - [ ] not the final official comparison data
+- [ ] Distinguish clearly between:
+  - [ ] `phase2_dev`
+  - [ ] final `phase2_baseline`
+- [ ] Reserve final full-dataset serial-vs-parallel benchmarking for the official comparison campaign later
+
+#### Agent instructions
+- Ensure output directories and filenames make this distinction obvious
+- Do not mix subset-development outputs with final benchmark outputs
+
+#### Deliverable
+- Early Phase 2 data collection is organized without being confused with final results
+
+---
+
+## Extra Definition of Done for Development-Stage Parallel Benchmarking
+This subsection is complete when all of the following are true:
+
+- [ ] Reproducible subset datasets are reused successfully
+- [ ] Serial and parallel programs both run successfully on all selected subset sizes
+- [ ] At least 3 benchmark scenarios run repeatedly in serial and parallel modes
+- [ ] Multiple thread counts are tested
+- [ ] Raw results are saved to disk
+- [ ] Summary tables are generated
+- [ ] Simple graphs are generated
+- [ ] Development benchmark notes are recorded
+- [ ] Outputs are clearly labeled as pre-baseline and not final full-dataset benchmarks
