@@ -36,7 +36,15 @@ def grouped_stats(values):
 def main():
     if len(sys.argv) < 3:
         print("Usage: summarize_phase2.py <raw_dir> <output_csv>")
+        print("Note: this legacy script is maintained for backward compatibility.")
+        print("      Prefer scripts/summarize_phase2_dev.py with --manifest for current Phase 2 batches.")
         return 2
+
+    print(
+        "[summarize_phase2] warning: legacy fixed-file summary path in use; "
+        "prefer scripts/summarize_phase2_dev.py for manifest-driven summaries.",
+        file=sys.stderr,
+    )
 
     raw_dir = sys.argv[1]
     output_csv = sys.argv[2]

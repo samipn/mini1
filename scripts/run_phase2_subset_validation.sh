@@ -114,8 +114,41 @@ CSV
 
 read_csv_field() {
   local csv_file="$1"
-  local field_idx="$2"
-  awk -F, -v idx="${field_idx}" 'NR==2 {print $idx}' "${csv_file}"
+  local field_name="$2"
+  awk -F, -v field="${field_name}" '
+    NR==1 {
+      for (i=1; i<=NF; ++i) {
+        col[$i]=i;
+      }
+      next;
+    }
+    NR==2 {
+      if (!(field in col)) {
+        exit 2;
+      }
+      print $(col[field]);
+      exit 0;
+    }
+  ' "${csv_file}"
+}
+
+emit_parallel_rows() {
+  local csv_file="$1"
+  awk -F, '
+    NR==1 {
+      for (i=1; i<=NF; ++i) {
+        col[$i]=i;
+      }
+      req1="thread_count"; req2="result_count"; req3="average_speed_mph"; req4="average_travel_time_seconds"; req5="serial_match";
+      if (!(req1 in col) || !(req2 in col) || !(req3 in col) || !(req4 in col) || !(req5 in col)) {
+        exit 2;
+      }
+      next;
+    }
+    NR>1 {
+      print $(col["thread_count"])","$(col["result_count"])","$(col["average_speed_mph"])","$(col["average_travel_time_seconds"])","$(col["serial_match"]);
+    }
+  ' "${csv_file}"
 }
 
 declare -a LABELS=("small" "medium" "large_dev")
@@ -185,9 +218,9 @@ for i in "${!LABELS[@]}"; do
       continue
     fi
 
-    serial_count="$(read_csv_field "${serial_csv}" 19)"
-    serial_avg_speed="$(read_csv_field "${serial_csv}" 21)"
-    serial_avg_travel="$(read_csv_field "${serial_csv}" 22)"
+    serial_count="$(read_csv_field "${serial_csv}" "result_count")"
+    serial_avg_speed="$(read_csv_field "${serial_csv}" "average_speed_mph")"
+    serial_avg_travel="$(read_csv_field "${serial_csv}" "average_travel_time_seconds")"
 
     while IFS=',' read -r thread_count parallel_count parallel_avg_speed parallel_avg_travel serial_match; do
       status="ok"
@@ -205,7 +238,7 @@ for i in "${!LABELS[@]}"; do
         "${TS}" "${subset_label}" "${scenario_name}" "${thread_count}" "${serial_count}" "${parallel_count}" \
         "${serial_avg_speed}" "${serial_avg_travel}" "${parallel_avg_speed}" "${parallel_avg_travel}" \
         "${serial_match}" "${status}" "${serial_csv}" "${parallel_csv}" "${note}" >> "${RESULT_CSV}"
-    done < <(awk -F, 'NR>1 {print $4","$19","$21","$22","$6}' "${parallel_csv}")
+    done < <(emit_parallel_rows "${parallel_csv}")
 
   done < "${SCENARIO_FILE}"
 done

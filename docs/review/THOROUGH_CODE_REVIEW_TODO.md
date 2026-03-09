@@ -190,18 +190,18 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P2-D11/D13 evidence policy: separate dev batches (`runs=3`) from deliverable-grade scaling evidence (`runs>=10`).
   Objective: prevent ambiguity when comparing Phase 2 scaling claims across `phase2_dev` and `phase2` artifact families.
   Evidence: `phase2_dev` manifests use 3 runs; `results/raw/phase2` contains 10-run sample sets.
-- [ ] P2-D14 tooling clarity: deprecate or clearly scope legacy `summarize_phase2.py`.
-  Objective: avoid analysis drift from parallel maintenance of fixed-file and manifest-driven summary pipelines.
-  Evidence: both `scripts/summarize_phase2.py` and `scripts/summarize_phase2_dev.py` are active.
+- [x] P2-D14 tooling clarity: deprecate or clearly scope legacy `summarize_phase2.py`.
+  Objective/result: legacy summarizer now emits explicit deprecation guidance and points to manifest-driven `summarize_phase2_dev.py`.
+  Evidence: `scripts/summarize_phase2.py`.
 - [x] P2-D16 hardening: guard numeric parsing for `run_index_experiments --repeats`.
   Objective/result: replaced unguarded `std::stoull` with checked parsing; invalid values now return exit code 2.
   Evidence: `apps/run_index_experiments.cpp`, `tests/test_run_index_experiments_cli.cpp`.
-- [ ] P2-D18 robustness: replace fixed-column parsing in subset validation script with header-based extraction.
-  Objective: keep validation resilient to benchmark CSV schema changes.
-  Evidence: `scripts/run_phase2_subset_validation.sh` uses positional fields (`$19/$21/$22/$6`).
-- [ ] P2-D20/D26 path hygiene: enforce clearer dev-vs-baseline output destination policy for phase2 scripts.
-  Objective: reduce accidental mixing between `phase2_dev`, `phase2`, and future `phase2_baseline` artifacts.
-  Evidence: index experiment defaults to `results/raw/phase2`; mixed benchmark entrypoint defaults to generic `results/raw`.
+- [x] P2-D18 robustness: replace fixed-column parsing in subset validation script with header-based extraction.
+  Objective/result: subset validation now resolves benchmark fields by header names for both serial and parallel CSVs.
+  Evidence: `scripts/run_phase2_subset_validation.sh`.
+- [x] P2-D20/D26 path hygiene: enforce clearer dev-vs-baseline output destination policy for phase2 scripts.
+  Objective/result: added dedicated baseline runner with default `results/raw/phase2_baseline` output and baseline run-count policy.
+  Evidence: `scripts/run_phase2_baseline_benchmarks.sh`.
 - [ ] P2-D24 notes freshness: refresh Phase 2 benchmark log for current 16-thread policy and latest stability batch.
   Objective: keep report evidence synchronized with current thread scope and newest artifact timestamps.
   Evidence: `report/phase2_dev_benchmark_log.md` entries primarily document 1/2/4/8-thread runs.
