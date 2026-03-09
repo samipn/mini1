@@ -10,7 +10,7 @@ Purpose: track issues found during incremental repository review and convert the
 - [x] Split timing scopes in `BenchmarkHarness` so validation work is not included in `query_ms`.
 - [x] Add explicit benchmark mode toggle: correctness-validation mode vs performance-only mode.
 - [x] Add `validation_ms` and `validation_ingest_ms` columns to benchmark CSV output.
-- [ ] Update CMake to avoid making OpenMP a hard requirement for purely serial builds.
+- [x] Update CMake to avoid making OpenMP a hard requirement for purely serial builds.
 - [ ] Add build matrix notes (compiler, flags, OpenMP availability) in docs for reproducibility.
 
 ## 2) Algorithms and Runtime Behavior
@@ -36,7 +36,7 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] Add per-query profiler integration option (e.g., perf/callgrind wrapper script).
 - [ ] Add confidence intervals / variability bands in summary tables.
 - [ ] Add regression guardrails in CI for benchmark schema and artifact completeness.
-- [ ] Add benchmark integrity checker script to detect missing scenario/mode/thread combinations.
+- [x] Add benchmark integrity checker script to detect missing scenario/mode/thread combinations.
 
 ## Priority Queue
 - [ ] P0: timing-scope fix in `BenchmarkHarness` + benchmark rerun + graph regeneration.

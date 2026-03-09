@@ -46,6 +46,8 @@ std::size_t ParallelCongestionQuery::CountSpeedBelow(const TrafficDataset& datas
   const std::size_t threads = NormalizeThreadCount(num_threads, n);
 #if defined(_OPENMP)
   omp_set_num_threads(static_cast<int>(threads));
+#else
+  (void)threads;
 #endif
 
   std::size_t total = 0;
@@ -73,6 +75,8 @@ std::size_t ParallelCongestionQuery::CountBoroughAndSpeedBelow(const TrafficData
   const std::int16_t borough_code = ToInt(ParseBoroughCode(borough));
 #if defined(_OPENMP)
   omp_set_num_threads(static_cast<int>(threads));
+#else
+  (void)threads;
 #endif
 
   std::size_t total = 0;
@@ -107,6 +111,8 @@ std::size_t ParallelCongestionQuery::CountTimeWindow(const TrafficDataset& datas
   const std::size_t threads = NormalizeThreadCount(num_threads, n);
 #if defined(_OPENMP)
   omp_set_num_threads(static_cast<int>(threads));
+#else
+  (void)threads;
 #endif
 
   std::size_t total = 0;

@@ -167,12 +167,22 @@ emit_rps_rows() {
 
   awk -F, -v ts="${TS}" -v branch="${GIT_BRANCH}" -v commit="${GIT_COMMIT}" \
       -v subset="${subset_label}" -v scenario="${scenario_name}" -v mode="${mode}" '
+    NR == 1 {
+      for (i = 1; i <= NF; ++i) {
+        col[$i] = i;
+      }
+      if (!("thread_count" in col) || !("run_number" in col) || !("total_ms" in col) || !("rows_accepted" in col)) {
+        print "[phase2-dev] benchmark CSV missing required columns in " FILENAME > "/dev/stderr";
+        exit 2;
+      }
+      next;
+    }
     NR > 1 {
-      total_ms = $15 + 0.0;
-      rows_accepted = $17 + 0.0;
+      total_ms = $(col["total_ms"]) + 0.0;
+      rows_accepted = $(col["rows_accepted"]) + 0.0;
       rps = (total_ms > 0.0) ? (rows_accepted / (total_ms / 1000.0)) : 0.0;
       printf "%s,%s,%s,%s,%s,%s,%s,%s,%.6f,%s,%.6f\n",
-             ts, branch, commit, subset, scenario, mode, $4, $12, total_ms, $17, rps;
+             ts, branch, commit, subset, scenario, mode, $(col["thread_count"]), $(col["run_number"]), total_ms, $(col["rows_accepted"]), rps;
     }
   ' "${csv_file}" >> "${RPS_CSV}"
 }
