@@ -23,7 +23,8 @@ Evidence sources:
   - Phase 1 D1-D10 reviewed (with open operational hardening gaps)
   - Phase 1 chunked re-review:
     - D1-D5 reviewed (open ingestion/reset semantics + invariant/policy gaps identified)
-    - D6-D20 pending chunked re-review
+    - D6-D10 reviewed (open baseline-evidence rigor + notes freshness gaps identified)
+    - D11-D20 pending chunked re-review
   - Phase 2 D1-D15 reviewed (with open operational consistency gaps)
   - Phase 3 reviewed in chunks:
     - D1-D5 reviewed (open correctness/robustness gaps identified)
@@ -85,5 +86,8 @@ They exist locally for verification but are not committed to git by design.
 18. Garage/Building support loaders currently append into caller vectors without explicit reset semantics.
 19. Strict warning policy is not uniformly applied across all app/test compile targets.
 20. Borough dual-representation (`borough` + `borough_code`) lacks enforced normalization invariants for direct-record query use.
+21. Latest Phase 1 baseline artifacts are currently smoke-level (`runs=1`) and do not satisfy D10 run-count expectations.
+22. Phase 1 benchmark log entries are stale relative to current scenario configuration and latest artifact batches.
+23. Phase 1 runner does not enforce a deliverable-grade run-count floor for baseline evidence collection.
 
 Previously identified CLI numeric-parse abort issues and Phase 1 benchmark output overwrite risk have been fixed on this branch. Remaining gaps are tracked in `docs/review/THOROUGH_CODE_REVIEW_TODO.md`.

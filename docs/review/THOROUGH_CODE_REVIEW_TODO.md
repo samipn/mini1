@@ -92,6 +92,15 @@ Purpose: track issues found during incremental repository review and convert the
 - [x] P1 test depth: add explicit negative CLI tests for malformed numeric parameters.
   Objective/result: regression coverage added to assert graceful failure (exit code 2), no crash.
   Evidence: `tests/test_run_serial_benchmark_cli.cpp`.
+- [ ] P1-D10 evidence rigor: enforce deliverable-grade run count policy for baseline claims.
+  Objective: prevent single-run/smoke batches from being treated as Phase 1 baseline evidence.
+  Evidence: latest Phase 1 dev manifest/summary rows show `runs=1`.
+- [ ] P1-D9 notes freshness: keep Phase 1 benchmark log aligned with current scenario config and artifacts.
+  Objective: maintain traceable and current benchmark-history entries (scenario names, branch/commit, timestamps).
+  Evidence: `report/phase1_dev_benchmark_log.md` scenario set differs from `configs/phase1_dev_scenarios.csv`.
+- [ ] P1-D10 operational clarity: provide explicit serial-only baseline benchmark entrypoint.
+  Objective: reduce confusion from mixed-phase benchmark script usage when running Phase 1 baseline workflows.
+  Evidence: `scripts/benchmark.sh` currently runs serial + parallel + optimized paths.
 
 ### Phase 2 (D1-D15)
 - [x] D1 baseline lock reviewed.
