@@ -6,6 +6,8 @@ import csv
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+from plot_common import utc_now_iso, write_chart_manifest, write_chart_markdown_index
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate simple Phase 2 dev benchmark graphs (SVG).")
@@ -16,6 +18,11 @@ def parse_args() -> argparse.Namespace:
         "--parallel-threads",
         default="1,2,4,8,16",
         help="Comma-separated parallel thread counts for all-thread comparison charts",
+    )
+    parser.add_argument(
+        "--allow-partial",
+        action="store_true",
+        help="Allow partial chart generation when some scenario/subset/mode combinations are missing.",
     )
     return parser.parse_args()
 
@@ -57,14 +64,25 @@ def normalize(values: List[float], low: float, high: float) -> List[float]:
     return [high - ((v - vmin) / (vmax - vmin)) * (high - low) for v in values]
 
 
-def line_chart(title: str, xlabel: str, ylabel: str, xlabels: List[str], series: List[Tuple[str, List[float], str]]) -> str:
+def line_chart(
+    title: str,
+    subtitle: str,
+    what_tested: str,
+    xlabel: str,
+    ylabel: str,
+    xlabels: List[str],
+    series: List[Tuple[str, List[float], str]],
+    source_summary: Path,
+    generated_utc: str,
+) -> str:
     width, height = 960, 540
     left, right, top, bottom = 90, 40, 60, 90
     plot_w = width - left - right
     plot_h = height - top - bottom
 
     content = [svg_header(width, height)]
-    content.append(f'<text x="{width/2}" y="30" text-anchor="middle" font-size="20">{title}</text>\n')
+    content.append(f'<text x="{width/2}" y="28" text-anchor="middle" font-size="20">{title}</text>\n')
+    content.append(f'<text x="{width/2}" y="48" text-anchor="middle" font-size="12" fill="#444">{subtitle}</text>\n')
 
     # axes
     x0, y0 = left, top + plot_h
@@ -88,7 +106,14 @@ def line_chart(title: str, xlabel: str, ylabel: str, xlabels: List[str], series:
     ys_norm = normalize(all_vals, top + 10, y0 - 10)
     idx = 0
 
-    legend_y = top + 10
+    content.append(
+        f'<rect x="{left}" y="{top+14}" width="{plot_w*0.64:.0f}" height="24" fill="#f7f7f7" stroke="#bbbbbb"/>\n'
+    )
+    content.append(
+        f'<text x="{left+8}" y="{top+30}" font-size="11" fill="#333">What this tests: {what_tested}</text>\n'
+    )
+
+    legend_y = top + 42
     for name, vals, color in series:
         points = []
         for i, v in enumerate(vals):
@@ -106,18 +131,32 @@ def line_chart(title: str, xlabel: str, ylabel: str, xlabels: List[str], series:
         content.append(f'<text x="{width-200}" y="{legend_y+12}" font-size="12">{name}</text>\n')
         legend_y += 20
 
+    content.append(
+        f'<text x="10" y="{height-8}" font-size="9" fill="#555">Source: {source_summary} | Generated: {generated_utc}</text>\n'
+    )
     content.append(svg_footer())
     return "".join(content)
 
 
-def grouped_bar_chart(title: str, xlabel: str, ylabel: str, categories: List[str], groups: List[Tuple[str, List[float], str]]) -> str:
+def grouped_bar_chart(
+    title: str,
+    subtitle: str,
+    what_tested: str,
+    xlabel: str,
+    ylabel: str,
+    categories: List[str],
+    groups: List[Tuple[str, List[float], str]],
+    source_summary: Path,
+    generated_utc: str,
+) -> str:
     width, height = 960, 540
     left, right, top, bottom = 90, 40, 60, 120
     plot_w = width - left - right
     plot_h = height - top - bottom
 
     content = [svg_header(width, height)]
-    content.append(f'<text x="{width/2}" y="30" text-anchor="middle" font-size="20">{title}</text>\n')
+    content.append(f'<text x="{width/2}" y="28" text-anchor="middle" font-size="20">{title}</text>\n')
+    content.append(f'<text x="{width/2}" y="48" text-anchor="middle" font-size="12" fill="#444">{subtitle}</text>\n')
 
     x0, y0 = left, top + plot_h
     content.append(f'<line x1="{x0}" y1="{y0}" x2="{x0+plot_w}" y2="{y0}" stroke="#333"/>\n')
@@ -148,12 +187,22 @@ def grouped_bar_chart(title: str, xlabel: str, ylabel: str, categories: List[str
             y = y0 - h
             content.append(f'<rect x="{x:.2f}" y="{y:.2f}" width="{bar_width-2:.2f}" height="{h:.2f}" fill="{color}"/>\n')
 
-    legend_y = top + 10
+    content.append(
+        f'<rect x="{left}" y="{top+14}" width="{plot_w*0.64:.0f}" height="24" fill="#f7f7f7" stroke="#bbbbbb"/>\n'
+    )
+    content.append(
+        f'<text x="{left+8}" y="{top+30}" font-size="11" fill="#333">What this tests: {what_tested}</text>\n'
+    )
+
+    legend_y = top + 42
     for gname, _, color in groups:
         content.append(f'<rect x="{width-220}" y="{legend_y}" width="14" height="14" fill="{color}"/>\n')
         content.append(f'<text x="{width-200}" y="{legend_y+12}" font-size="12">{gname}</text>\n')
         legend_y += 20
 
+    content.append(
+        f'<text x="10" y="{height-8}" font-size="9" fill="#555">Source: {source_summary} | Generated: {generated_utc}</text>\n'
+    )
     content.append(svg_footer())
     return "".join(content)
 
@@ -164,6 +213,11 @@ def main() -> int:
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     all_threads = [t.strip() for t in args.parallel_threads.split(",") if t.strip()]
+    generated_utc = utc_now_iso()
+    runs_values = sorted({r.get("runs", "").strip() for r in rows if r.get("runs", "").strip()})
+    runs_text = ",".join(runs_values) if runs_values else "unknown"
+    subtitle = f"Phase 2 Dev | runs={runs_text} | threads={','.join(all_threads)}"
+    chart_manifest_rows: List[Dict[str, str]] = []
 
     subset_order = ["small", "medium", "large_dev"]
     subset_display = {"small": "10k", "medium": "100k", "large_dev": "1M"}
@@ -192,21 +246,55 @@ def main() -> int:
         if runtime_series:
             svg = line_chart(
                 title=f"Query Runtime vs Thread Count ({scenario})",
+                subtitle=subtitle,
+                what_tested="Parallel query runtime scaling by thread count for each subset.",
                 xlabel="Thread Count",
                 ylabel="Mean Query Runtime (ms)",
                 xlabels=xlabels,
                 series=runtime_series,
+                source_summary=Path(args.summary_csv),
+                generated_utc=generated_utc,
             )
-            save_svg(out_dir / f"runtime_vs_threads_{scenario}.svg", svg)
+            runtime_path = out_dir / f"runtime_vs_threads_{scenario}.svg"
+            save_svg(runtime_path, svg)
+            chart_manifest_rows.append(
+                {
+                    "chart_id": f"phase2_runtime_vs_threads_{scenario}",
+                    "file_path": str(runtime_path),
+                    "phase": "phase2",
+                    "what_tested": "Parallel runtime scaling by thread count.",
+                    "x_axis": "Thread Count",
+                    "y_axis": "Mean Query Runtime (ms)",
+                    "source_summary_csv": str(Path(args.summary_csv)),
+                    "generated_utc": generated_utc,
+                }
+            )
 
             svg2 = line_chart(
                 title=f"Speedup vs Thread Count ({scenario})",
+                subtitle=subtitle,
+                what_tested="Parallel speedup relative to serial query runtime.",
                 xlabel="Thread Count",
                 ylabel="Speedup",
                 xlabels=xlabels,
                 series=speedup_series,
+                source_summary=Path(args.summary_csv),
+                generated_utc=generated_utc,
             )
-            save_svg(out_dir / f"speedup_vs_threads_{scenario}.svg", svg2)
+            speedup_path = out_dir / f"speedup_vs_threads_{scenario}.svg"
+            save_svg(speedup_path, svg2)
+            chart_manifest_rows.append(
+                {
+                    "chart_id": f"phase2_speedup_vs_threads_{scenario}",
+                    "file_path": str(speedup_path),
+                    "phase": "phase2",
+                    "what_tested": "Speedup scaling by thread count.",
+                    "x_axis": "Thread Count",
+                    "y_axis": "Speedup (serial/parallel)",
+                    "source_summary_csv": str(Path(args.summary_csv)),
+                    "generated_utc": generated_utc,
+                }
+            )
 
     # Serial vs parallel by subset
     for scenario in scenarios:
@@ -217,19 +305,41 @@ def main() -> int:
             serial_row = next((r for r in rows if r["scenario_name"] == scenario and r["subset_label"] == subset and r["mode"] == "serial" and r["thread_count"] == "1"), None)
             parallel_row = next((r for r in rows if r["scenario_name"] == scenario and r["subset_label"] == subset and r["mode"] == "parallel" and r["thread_count"] == args.parallel_thread), None)
             if serial_row is None or parallel_row is None:
-                continue
+                if args.allow_partial:
+                    continue
+                raise SystemExit(
+                    f"Missing serial/parallel rows for scenario={scenario}, subset={subset}, "
+                    f"thread={args.parallel_thread}."
+                )
             labels.append(subset_display[subset])
             serial_vals.append(float(serial_row["query_mean_ms"]))
             parallel_vals.append(float(parallel_row["query_mean_ms"]))
         if labels:
             svg = grouped_bar_chart(
                 title=f"Serial vs Parallel Query Runtime by Subset ({scenario})",
+                subtitle=subtitle,
+                what_tested="Direct runtime comparison between serial and selected parallel thread count.",
                 xlabel="Subset Size",
                 ylabel="Mean Query Runtime (ms)",
                 categories=labels,
                 groups=[("serial", serial_vals, "#1f77b4"), (f"parallel t={args.parallel_thread}", parallel_vals, "#ff7f0e")],
+                source_summary=Path(args.summary_csv),
+                generated_utc=generated_utc,
             )
-            save_svg(out_dir / f"serial_vs_parallel_by_subset_{scenario}.svg", svg)
+            comp_path = out_dir / f"serial_vs_parallel_by_subset_{scenario}.svg"
+            save_svg(comp_path, svg)
+            chart_manifest_rows.append(
+                {
+                    "chart_id": f"phase2_serial_vs_parallel_subset_{scenario}",
+                    "file_path": str(comp_path),
+                    "phase": "phase2",
+                    "what_tested": "Serial vs parallel runtime by subset.",
+                    "x_axis": "Subset Size",
+                    "y_axis": "Mean Query Runtime (ms)",
+                    "source_summary_csv": str(Path(args.summary_csv)),
+                    "generated_utc": generated_utc,
+                }
+            )
 
     # Serial + all configured parallel threads by subset (default includes 16-thread view)
     for scenario in scenarios:
@@ -265,8 +375,12 @@ def main() -> int:
                     None,
                 )
                 if candidate is None:
-                    candidate_rows = {}
-                    break
+                    if args.allow_partial:
+                        candidate_rows = {}
+                        break
+                    raise SystemExit(
+                        f"Missing parallel row for scenario={scenario}, subset={subset}, thread={t}."
+                    )
                 candidate_rows[t] = candidate
 
             if not candidate_rows:
@@ -284,12 +398,29 @@ def main() -> int:
                 groups.append((f"parallel t={t}", parallel_by_thread[t], palette[i % len(palette)]))
             svg = grouped_bar_chart(
                 title=f"Serial vs Parallel (All Threads) by Subset ({scenario})",
+                subtitle=subtitle,
+                what_tested="Runtime comparison across serial and all configured parallel thread counts.",
                 xlabel="Subset Size",
                 ylabel="Mean Query Runtime (ms)",
                 categories=labels,
                 groups=groups,
+                source_summary=Path(args.summary_csv),
+                generated_utc=generated_utc,
             )
-            save_svg(out_dir / f"serial_vs_parallel_all_threads_by_subset_{scenario}.svg", svg)
+            all_threads_path = out_dir / f"serial_vs_parallel_all_threads_by_subset_{scenario}.svg"
+            save_svg(all_threads_path, svg)
+            chart_manifest_rows.append(
+                {
+                    "chart_id": f"phase2_all_threads_subset_{scenario}",
+                    "file_path": str(all_threads_path),
+                    "phase": "phase2",
+                    "what_tested": "All-thread serial vs parallel subset comparison.",
+                    "x_axis": "Subset Size",
+                    "y_axis": "Mean Query Runtime (ms)",
+                    "source_summary_csv": str(Path(args.summary_csv)),
+                    "generated_utc": generated_utc,
+                }
+            )
 
     # Runtime by scenario per subset
     for subset in subset_order:
@@ -300,20 +431,44 @@ def main() -> int:
             serial_row = next((r for r in rows if r["scenario_name"] == scenario and r["subset_label"] == subset and r["mode"] == "serial" and r["thread_count"] == "1"), None)
             parallel_row = next((r for r in rows if r["scenario_name"] == scenario and r["subset_label"] == subset and r["mode"] == "parallel" and r["thread_count"] == args.parallel_thread), None)
             if serial_row is None or parallel_row is None:
-                continue
+                if args.allow_partial:
+                    continue
+                raise SystemExit(
+                    f"Missing runtime-by-scenario rows for scenario={scenario}, subset={subset}, "
+                    f"thread={args.parallel_thread}."
+                )
             labels.append(scenario)
             serial_vals.append(float(serial_row["query_mean_ms"]))
             parallel_vals.append(float(parallel_row["query_mean_ms"]))
         if labels:
             svg = grouped_bar_chart(
                 title=f"Runtime by Scenario ({subset_display[subset]})",
+                subtitle=subtitle,
+                what_tested="Scenario-level runtime comparison between serial and selected parallel mode.",
                 xlabel="Scenario",
                 ylabel="Mean Query Runtime (ms)",
                 categories=labels,
                 groups=[("serial", serial_vals, "#1f77b4"), (f"parallel t={args.parallel_thread}", parallel_vals, "#ff7f0e")],
+                source_summary=Path(args.summary_csv),
+                generated_utc=generated_utc,
             )
-            save_svg(out_dir / f"runtime_by_scenario_{subset}.svg", svg)
+            by_scenario_path = out_dir / f"runtime_by_scenario_{subset}.svg"
+            save_svg(by_scenario_path, svg)
+            chart_manifest_rows.append(
+                {
+                    "chart_id": f"phase2_runtime_by_scenario_{subset}",
+                    "file_path": str(by_scenario_path),
+                    "phase": "phase2",
+                    "what_tested": "Scenario-level serial vs parallel runtime by subset.",
+                    "x_axis": "Scenario",
+                    "y_axis": "Mean Query Runtime (ms)",
+                    "source_summary_csv": str(Path(args.summary_csv)),
+                    "generated_utc": generated_utc,
+                }
+            )
 
+    write_chart_manifest(out_dir / "chart_manifest.csv", chart_manifest_rows)
+    write_chart_markdown_index(out_dir / "chart_index.md", chart_manifest_rows)
     print(f"[plot_phase2_dev] wrote SVG graphs to: {out_dir}")
     return 0
 

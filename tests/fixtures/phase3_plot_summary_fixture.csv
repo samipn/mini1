@@ -1,0 +1,6 @@
+subset_label,scenario_name,mode,thread_count,query_mean_ms,speedup_vs_serial_query,runs
+large_dev,speed_below_15,serial,1,10.000000,1.000000,3
+large_dev,speed_below_15,parallel,1,9.000000,1.111111,3
+large_dev,speed_below_15,optimized_serial,1,7.000000,1.428571,3
+large_dev,speed_below_15,optimized_parallel,1,6.000000,1.666667,3
+large_dev,speed_below_15,optimized_parallel,2,5.000000,2.000000,3
