@@ -101,6 +101,18 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P1-D10 operational clarity: provide explicit serial-only baseline benchmark entrypoint.
   Objective: reduce confusion from mixed-phase benchmark script usage when running Phase 1 baseline workflows.
   Evidence: `scripts/benchmark.sh` currently runs serial + parallel + optimized paths.
+- [ ] P1-D12 evidence integrity: enforce/verify subset-validation artifact presence.
+  Objective: ensure D12 claims are backed by current timestamped logs under `results/raw/validation/`.
+  Evidence: validation runner exists, but snapshot currently has no validation logs.
+- [ ] P1-D13 scenario integrity: make determinism checks use the same scenario source as benchmark runs.
+  Objective: prevent drift between hardcoded determinism scenarios and `configs/phase1_dev_scenarios.csv`.
+  Evidence: `scripts/check_phase1_dev_determinism.py` scenarios differ from `configs/phase1_dev_scenarios.csv`.
+- [ ] P1-D14 policy guard: enforce minimum repeat count for deliverable-grade subset benchmark runs.
+  Objective: prevent accidental `--runs < 3` batches from being treated as D15 evidence.
+  Evidence: `scripts/run_phase1_dev_benchmarks.sh` accepts arbitrary run counts without floor checks.
+- [ ] P1-D15 evidence rigor: ensure latest subset timing artifacts satisfy minimum repeat expectations.
+  Objective: align D15 status with local evidence by generating/retaining batches with at least 3 runs per scenario/subset.
+  Evidence: latest `phase1_dev` manifest/summary rows in snapshot show `runs=1`.
 
 ### Phase 2 (D1-D15)
 - [x] D1 baseline lock reviewed.
