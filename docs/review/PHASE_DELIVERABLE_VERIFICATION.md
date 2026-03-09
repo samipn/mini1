@@ -25,7 +25,7 @@ Evidence sources:
     - D1-D5 reviewed (open ingestion/reset semantics + invariant/policy gaps identified)
     - D6-D10 reviewed (open baseline-evidence rigor + notes freshness gaps identified)
     - D11-D15 reviewed (open scenario/evidence-policy gaps identified)
-    - D16-D20 pending chunked re-review
+    - D16-D20 reviewed (open summary/graph/log/determinism-depth gaps identified)
   - Phase 2 D1-D15 reviewed (with open operational consistency gaps)
   - Phase 3 reviewed in chunks:
     - D1-D5 reviewed (open correctness/robustness gaps identified)
@@ -92,5 +92,9 @@ They exist locally for verification but are not committed to git by design.
 23. Phase 1 runner does not enforce a deliverable-grade run-count floor for baseline evidence collection.
 24. Phase 1 subset determinism checker currently uses a hardcoded scenario set that has drifted from `configs/phase1_dev_scenarios.csv`.
 25. Phase 1 subset validation output directory currently has no local logs in this snapshot, leaving D12 evidence non-auditable without rerun.
+26. Phase 1 summary defaults are fragile against label drift (`small/medium/large_dev` vs current `small_smoke` artifacts).
+27. Phase 1 plotting flow depends on hardcoded labels/scenarios and local `matplotlib`, reducing reproducibility on clean environments.
+28. Phase 1 determinism checks do not currently validate top-N payload/order stability.
+29. Phase 1 benchmark entrypoints still allow easy mixing of dev/pre-baseline and broader benchmark outputs.
 
 Previously identified CLI numeric-parse abort issues and Phase 1 benchmark output overwrite risk have been fixed on this branch. Remaining gaps are tracked in `docs/review/THOROUGH_CODE_REVIEW_TODO.md`.

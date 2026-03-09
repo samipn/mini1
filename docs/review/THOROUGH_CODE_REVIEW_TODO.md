@@ -113,6 +113,24 @@ Purpose: track issues found during incremental repository review and convert the
 - [ ] P1-D15 evidence rigor: ensure latest subset timing artifacts satisfy minimum repeat expectations.
   Objective: align D15 status with local evidence by generating/retaining batches with at least 3 runs per scenario/subset.
   Evidence: latest `phase1_dev` manifest/summary rows in snapshot show `runs=1`.
+- [ ] P1-D16 summary robustness: handle dataset-label drift between runner outputs and summary defaults.
+  Objective: make default `summarize_phase1_dev.py` succeed against current phase1_dev artifacts (or enforce canonical labels at source).
+  Evidence: defaults expect `small/medium/large_dev`, current snapshot contains `small_smoke`.
+- [ ] P1-D17 graph robustness: remove hardcoded subset/scenario assumptions in plotting.
+  Objective: derive labels/scenarios dynamically from summary CSV so graph generation remains stable when scenarios evolve.
+  Evidence: `plot_phase1_dev.py` hardcodes `small/medium/large_dev` and fixed scenario names.
+- [ ] P1-D17 dependency clarity: provide explicit plotting dependency/install path.
+  Objective: avoid silent graph-step failures on clean environments lacking `matplotlib`.
+  Evidence: `plot_phase1_dev.py` exits with dependency error when `matplotlib` is unavailable.
+- [ ] P1-D18 notes freshness: append benchmark-log entries for latest local Phase 1 dev artifacts.
+  Objective: keep benchmark history synchronized with latest manifests/scenario definitions.
+  Evidence: latest `batch_20260309T061031Z_manifest.csv` is not represented in `report/phase1_dev_benchmark_log.md`.
+- [ ] P1-D19 determinism depth: verify top-N payload/order stability, not only counts.
+  Objective: catch nondeterministic top-N member/order regressions in repeated subset runs.
+  Evidence: current determinism checker validates `result_count`/ingest aggregates only.
+- [ ] P1-D20 operational guardrails: enforce dev-vs-baseline output path separation in benchmark entrypoints.
+  Objective: reduce operator-error risk of mixing pre-baseline and baseline artifacts.
+  Evidence: broad `scripts/benchmark.sh` defaults to `results/raw` and mixes cross-phase outputs.
 
 ### Phase 2 (D1-D15)
 - [x] D1 baseline lock reviewed.
