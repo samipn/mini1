@@ -41,6 +41,8 @@ int main() {
       (std::filesystem::temp_directory_path() / "urbandrop_benchmark_serial_output.csv").string();
   const std::string parallel_out_path =
       (std::filesystem::temp_directory_path() / "urbandrop_benchmark_parallel_output.csv").string();
+  const std::string optimized_out_path =
+      (std::filesystem::temp_directory_path() / "urbandrop_benchmark_optimized_output.csv").string();
 
   urbandrop::BenchmarkConfig serial_config;
   serial_config.dataset_path = csv_path;
@@ -69,7 +71,7 @@ int main() {
   for (const auto& row : serial_results) {
     if (row.execution_mode != urbandrop::BenchmarkExecutionMode::kSerial || row.thread_count != 1 ||
         row.rows_read != 3 || row.rows_accepted != 3 || row.rows_rejected != 0 || row.result_count != 3 ||
-        !row.serial_match) {
+        !row.serial_match || row.validation_ms != 0.0 || row.validation_ingest_ms != 0.0) {
       std::cerr << "unexpected serial benchmark row counters\n";
       return EXIT_FAILURE;
     }
@@ -81,7 +83,8 @@ int main() {
     return EXIT_FAILURE;
   }
   if (!Contains(serial_lines[0], "execution_mode") || !Contains(serial_lines[0], "thread_count") ||
-      !Contains(serial_lines[0], "serial_match")) {
+      !Contains(serial_lines[0], "serial_match") || !Contains(serial_lines[0], "validation_ms") ||
+      !Contains(serial_lines[0], "validation_ingest_ms")) {
     std::cerr << "serial CSV header missing new benchmark columns\n";
     return EXIT_FAILURE;
   }
@@ -114,7 +117,7 @@ int main() {
   for (const auto& row : parallel_results) {
     if (row.execution_mode != urbandrop::BenchmarkExecutionMode::kParallel || row.thread_count != 2 ||
         row.rows_read != 3 || row.rows_accepted != 3 || row.rows_rejected != 0 || row.result_count != 3 ||
-        !row.serial_match) {
+        !row.serial_match || row.validation_ms <= 0.0 || row.validation_ingest_ms != 0.0) {
       std::cerr << "unexpected parallel benchmark row counters\n";
       return EXIT_FAILURE;
     }
@@ -123,6 +126,44 @@ int main() {
   const auto parallel_lines = ReadAllLines(parallel_out_path);
   if (parallel_lines.size() != 3) {
     std::cerr << "parallel benchmark output CSV should have header + 2 rows\n";
+    return EXIT_FAILURE;
+  }
+
+  urbandrop::BenchmarkConfig optimized_config;
+  optimized_config.binary_name = "run_optimized";
+  optimized_config.execution_mode = urbandrop::BenchmarkExecutionMode::kOptimized;
+  optimized_config.dataset_path = csv_path;
+  optimized_config.dataset_label = "fixture";
+  optimized_config.query_type = "summary";
+  optimized_config.runs = 2;
+  optimized_config.thread_count = 2;
+  optimized_config.validate_parallel_against_serial = true;
+  optimized_config.output_csv_path = optimized_out_path;
+  optimized_config.append_output = false;
+  optimized_config.has_expected_accepted_rows = true;
+  optimized_config.expected_accepted_rows = 3;
+
+  std::vector<urbandrop::BenchmarkRunResult> optimized_results;
+  if (!urbandrop::BenchmarkHarness::RunOptimized(optimized_config, &optimized_results, &error)) {
+    std::cerr << "BenchmarkHarness optimized failed: " << error << "\n";
+    return EXIT_FAILURE;
+  }
+  if (optimized_results.size() != 2) {
+    std::cerr << "expected 2 optimized benchmark runs\n";
+    return EXIT_FAILURE;
+  }
+  for (const auto& row : optimized_results) {
+    if (row.execution_mode != urbandrop::BenchmarkExecutionMode::kOptimized || row.thread_count != 2 ||
+        row.rows_read != 3 || row.rows_accepted != 3 || row.rows_rejected != 0 || row.result_count != 3 ||
+        !row.serial_match || row.validation_ms <= 0.0 || row.validation_ingest_ms <= 0.0) {
+      std::cerr << "unexpected optimized benchmark row counters\n";
+      return EXIT_FAILURE;
+    }
+  }
+
+  const auto optimized_lines = ReadAllLines(optimized_out_path);
+  if (optimized_lines.size() != 3) {
+    std::cerr << "optimized benchmark output CSV should have header + 2 rows\n";
     return EXIT_FAILURE;
   }
 
