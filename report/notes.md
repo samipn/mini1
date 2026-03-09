@@ -303,3 +303,29 @@
   - `results/raw/phase2_baseline/`
   - `results/tables/phase2_baseline/`
   - `results/graphs/phase2_baseline/`
+
+## Phase 3 Notes (Baseline Freeze)
+- Date (UTC): `2026-03-09`.
+- Branch: `phase3/freeze-baselines`.
+- Baseline snapshot dataset:
+  - `data/subsets/i4gi-tjb9_subset_1000000.csv`
+  - source mapping recorded in `data/subsets/manifest.csv`
+  - file stat: `size=434093381`, `mtime=2026-03-08 22:58:58 +0000`
+- Build/settings frozen for this baseline batch:
+  - CMake build type: `Release`
+  - compiler: `gcc/g++ 13.3.0`
+  - OS/kernel: `Linux 6.8.0-101-generic x86_64`
+  - OpenMP thread sweep: `1,2,4,8`
+  - benchmark runs per scenario: `3`
+- Benchmark scenarios executed (from `scripts/benchmark.sh`):
+  - serial: `ingest_only`, `speed_below(threshold=15)`, `time_window(0..4102444800)`,
+    `borough_speed_below(Manhattan, threshold=15)`, `summary`, `top_n_slowest(top_n=20,min_link_samples=1)`
+  - parallel: `speed_below`, `time_window`, `borough_speed_below`, `summary` with serial validation enabled
+- Outputs generated:
+  - Phase 1 baseline raw: `results/raw/phase1_baseline/serial_*.csv`
+  - Phase 2 baseline raw: `results/raw/phase2_baseline/{serial_*,parallel_*}.csv`
+  - Phase 1 baseline table: `results/tables/phase1_baseline/serial_summary.csv`
+  - Phase 2 baseline table: `results/tables/phase2_baseline/summary.csv`
+- Notes:
+  - this freezes a **development comparison baseline snapshot** for Phase 3 work.
+  - full-dataset baseline campaign can still be run later if final reporting requires it.

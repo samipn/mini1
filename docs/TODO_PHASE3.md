@@ -55,12 +55,12 @@ The goal is to isolate which changes actually matter.
 
 ### 1. Freeze the Comparison Baselines
 #### Tasks
-- [ ] Keep `run_serial` and `run_parallel` buildable
-- [ ] Save known-good benchmark outputs from Phase 1 and Phase 2
-- [ ] Define the exact dataset snapshot(s) and query scenarios for final comparison
-- [ ] Ensure the same hardware/compiler settings are used where possible
-- [ ] Create a new executable:
-  - [ ] `run_optimized`
+- [x] Keep `run_serial` and `run_parallel` buildable
+- [x] Save known-good benchmark outputs from Phase 1 and Phase 2
+- [x] Define the exact dataset snapshot(s) and query scenarios for final comparison
+- [x] Ensure the same hardware/compiler settings are used where possible
+- [x] Create a new executable:
+  - [x] `run_optimized`
 
 #### Deliverable
 - Stable baselines exist for side-by-side comparison with the optimized version
