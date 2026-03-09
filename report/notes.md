@@ -276,6 +276,31 @@
     - `results/tables/phase2_dev/phase2_dev_summary_20260309T040238Z.csv`
     - `results/graphs/phase2_dev/*.svg`
 
+## Phase 3 Notes (Chunk 1: D1-D5 + D10 Foundation)
+- Branch: `P3-D1-5`.
+- Implemented Phase 3 Object-of-Arrays foundation:
+  - `TrafficColumns` columnar container with aligned vectors for link_id, speed, travel_time, timestamp, borough_code.
+  - `TrafficDatasetOptimized` wrapper with counters and conversion helper from row dataset.
+  - link-name dictionary encoding via `link_name_ids` + dictionary store to reduce repeated string storage.
+- Added optimized ingestion paths:
+  - direct parse to optimized layout: `CSVReader::LoadTrafficCSVOptimized(...)`
+  - conversion path: `TrafficDatasetOptimized::FromRowDataset(...)`
+- Added optimized query/aggregation APIs:
+  - `OptimizedCongestionQuery` (speed/time/borough counts + top-N, serial and OpenMP-parallel variants)
+  - `OptimizedTrafficAggregator` (summary/speed/time/borough aggregations, serial and OpenMP-parallel variants)
+- Implemented `run_optimized` CLI:
+  - supports query args, `--execution serial|parallel`, `--threads`, `--load-mode direct|row_convert`
+  - supports benchmark mode with CSV output and serial parity validation
+- Benchmark harness extension:
+  - added `BenchmarkExecutionMode::kOptimized`
+  - added `BenchmarkHarness::RunOptimized(...)`
+  - unified CSV output includes optimized execution mode rows
+- Added tests:
+  - `test_optimized_query_correctness`
+  - `test_run_optimized_cli`
+- Validation:
+  - full build + CTest passed with `15/15` tests after optimized-path integration.
+
 ## Pre-baseline classification (D20)
 - All subset benchmark artifacts under:
   - `results/raw/phase1_dev/`

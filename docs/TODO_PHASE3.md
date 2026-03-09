@@ -55,12 +55,12 @@ The goal is to isolate which changes actually matter.
 
 ### 1. Freeze the Comparison Baselines
 #### Tasks
-- [ ] Keep `run_serial` and `run_parallel` buildable
-- [ ] Save known-good benchmark outputs from Phase 1 and Phase 2
-- [ ] Define the exact dataset snapshot(s) and query scenarios for final comparison
-- [ ] Ensure the same hardware/compiler settings are used where possible
+- [x] Keep `run_serial` and `run_parallel` buildable
+- [x] Save known-good benchmark outputs from Phase 1 and Phase 2
+- [x] Define the exact dataset snapshot(s) and query scenarios for final comparison
+- [x] Ensure the same hardware/compiler settings are used where possible
 - [ ] Create a new executable:
-  - [ ] `run_optimized`
+  - [x] `run_optimized`
 
 #### Deliverable
 - Stable baselines exist for side-by-side comparison with the optimized version
@@ -69,14 +69,14 @@ The goal is to isolate which changes actually matter.
 
 ### 2. Profile or Identify Hot Paths
 #### Tasks
-- [ ] Identify the slowest or most frequently used query paths from earlier phases
-- [ ] Prioritize optimization targets such as:
-  - [ ] full-dataset speed-threshold scans
-  - [ ] time-window scans
-  - [ ] borough + threshold filters
-  - [ ] aggregations over large record ranges
-- [ ] Record why these paths were chosen
-- [ ] If available, use profiling tools or timing breakdowns to confirm hotspots
+- [x] Identify the slowest or most frequently used query paths from earlier phases
+- [x] Prioritize optimization targets such as:
+  - [x] full-dataset speed-threshold scans
+  - [x] time-window scans
+  - [x] borough + threshold filters
+  - [x] aggregations over large record ranges
+- [x] Record why these paths were chosen
+- [x] If available, use profiling tools or timing breakdowns to confirm hotspots
 
 #### Deliverable
 - A short written list of the hot paths chosen for optimization
@@ -85,21 +85,21 @@ The goal is to isolate which changes actually matter.
 
 ### 3. Design the Object-of-Arrays Traffic Layout
 #### Tasks
-- [ ] Create an optimized data container, for example:
-  - [ ] `TrafficColumns`
-  - [ ] `TrafficDatasetOptimized`
-- [ ] Convert row-oriented storage such as:
-  - [ ] `std::vector<TrafficRecord>`
-- [ ] into columnar/vectorized storage such as:
-  - [ ] `std::vector<int> link_ids`
-  - [ ] `std::vector<float> speeds`
-  - [ ] `std::vector<float> travel_times`
-  - [ ] `std::vector<int> borough_codes`
-  - [ ] `std::vector<int64_t> timestamps`
-- [ ] Replace repeated string fields with compact encoded forms where practical
-- [ ] Define a mapping strategy for categorical fields:
-  - [ ] borough string to integer code
-  - [ ] link descriptors optionally stored out-of-band
+- [x] Create an optimized data container, for example:
+  - [x] `TrafficColumns`
+  - [x] `TrafficDatasetOptimized`
+- [x] Convert row-oriented storage such as:
+  - [x] `std::vector<TrafficRecord>`
+- [x] into columnar/vectorized storage such as:
+  - [x] `std::vector<int> link_ids`
+  - [x] `std::vector<float> speeds`
+  - [x] `std::vector<float> travel_times`
+  - [x] `std::vector<int> borough_codes`
+  - [x] `std::vector<int64_t> timestamps`
+- [x] Replace repeated string fields with compact encoded forms where practical
+- [x] Define a mapping strategy for categorical fields:
+  - [x] borough string to integer code
+  - [x] link descriptors optionally stored out-of-band
 
 #### Deliverable
 - An optimized traffic dataset structure exists and compiles cleanly
@@ -108,13 +108,13 @@ The goal is to isolate which changes actually matter.
 
 ### 4. Build Conversion or Direct-Load Path
 #### Tasks
-- [ ] Choose one of the following approaches:
-  - [ ] load into row objects first, then convert
-  - [ ] parse directly into columnar arrays
-- [ ] Prefer the simplest approach first for correctness
-- [ ] Track ingest time for both approaches if both are attempted
-- [ ] Ensure all column vectors remain aligned by index
-- [ ] Validate row counts after conversion or direct load
+- [x] Choose one of the following approaches:
+  - [x] load into row objects first, then convert
+  - [x] parse directly into columnar arrays
+- [x] Prefer the simplest approach first for correctness
+- [x] Track ingest time for both approaches if both are attempted
+- [x] Ensure all column vectors remain aligned by index
+- [x] Validate row counts after conversion or direct load
 
 #### Deliverable
 - Real traffic data can be loaded into the optimized layout correctly
@@ -123,17 +123,17 @@ The goal is to isolate which changes actually matter.
 
 ### 5. Implement Optimized Query APIs
 #### Tasks
-- [ ] Add optimized query classes or functions, such as:
-  - [ ] `OptimizedCongestionQuery`
-  - [ ] `OptimizedTrafficAggregator`
-- [ ] Port the hottest queries first:
-  - [ ] speed-threshold scan
-  - [ ] time-window scan
-  - [ ] borough + threshold filter
-  - [ ] average speed / travel time aggregation
-- [ ] Keep outputs comparable to earlier implementations
-- [ ] Minimize heap allocations in hot paths
-- [ ] Avoid reconstructing row objects unless required for output
+- [x] Add optimized query classes or functions, such as:
+  - [x] `OptimizedCongestionQuery`
+  - [x] `OptimizedTrafficAggregator`
+- [x] Port the hottest queries first:
+  - [x] speed-threshold scan
+  - [x] time-window scan
+  - [x] borough + threshold filter
+  - [x] average speed / travel time aggregation
+- [x] Keep outputs comparable to earlier implementations
+- [x] Minimize heap allocations in hot paths
+- [x] Avoid reconstructing row objects unless required for output
 
 #### Deliverable
 - Optimized query paths exist and return correct results
@@ -204,20 +204,20 @@ The goal is to isolate which changes actually matter.
 
 ### 10. Implement the Optimized CLI Runner
 #### Tasks
-- [ ] Implement `apps/run_optimized.cpp`
+- [x] Implement `apps/run_optimized.cpp`
 - [ ] Accept command-line arguments for:
-  - [ ] dataset path
-  - [ ] query type
-  - [ ] thresholds
-  - [ ] time ranges
-  - [ ] execution mode if needed
-  - [ ] thread count if parallel optimized mode is supported
+  - [x] dataset path
+  - [x] query type
+  - [x] thresholds
+  - [x] time ranges
+  - [x] execution mode if needed
+  - [x] thread count if parallel optimized mode is supported
 - [ ] Print useful execution logs:
-  - [ ] optimized layout load started/completed
-  - [ ] query started/completed
-  - [ ] elapsed time
-  - [ ] result size or aggregate summary
-- [ ] Return nonzero exit code on failure
+  - [x] optimized layout load started/completed
+  - [x] query started/completed
+  - [x] elapsed time
+  - [x] result size or aggregate summary
+- [x] Return nonzero exit code on failure
 
 #### Deliverable
 - Optimized executable runs benchmarkable workloads cleanly
@@ -325,29 +325,29 @@ The goal is to isolate which changes actually matter.
 ## File-Level TODO Suggestions
 
 ### `include/data_model/`
-- [ ] `TrafficColumns.hpp`
-- [ ] `TrafficDatasetOptimized.hpp`
+- [x] `TrafficColumns.hpp`
+- [x] `TrafficDatasetOptimized.hpp`
 
 ### `include/query/`
-- [ ] `OptimizedCongestionQuery.hpp`
-- [ ] `OptimizedTrafficAggregator.hpp`
+- [x] `OptimizedCongestionQuery.hpp`
+- [x] `OptimizedTrafficAggregator.hpp`
 
 ### `include/benchmark/`
 - [ ] update `BenchmarkHarness.hpp` for final comparison modes
 
 ### `src/data_model/`
-- [ ] `TrafficColumns.cpp`
-- [ ] `TrafficDatasetOptimized.cpp`
+- [x] `TrafficColumns.cpp`
+- [x] `TrafficDatasetOptimized.cpp`
 
 ### `src/query/`
-- [ ] `OptimizedCongestionQuery.cpp`
-- [ ] `OptimizedTrafficAggregator.cpp`
+- [x] `OptimizedCongestionQuery.cpp`
+- [x] `OptimizedTrafficAggregator.cpp`
 
 ### `src/benchmark/`
 - [ ] update `BenchmarkHarness.cpp`
 
 ### `apps/`
-- [ ] `run_optimized.cpp`
+- [x] `run_optimized.cpp`
 
 ### `scripts/`
 - [ ] update `benchmark.sh` for full phase comparison runs
@@ -359,13 +359,13 @@ The goal is to isolate which changes actually matter.
 ## Suggested Phase 3 Milestones
 
 ### Milestone A — Optimized Layout Exists
-- [ ] columnar traffic storage compiles
-- [ ] data loads correctly
-- [ ] counts match baseline
+- [x] columnar traffic storage compiles
+- [x] data loads correctly
+- [x] counts match baseline
 
 ### Milestone B — First Optimized Query
-- [ ] speed-threshold query runs on optimized layout
-- [ ] correctness verified against baseline
+- [x] speed-threshold query runs on optimized layout
+- [x] correctness verified against baseline
 
 ### Milestone C — Core Query Port Complete
 - [ ] time-window query ported

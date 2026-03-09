@@ -5,6 +5,7 @@
 #include <string>
 
 #include "data_model/TrafficDataset.hpp"
+#include "data_model/TrafficDatasetOptimized.hpp"
 
 namespace urbandrop {
 
@@ -20,6 +21,12 @@ class CSVReader {
                              const TrafficLoadOptions& options,
                              std::ostream* log_stream,
                              std::string* error);
+
+  static bool LoadTrafficCSVOptimized(const std::string& csv_path,
+                                      TrafficDatasetOptimized* dataset,
+                                      const TrafficLoadOptions& options,
+                                      std::ostream* log_stream,
+                                      std::string* error);
 };
 
 }  // namespace urbandrop

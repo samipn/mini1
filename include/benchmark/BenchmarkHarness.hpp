@@ -9,7 +9,8 @@ namespace urbandrop {
 
 enum class BenchmarkExecutionMode {
   kSerial,
-  kParallel
+  kParallel,
+  kOptimized
 };
 
 struct BenchmarkConfig {
@@ -73,6 +74,9 @@ class BenchmarkHarness {
   static bool RunParallel(const BenchmarkConfig& config,
                           std::vector<BenchmarkRunResult>* out_results,
                           std::string* error);
+  static bool RunOptimized(const BenchmarkConfig& config,
+                           std::vector<BenchmarkRunResult>* out_results,
+                           std::string* error);
 };
 
 }  // namespace urbandrop

@@ -17,10 +17,13 @@
 #include "data_model/TrafficDataset.hpp"
 #include "io/CSVReader.hpp"
 #include "query/CongestionQuery.hpp"
+#include "query/OptimizedCongestionQuery.hpp"
+#include "query/OptimizedTrafficAggregator.hpp"
 #include "query/ParallelCongestionQuery.hpp"
 #include "query/ParallelTrafficAggregator.hpp"
 #include "query/TimeWindowQuery.hpp"
 #include "query/TrafficAggregator.hpp"
+#include "data_model/CommonCodes.hpp"
 
 namespace urbandrop {
 namespace {
@@ -70,7 +73,13 @@ bool NearlyEqual(double lhs, double rhs) {
 }
 
 std::string ExecutionModeString(BenchmarkExecutionMode mode) {
-  return mode == BenchmarkExecutionMode::kParallel ? "parallel" : "serial";
+  if (mode == BenchmarkExecutionMode::kParallel) {
+    return "parallel";
+  }
+  if (mode == BenchmarkExecutionMode::kOptimized) {
+    return "optimized";
+  }
+  return "serial";
 }
 
 bool ExecuteQuerySerial(const BenchmarkConfig& config,
@@ -292,6 +301,135 @@ bool ExecuteQueryParallel(const BenchmarkConfig& config,
   return false;
 }
 
+bool ExecuteQueryOptimized(const BenchmarkConfig& config,
+                           const TrafficDatasetOptimized& dataset,
+                           std::size_t thread_count,
+                           QueryExecutionResult* out,
+                           std::string* error) {
+  if (out == nullptr) {
+    if (error != nullptr) {
+      *error = "out cannot be null";
+    }
+    return false;
+  }
+
+  QueryExecutionResult result;
+  const bool use_parallel = thread_count > 1;
+
+  if (config.query_type.empty() || config.query_type == "ingest_only") {
+    result.result_count = dataset.Size();
+    *out = result;
+    return true;
+  }
+
+  if (config.query_type == "speed_below") {
+    if (!config.has_threshold) {
+      if (error != nullptr) {
+        *error = "speed_below requires threshold";
+      }
+      return false;
+    }
+    result.result_count = use_parallel
+                              ? OptimizedCongestionQuery::CountSpeedBelowParallel(dataset,
+                                                                                  config.threshold_mph,
+                                                                                  thread_count)
+                              : OptimizedCongestionQuery::CountSpeedBelow(dataset, config.threshold_mph);
+    result.has_aggregate = true;
+    result.aggregate = use_parallel
+                           ? OptimizedTrafficAggregator::SummarizeSpeedBelowParallel(dataset,
+                                                                                      config.threshold_mph,
+                                                                                      thread_count)
+                           : OptimizedTrafficAggregator::SummarizeSpeedBelow(dataset, config.threshold_mph);
+    *out = result;
+    return true;
+  }
+
+  if (config.query_type == "time_window") {
+    if (!config.has_start_epoch || !config.has_end_epoch) {
+      if (error != nullptr) {
+        *error = "time_window requires start and end epoch";
+      }
+      return false;
+    }
+    result.result_count =
+        use_parallel
+            ? OptimizedCongestionQuery::CountTimeWindowParallel(dataset,
+                                                                config.start_epoch,
+                                                                config.end_epoch,
+                                                                thread_count)
+            : OptimizedCongestionQuery::CountTimeWindow(dataset, config.start_epoch, config.end_epoch);
+    result.has_aggregate = true;
+    result.aggregate = use_parallel
+                           ? OptimizedTrafficAggregator::SummarizeTimeWindowParallel(dataset,
+                                                                                      config.start_epoch,
+                                                                                      config.end_epoch,
+                                                                                      thread_count)
+                           : OptimizedTrafficAggregator::SummarizeTimeWindow(dataset,
+                                                                             config.start_epoch,
+                                                                             config.end_epoch);
+    *out = result;
+    return true;
+  }
+
+  if (config.query_type == "borough_speed_below") {
+    if (config.borough.empty() || !config.has_threshold) {
+      if (error != nullptr) {
+        *error = "borough_speed_below requires borough and threshold";
+      }
+      return false;
+    }
+    const std::int16_t borough_code = ToInt(ParseBoroughCode(config.borough));
+    result.result_count = use_parallel
+                              ? OptimizedCongestionQuery::CountBoroughAndSpeedBelowParallel(
+                                    dataset, borough_code, config.threshold_mph, thread_count)
+                              : OptimizedCongestionQuery::CountBoroughAndSpeedBelow(dataset,
+                                                                                    borough_code,
+                                                                                    config.threshold_mph);
+    result.has_aggregate = true;
+    result.aggregate = use_parallel
+                           ? OptimizedTrafficAggregator::SummarizeBoroughAndSpeedBelowParallel(
+                                 dataset, borough_code, config.threshold_mph, thread_count)
+                           : OptimizedTrafficAggregator::SummarizeBoroughAndSpeedBelow(dataset,
+                                                                                       borough_code,
+                                                                                       config.threshold_mph);
+    *out = result;
+    return true;
+  }
+
+  if (config.query_type == "top_n_slowest") {
+    if (config.top_n == 0) {
+      if (error != nullptr) {
+        *error = "top_n_slowest requires top_n > 0";
+      }
+      return false;
+    }
+    result.has_topn = true;
+    result.topn = use_parallel
+                      ? OptimizedCongestionQuery::TopNSlowestRecurringLinksParallel(
+                            dataset, config.top_n, config.min_link_samples, thread_count)
+                      : OptimizedCongestionQuery::TopNSlowestRecurringLinks(dataset,
+                                                                            config.top_n,
+                                                                            config.min_link_samples);
+    result.result_count = result.topn.size();
+    *out = result;
+    return true;
+  }
+
+  if (config.query_type == "summary") {
+    result.has_aggregate = true;
+    result.aggregate = use_parallel ? OptimizedTrafficAggregator::SummarizeDatasetParallel(dataset, thread_count)
+                                    : OptimizedTrafficAggregator::SummarizeDataset(dataset);
+    result.result_count = result.aggregate.record_count;
+    *out = result;
+    return true;
+  }
+
+  if (error != nullptr) {
+    *error = "query_type not supported in optimized mode: " + config.query_type;
+  }
+  return false;
+}
+
 bool CompareResults(const QueryExecutionResult& serial,
                     const QueryExecutionResult& parallel,
                     std::string* mismatch) {
@@ -437,7 +575,7 @@ bool RunInternal(const BenchmarkConfig& config,
   }
 
   std::size_t effective_threads = 1;
-  if (mode == BenchmarkExecutionMode::kParallel) {
+  if (mode == BenchmarkExecutionMode::kParallel || mode == BenchmarkExecutionMode::kOptimized) {
     effective_threads = config.thread_count;
     if (effective_threads == 0) {
 #if defined(_OPENMP)
@@ -458,13 +596,19 @@ bool RunInternal(const BenchmarkConfig& config,
     const auto total_started = Clock::now();
 
     TrafficDataset dataset;
+    TrafficDatasetOptimized optimized_dataset;
     TrafficLoadOptions options;
     options.print_progress = config.enable_ingest_progress;
     options.progress_every_rows = config.progress_every_rows;
 
     const auto ingest_started = Clock::now();
     std::string ingest_error;
-    if (!CSVReader::LoadTrafficCSV(config.dataset_path, &dataset, options, nullptr, &ingest_error)) {
+    const bool ingest_ok =
+        mode == BenchmarkExecutionMode::kOptimized
+            ? CSVReader::LoadTrafficCSVOptimized(
+                  config.dataset_path, &optimized_dataset, options, nullptr, &ingest_error)
+            : CSVReader::LoadTrafficCSV(config.dataset_path, &dataset, options, nullptr, &ingest_error);
+    if (!ingest_ok) {
       if (error != nullptr) {
         *error = "ingest failed on run " + std::to_string(run) + ": " + ingest_error;
       }
@@ -472,7 +616,9 @@ bool RunInternal(const BenchmarkConfig& config,
     }
     const auto ingest_finished = Clock::now();
 
-    const std::size_t accepted_rows = dataset.Counters().rows_accepted;
+    const std::size_t accepted_rows = mode == BenchmarkExecutionMode::kOptimized
+                                          ? optimized_dataset.Counters().rows_accepted
+                                          : dataset.Counters().rows_accepted;
     if (config.has_expected_accepted_rows && accepted_rows != config.expected_accepted_rows) {
       if (error != nullptr) {
         *error = "accepted row count mismatch on run " + std::to_string(run) +
@@ -501,6 +647,9 @@ bool RunInternal(const BenchmarkConfig& config,
     bool query_ok = false;
     if (mode == BenchmarkExecutionMode::kParallel) {
       query_ok = ExecuteQueryParallel(config, dataset, effective_threads, &query_result, &query_error);
+    } else if (mode == BenchmarkExecutionMode::kOptimized) {
+      query_ok =
+          ExecuteQueryOptimized(config, optimized_dataset, effective_threads, &query_result, &query_error);
     } else {
       query_ok = ExecuteQuerySerial(config, dataset, &query_result, &query_error);
     }
@@ -512,10 +661,28 @@ bool RunInternal(const BenchmarkConfig& config,
     }
 
     bool serial_match = true;
-    if (mode == BenchmarkExecutionMode::kParallel && config.validate_parallel_against_serial) {
+    if ((mode == BenchmarkExecutionMode::kParallel || mode == BenchmarkExecutionMode::kOptimized) &&
+        config.validate_parallel_against_serial) {
       QueryExecutionResult serial_result;
       std::string serial_error;
-      if (!ExecuteQuerySerial(config, dataset, &serial_result, &serial_error)) {
+      if (mode == BenchmarkExecutionMode::kOptimized) {
+        TrafficDataset serial_dataset;
+        std::string serial_ingest_error;
+        if (!CSVReader::LoadTrafficCSV(
+                config.dataset_path, &serial_dataset, options, nullptr, &serial_ingest_error)) {
+          if (error != nullptr) {
+            *error = "serial validation ingest failed on run " + std::to_string(run) + ": " +
+                     serial_ingest_error;
+          }
+          return false;
+        }
+        if (!ExecuteQuerySerial(config, serial_dataset, &serial_result, &serial_error)) {
+          if (error != nullptr) {
+            *error = "serial validation failed on run " + std::to_string(run) + ": " + serial_error;
+          }
+          return false;
+        }
+      } else if (!ExecuteQuerySerial(config, dataset, &serial_result, &serial_error)) {
         if (error != nullptr) {
           *error = "serial validation failed on run " + std::to_string(run) + ": " + serial_error;
         }
@@ -537,7 +704,10 @@ bool RunInternal(const BenchmarkConfig& config,
     BenchmarkRunResult row;
     row.run_number = run;
     row.execution_mode = mode;
-    row.thread_count = mode == BenchmarkExecutionMode::kParallel ? effective_threads : 1;
+    row.thread_count =
+        (mode == BenchmarkExecutionMode::kParallel || mode == BenchmarkExecutionMode::kOptimized)
+            ? effective_threads
+            : 1;
     row.ingest_ms =
         std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(ingest_finished - ingest_started)
             .count();
@@ -547,9 +717,15 @@ bool RunInternal(const BenchmarkConfig& config,
     row.total_ms =
         std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(total_finished - total_started)
             .count();
-    row.rows_read = dataset.Counters().rows_read;
-    row.rows_accepted = dataset.Counters().rows_accepted;
-    row.rows_rejected = dataset.Counters().rows_rejected;
+    if (mode == BenchmarkExecutionMode::kOptimized) {
+      row.rows_read = optimized_dataset.Counters().rows_read;
+      row.rows_accepted = optimized_dataset.Counters().rows_accepted;
+      row.rows_rejected = optimized_dataset.Counters().rows_rejected;
+    } else {
+      row.rows_read = dataset.Counters().rows_read;
+      row.rows_accepted = dataset.Counters().rows_accepted;
+      row.rows_rejected = dataset.Counters().rows_rejected;
+    }
     row.result_count = query_result.result_count;
     row.has_aggregate = query_result.has_aggregate;
     row.average_speed_mph = query_result.aggregate.average_speed_mph;
@@ -582,6 +758,12 @@ bool BenchmarkHarness::RunParallel(const BenchmarkConfig& config,
                                    std::vector<BenchmarkRunResult>* out_results,
                                    std::string* error) {
   return RunInternal(config, BenchmarkExecutionMode::kParallel, out_results, error);
+}
+
+bool BenchmarkHarness::RunOptimized(const BenchmarkConfig& config,
+                                    std::vector<BenchmarkRunResult>* out_results,
+                                    std::string* error) {
+  return RunInternal(config, BenchmarkExecutionMode::kOptimized, out_results, error);
 }
 
 }  // namespace urbandrop
