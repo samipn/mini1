@@ -619,6 +619,10 @@ bool RunInternal(const BenchmarkConfig& config,
     TrafficLoadOptions options;
     options.print_progress = config.enable_ingest_progress;
     options.progress_every_rows = config.progress_every_rows;
+    // Use parallel mmap ingestion for Phase 2 and Phase 3.
+    if (mode != BenchmarkExecutionMode::kSerial) {
+      options.num_threads = effective_threads;
+    }
 
     const auto ingest_started = Clock::now();
     std::string ingest_error;

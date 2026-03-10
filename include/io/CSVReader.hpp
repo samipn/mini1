@@ -12,6 +12,9 @@ namespace urbandrop {
 struct TrafficLoadOptions {
   std::size_t progress_every_rows = 500000;
   bool print_progress = true;
+  // When > 1, the loader uses a parallel mmap-based strategy (Linux only).
+  // 0 means "use the serial loader regardless".
+  std::size_t num_threads = 0;
 };
 
 class CSVReader {

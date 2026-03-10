@@ -97,15 +97,28 @@ def ml(m: str) -> str:
     return MODE_LABELS.get(m, m)
 
 
-def load_all_csvs(raw_dir: Path) -> pd.DataFrame:
-    patterns = [
-        raw_dir / "phase1_dev" / "*.csv",
-        raw_dir / "phase2_dev" / "*.csv",
-        raw_dir / "phase3_dev" / "*.csv",
-    ]
+# Experiment definitions — dirs are relative to raw_dir
+EXPERIMENTS = {
+    "original": {
+        "label": "Phase 1–3  ·  1M rows",
+        "dirs":  ["phase1_dev", "phase2_dev", "phase3_dev"],
+    },
+    "par_ingest": {
+        "label": "Phase 2–3  ·  Parallel Ingest  (1M)",
+        "dirs":  ["phase2_par_ingest", "phase3_par_ingest"],
+    },
+    "full": {
+        "label": "Phase 1–3  ·  Full Dataset  (46M rows)",
+        "dirs":  ["phase1_full", "phase2_full", "phase3_full"],
+        "dataset_labels": {"large_dev": "46M rows"},
+    },
+}
+
+
+def _load_dirs(raw_dir: Path, dirs: list[str]) -> pd.DataFrame:
     frames = []
-    for pat in patterns:
-        for f in glob.glob(str(pat)):
+    for d in dirs:
+        for f in glob.glob(str(raw_dir / d / "*.csv")):
             p = Path(f)
             if p.stem.startswith("batch_") or p.stem.startswith("subset_"):
                 continue
@@ -122,15 +135,30 @@ def load_all_csvs(raw_dir: Path) -> pd.DataFrame:
     for col, default in [("cpu_ms", float("nan")), ("peak_rss_kb", -1)]:
         if col not in combined.columns:
             combined[col] = default
-    combined["run_number"] = pd.to_numeric(combined["run_number"], errors="coerce")
-    combined["query_ms"]   = pd.to_numeric(combined["query_ms"],   errors="coerce")
-    combined["ingest_ms"]  = pd.to_numeric(combined["ingest_ms"],  errors="coerce")
-    combined["total_ms"]   = pd.to_numeric(combined["total_ms"],   errors="coerce")
-    combined["cpu_ms"]     = pd.to_numeric(combined["cpu_ms"],     errors="coerce")
-    combined["peak_rss_kb"]= pd.to_numeric(combined["peak_rss_kb"],errors="coerce")
-    combined["rows_accepted"]= pd.to_numeric(combined["rows_accepted"],errors="coerce")
+    combined["run_number"]   = pd.to_numeric(combined["run_number"],   errors="coerce")
+    combined["query_ms"]     = pd.to_numeric(combined["query_ms"],     errors="coerce")
+    combined["ingest_ms"]    = pd.to_numeric(combined["ingest_ms"],    errors="coerce")
+    combined["total_ms"]     = pd.to_numeric(combined["total_ms"],     errors="coerce")
+    combined["cpu_ms"]       = pd.to_numeric(combined["cpu_ms"],       errors="coerce")
+    combined["peak_rss_kb"]  = pd.to_numeric(combined["peak_rss_kb"],  errors="coerce")
+    combined["rows_accepted"]= pd.to_numeric(combined["rows_accepted"], errors="coerce")
     combined["thread_count"] = pd.to_numeric(combined["thread_count"], errors="coerce").fillna(1).astype(int)
     return combined[combined["run_number"] >= 0].copy()
+
+
+def load_all_csvs(raw_dir: Path) -> pd.DataFrame:
+    """Legacy single-frame loader used by existing chart functions."""
+    return _load_dirs(raw_dir, EXPERIMENTS["original"]["dirs"])
+
+
+def load_experiment_frames(raw_dir: Path) -> dict[str, pd.DataFrame]:
+    """Returns {experiment_key: DataFrame} for each experiment."""
+    result = {}
+    for key, meta in EXPERIMENTS.items():
+        df = _load_dirs(raw_dir, meta["dirs"])
+        if not df.empty:
+            result[key] = df
+    return result
 
 
 def query_rows(df: pd.DataFrame) -> pd.DataFrame:
@@ -313,6 +341,111 @@ def chart_memory(df: pd.DataFrame, dataset: str) -> str | None:
     b64 = fig_to_b64(fig); plt.close(fig); return b64
 
 
+def chart_ingest_by_threads(df: pd.DataFrame) -> str | None:
+    """Ingest time vs thread count for each dataset size (parallel ingest experiment)."""
+    par = df[df["execution_mode"] == "parallel"].copy()
+    if par.empty:
+        return None
+    datasets = [d for d in DATASET_ORDER if d in par["dataset_label"].unique()]
+    if not datasets:
+        return None
+    thread_counts = sorted(par["thread_count"].unique())
+    if len(thread_counts) < 2:
+        return None
+
+    fig, axes = plt.subplots(1, len(datasets), figsize=(5 * len(datasets), 4.5), facecolor=BG)
+    if len(datasets) == 1:
+        axes = [axes]
+
+    for ax, ds in zip(axes, datasets):
+        sub = par[par["dataset_label"] == ds]
+        means = []
+        for t in thread_counts:
+            v = sub[sub["thread_count"] == t]["ingest_ms"]
+            means.append(v.mean() if len(v) else float("nan"))
+
+        # Also draw serial baseline (thread_count=1 serial)
+        ser = df[(df["execution_mode"] == "serial") & (df["dataset_label"] == ds)]["ingest_ms"]
+        ser_mean = ser.mean() if len(ser) else float("nan")
+
+        ax.plot(thread_counts, means, marker="o", color=MODE_COLORS["parallel"],
+                linewidth=2, markersize=5, zorder=3, label="Parallel ingest")
+        ax.fill_between(thread_counts, means, alpha=0.12, color=MODE_COLORS["parallel"])
+        if not np.isnan(ser_mean):
+            ax.axhline(ser_mean, color=MODE_COLORS["serial"], linewidth=1.5,
+                       linestyle="--", zorder=5, label=f"Serial ({ser_mean:.0f} ms)")
+        for t, m in zip(thread_counts, means):
+            if not np.isnan(m):
+                ax.text(t, m + max(m for m in means if not np.isnan(m)) * 0.04,
+                        f"{m:.0f}", ha="center", va="bottom", fontsize=7)
+        style_ax(ax, title=DATASET_LABELS.get(ds, ds),
+                 xlabel="Threads", ylabel="Ingest time (ms)")
+        ax.set_xticks(thread_counts)
+        ax.legend(fontsize=7, framealpha=0.6)
+
+    fig.suptitle("INGEST TIME vs THREAD COUNT  —  mmap parallel loader",
+                 fontsize=10, color=TEXT_COLOR, fontweight="semibold", y=1.02)
+    fig.tight_layout(pad=1.5)
+    b64 = fig_to_b64(fig); plt.close(fig); return b64
+
+
+def chart_ingest_comparison(orig_df: pd.DataFrame, par_df: pd.DataFrame) -> str | None:
+    """Side-by-side ingest speedup: serial (phase1) vs best parallel ingest at 8T."""
+    if orig_df.empty or par_df.empty:
+        return None
+    datasets = [d for d in DATASET_ORDER
+                if d in orig_df["dataset_label"].unique() and d in par_df["dataset_label"].unique()]
+    if not datasets:
+        return None
+
+    x = np.arange(len(datasets))
+    width = 0.28
+    fig, ax = plt.subplots(figsize=(9, 4.5), facecolor=CARD_BG)
+
+    orig_means, par_means_8t, par_means_best = [], [], []
+    for ds in datasets:
+        orig = orig_df[(orig_df["execution_mode"] == "serial") &
+                       (orig_df["dataset_label"] == ds)]["ingest_ms"]
+        par8 = par_df[(par_df["execution_mode"] == "parallel") &
+                      (par_df["thread_count"] == 8) &
+                      (par_df["dataset_label"] == ds)]["ingest_ms"]
+        par_best_t = par_df[(par_df["execution_mode"] == "parallel") &
+                            (par_df["dataset_label"] == ds)]
+        best_mean = par_best_t.groupby("thread_count")["ingest_ms"].mean().min() if not par_best_t.empty else float("nan")
+        orig_means.append(orig.mean() if len(orig) else float("nan"))
+        par_means_8t.append(par8.mean() if len(par8) else float("nan"))
+        par_means_best.append(best_mean)
+
+    b1 = ax.bar(x - width, orig_means, width * 0.9,
+                label="Serial ingest (Phase 1)", color=MODE_COLORS["serial"], alpha=0.88, zorder=3)
+    b2 = ax.bar(x,          par_means_8t, width * 0.9,
+                label="Parallel ingest (8T)", color=MODE_COLORS["parallel"], alpha=0.88, zorder=3)
+    b3 = ax.bar(x + width, par_means_best, width * 0.9,
+                label="Parallel ingest (best T)", color=MODE_COLORS["optimized_parallel"], alpha=0.88, zorder=3)
+
+    for bars in [b1, b2, b3]:
+        for bar in bars:
+            h = bar.get_height()
+            if h > 0 and not np.isnan(h):
+                ax.text(bar.get_x() + bar.get_width() / 2, h + max(orig_means) * 0.01,
+                        f"{h:.0f}", ha="center", va="bottom", fontsize=7, color=TEXT_COLOR)
+
+    for i, (o, p8) in enumerate(zip(orig_means, par_means_8t)):
+        if o > 0 and p8 > 0:
+            sp = o / p8
+            ax.text(x[i], max(orig_means) * 1.07, f"{sp:.1f}×",
+                    ha="center", va="bottom", fontsize=8, color=MODE_COLORS["parallel"],
+                    fontweight="bold")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([DATASET_LABELS.get(d, d) for d in datasets], fontsize=9)
+    style_ax(ax, title="INGEST SPEEDUP: Serial vs Parallel mmap  —  wall-clock time",
+             ylabel="Ingest time (ms)")
+    ax.legend(fontsize=8, framealpha=0.6)
+    fig.tight_layout(pad=1.2)
+    b64 = fig_to_b64(fig); plt.close(fig); return b64
+
+
 def chart_cpu_efficiency(df: pd.DataFrame, dataset: str) -> str | None:
     sub = query_rows(df[(df["dataset_label"] == dataset) & (df["cpu_ms"] > 0) & (df["query_ms"] > 0)])
     if sub.empty:
@@ -447,6 +580,12 @@ body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                              border-color: #e8e3da; }
 .dataset-pane { display: none; }
 .dataset-pane.active { display: block; }
+.exp-tabs { display: flex; gap: 10px; margin: 24px 0 8px; flex-wrap: wrap; border-bottom: 2px solid #e8e3da; padding-bottom: 8px; }
+.exp-tab  { padding: 8px 20px; border-radius: 8px 8px 0 0; font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; border: 2px solid #e8e3da; border-bottom: none; background: #f4f0e8; color: #44403c; }
+.exp-tab.active { background: #14171f; color: #fff; border-color: #14171f; }
+.exp-pane { display: none; }
+.exp-pane.active { display: block; }
 .bench-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 .bench-table th { background: #f4f0e8; color: #44403c; font-weight: 600;
                   padding: 8px 12px; text-align: left; font-size: 0.72rem; }
@@ -472,6 +611,12 @@ function switchDataset(id) {
     document.querySelectorAll('.dataset-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('pane-' + id).classList.add('active');
     document.getElementById('tab-' + id).classList.add('active');
+}
+function switchExp(id) {
+    document.querySelectorAll('.exp-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.exp-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('exppane-' + id).classList.add('active');
+    document.getElementById('exptab-' + id).classList.add('active');
 }
 """
 
@@ -530,13 +675,80 @@ def render_dataset_pane(df, dataset, first=False) -> str:
     </div>"""
 
 
-def render_html(df: pd.DataFrame, title: str, source: str) -> str:
-    kpis     = compute_kpis(df)
-    generated = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    datasets  = [d for d in DATASET_ORDER if d in df["dataset_label"].unique()]
+def render_exp_pane(exp_key: str, df: pd.DataFrame, orig_df: pd.DataFrame, first: bool) -> str:
+    """Render one experiment tab pane with dataset sub-tabs."""
+    exp_meta = EXPERIMENTS.get(exp_key, {})
+    ds_labels_override = exp_meta.get("dataset_labels", {})
 
-    # Ingest scaling chart (cross-dataset)
+    def _dslabel(ds):
+        return ds_labels_override.get(ds, DATASET_LABELS.get(ds, ds))
+
+    datasets = [d for d in DATASET_ORDER if d in df["dataset_label"].unique()]
     ingest_b64 = chart_ingest_scaling(df)
+
+    # For par_ingest experiment: add ingest-by-threads charts
+    extra_ingest = ""
+    if exp_key == "par_ingest":
+        by_threads = chart_ingest_by_threads(df)
+        compare    = chart_ingest_comparison(orig_df, df)
+        extra_ingest = f"""
+        <div class="section-label">Parallel Ingest Speedup</div>
+        <div class="chart-row-2">
+            {img_card(compare, "Ingest Time: Serial vs Parallel mmap",
+                      "Orange number = speedup at 8 threads")}
+            {img_card(by_threads, "Ingest Time vs Thread Count",
+                      "Dashed line = serial baseline")}
+        </div>"""
+
+    tab_buttons = "".join(
+        f'<div class="dataset-tab {"active" if i==0 else ""}" '
+        f'id="tab-{exp_key}-{ds}" onclick="switchDataset(\'{exp_key}-{ds}\')">'
+        f'{_dslabel(ds)}</div>'
+        for i, ds in enumerate(datasets)
+    )
+
+    def _pane(ds, i):
+        lat = chart_latency(df, ds)
+        spd = chart_speedup(df, ds)
+        thr = chart_thread_scaling(df, ds)
+        mem = chart_memory(df, ds)
+        cpu = chart_cpu_efficiency(df, ds)
+        tbl = summary_table_html(df, ds)
+        label = _dslabel(ds)
+        return f"""
+        <div class="dataset-pane {'active' if i==0 else ''}" id="pane-{exp_key}-{ds}">
+            <div class="section-label">Query Latency</div>
+            <div class="chart-row-1">{img_card(lat, f"Query latency — {label}", "mean ± stddev")}</div>
+            <div class="section-label">Speedup &amp; Thread Scaling</div>
+            <div class="chart-row-2">
+                {img_card(spd, "Speedup vs Serial")}
+                {img_card(thr, "Thread Scaling — Parallel Queries")}
+            </div>
+            <div class="section-label">Memory &amp; CPU</div>
+            <div class="chart-row-2">
+                {img_card(mem, "Peak RSS by Mode")}
+                {img_card(cpu, "CPU / Wall-clock Ratio")}
+            </div>
+            <div class="section-label">Full Benchmark Results — {label}</div>
+            <div class="chart-card">{tbl}</div>
+        </div>"""
+
+    panes = "".join(_pane(ds, i) for i, ds in enumerate(datasets))
+
+    return f"""
+    <div class="exp-pane {'active' if first else ''}" id="exppane-{exp_key}">
+        {extra_ingest}
+        <div class="section-label">Ingest Time vs Dataset Size</div>
+        <div class="chart-row-1">{img_card(ingest_b64, "Ingest Time vs Dataset Size", "Serial baseline")}</div>
+        <div class="dataset-tabs">{tab_buttons}</div>
+        {panes}
+    </div>"""
+
+
+def render_html(df: pd.DataFrame, title: str, source: str,
+                exp_frames: dict | None = None) -> str:
+    kpis      = compute_kpis(df)
+    generated = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
     kpi_html = "".join([
         kpi_card(f"{kpis['rows']/1e6:.2f}M" if kpis.get("rows") else "—",
@@ -552,15 +764,24 @@ def render_html(df: pd.DataFrame, title: str, source: str) -> str:
                  " · ".join(kpis.get("datasets",[]))),
     ])
 
-    tab_buttons = "".join(
-        f'<div class="dataset-tab {"active" if i==0 else ""}" '
-        f'id="tab-{ds}" onclick="switchDataset(\'{ds}\')">'
-        f'{DATASET_LABELS.get(ds,ds)}</div>'
-        for i, ds in enumerate(datasets)
+    # Build experiment tabs
+    if exp_frames is None:
+        exp_frames = {"original": df}
+
+    orig_df = exp_frames.get("original", df)
+    exp_keys = [k for k in EXPERIMENTS if k in exp_frames]
+    if not exp_keys:
+        exp_keys = list(exp_frames.keys())
+
+    exp_tab_buttons = "".join(
+        f'<div class="exp-tab {"active" if i==0 else ""}" '
+        f'id="exptab-{k}" onclick="switchExp(\'{k}\')">'
+        f'{EXPERIMENTS.get(k, {}).get("label", k)}</div>'
+        for i, k in enumerate(exp_keys)
     )
-    panes = "".join(
-        render_dataset_pane(df, ds, first=(i==0))
-        for i, ds in enumerate(datasets)
+    exp_panes = "".join(
+        render_exp_pane(k, exp_frames[k], orig_df, first=(i==0))
+        for i, k in enumerate(exp_keys)
     )
 
     return f"""<!DOCTYPE html>
@@ -598,11 +819,9 @@ def render_html(df: pd.DataFrame, title: str, source: str) -> str:
     <div class="section-label">Key Metrics</div>
     <div class="kpi-grid">{kpi_html}</div>
 
-    <div class="section-label">Ingest Scaling</div>
-    <div class="chart-row-1">{img_card(ingest_b64, "Ingest Time vs Dataset Size", "Serial baseline · wall-clock time")}</div>
-
-    <div class="dataset-tabs">{tab_buttons}</div>
-    {panes}
+    <div class="section-label">Experiments</div>
+    <div class="exp-tabs">{exp_tab_buttons}</div>
+    {exp_panes}
 </div>
 <footer>
     Generated {generated} &nbsp;·&nbsp; Source: {source}
@@ -624,17 +843,21 @@ def main():
 
     raw_dir = Path(args.raw_dir)
     print(f"[generate_report] loading CSVs from {raw_dir}")
-    df = load_all_csvs(raw_dir)
-    if df.empty:
+    exp_frames = load_experiment_frames(raw_dir)
+    if not exp_frames:
         print("[generate_report] ERROR: no benchmark CSVs found", file=sys.stderr)
         sys.exit(1)
 
-    print(f"[generate_report] loaded {len(df):,} rows across modes: "
+    # Use "original" as primary frame for KPI cards; fall back to first available
+    _orig = exp_frames.get("original")
+    df = _orig if (_orig is not None and not _orig.empty) else next(iter(exp_frames.values()))
+    print(f"[generate_report] loaded experiments: {list(exp_frames.keys())}")
+    print(f"[generate_report] primary frame: {len(df):,} rows across modes: "
           f"{sorted(df['execution_mode'].unique())}")
     print(f"[generate_report] datasets: {sorted(df['dataset_label'].unique())}")
     print(f"[generate_report] query types: {sorted(df['query_type'].unique())}")
 
-    html = render_html(df, args.title, str(raw_dir))
+    html = render_html(df, args.title, str(raw_dir), exp_frames=exp_frames)
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
