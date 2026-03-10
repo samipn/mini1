@@ -36,14 +36,6 @@ void TrafficColumns::AddRecord(std::int64_t link_id,
                                std::int64_t timestamp_epoch_seconds,
                                std::int16_t borough_code,
                                const std::string& link_name) {
-  const std::size_t next_size = Size() + 1;
-  link_ids_.reserve(next_size);
-  speeds_mph_.reserve(next_size);
-  travel_times_seconds_.reserve(next_size);
-  timestamps_epoch_seconds_.reserve(next_size);
-  borough_codes_.reserve(next_size);
-  link_name_ids_.reserve(next_size);
-
   const std::int32_t link_name_id = InternLinkName(link_name);
   link_ids_.push_back(link_id);
   speeds_mph_.push_back(speed_mph);
