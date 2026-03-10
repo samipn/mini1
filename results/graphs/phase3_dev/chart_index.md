@@ -1,0 +1,48 @@
+# Chart Index
+
+## phase3
+- `phase3_runtime_by_subset_borough_manhattan_speed_15`: `results/graphs/phase3_dev/runtime_by_subset_borough_manhattan_speed_15.svg`
+  - what: Mode runtime comparison by subset.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase3_runtime_by_subset_speed_below_15`: `results/graphs/phase3_dev/runtime_by_subset_speed_below_15.svg`
+  - what: Mode runtime comparison by subset.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase3_runtime_by_subset_summary`: `results/graphs/phase3_dev/runtime_by_subset_summary.svg`
+  - what: Mode runtime comparison by subset.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase3_runtime_by_subset_time_window_all`: `results/graphs/phase3_dev/runtime_by_subset_time_window_all.svg`
+  - what: Mode runtime comparison by subset.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase3_runtime_by_subset_top_5_slowest_links`: `results/graphs/phase3_dev/runtime_by_subset_top_5_slowest_links.svg`
+  - what: Mode runtime comparison by subset.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase3_opt_runtime_vs_threads_borough_manhattan_speed_15`: `results/graphs/phase3_dev/optimized_runtime_vs_threads_borough_manhattan_speed_15.svg`
+  - what: Optimized-parallel runtime scaling on large_dev.
+  - axes: x=`Thread Count`, y=`Mean Query Runtime (ms)`
+- `phase3_opt_speedup_vs_threads_borough_manhattan_speed_15`: `results/graphs/phase3_dev/optimized_speedup_vs_threads_borough_manhattan_speed_15.svg`
+  - what: Optimized-parallel speedup scaling on large_dev.
+  - axes: x=`Thread Count`, y=`Speedup (serial/optimized-parallel)`
+- `phase3_opt_runtime_vs_threads_speed_below_15`: `results/graphs/phase3_dev/optimized_runtime_vs_threads_speed_below_15.svg`
+  - what: Optimized-parallel runtime scaling on large_dev.
+  - axes: x=`Thread Count`, y=`Mean Query Runtime (ms)`
+- `phase3_opt_speedup_vs_threads_speed_below_15`: `results/graphs/phase3_dev/optimized_speedup_vs_threads_speed_below_15.svg`
+  - what: Optimized-parallel speedup scaling on large_dev.
+  - axes: x=`Thread Count`, y=`Speedup (serial/optimized-parallel)`
+- `phase3_opt_runtime_vs_threads_summary`: `results/graphs/phase3_dev/optimized_runtime_vs_threads_summary.svg`
+  - what: Optimized-parallel runtime scaling on large_dev.
+  - axes: x=`Thread Count`, y=`Mean Query Runtime (ms)`
+- `phase3_opt_speedup_vs_threads_summary`: `results/graphs/phase3_dev/optimized_speedup_vs_threads_summary.svg`
+  - what: Optimized-parallel speedup scaling on large_dev.
+  - axes: x=`Thread Count`, y=`Speedup (serial/optimized-parallel)`
+- `phase3_opt_runtime_vs_threads_time_window_all`: `results/graphs/phase3_dev/optimized_runtime_vs_threads_time_window_all.svg`
+  - what: Optimized-parallel runtime scaling on large_dev.
+  - axes: x=`Thread Count`, y=`Mean Query Runtime (ms)`
+- `phase3_opt_speedup_vs_threads_time_window_all`: `results/graphs/phase3_dev/optimized_speedup_vs_threads_time_window_all.svg`
+  - what: Optimized-parallel speedup scaling on large_dev.
+  - axes: x=`Thread Count`, y=`Speedup (serial/optimized-parallel)`
+- `phase3_opt_runtime_vs_threads_top_5_slowest_links`: `results/graphs/phase3_dev/optimized_runtime_vs_threads_top_5_slowest_links.svg`
+  - what: Optimized-parallel runtime scaling on large_dev.
+  - axes: x=`Thread Count`, y=`Mean Query Runtime (ms)`
+- `phase3_opt_speedup_vs_threads_top_5_slowest_links`: `results/graphs/phase3_dev/optimized_speedup_vs_threads_top_5_slowest_links.svg`
+  - what: Optimized-parallel speedup scaling on large_dev.
+  - axes: x=`Thread Count`, y=`Speedup (serial/optimized-parallel)`

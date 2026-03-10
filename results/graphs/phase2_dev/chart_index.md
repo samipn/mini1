@@ -1,0 +1,60 @@
+# Chart Index
+
+## phase2
+- `phase2_runtime_vs_threads_borough_manhattan_speed_15`: `results/graphs/phase2_dev/runtime_vs_threads_borough_manhattan_speed_15.svg`
+  - what: Parallel runtime scaling by thread count.
+  - axes: x=`Thread Count`, y=`Mean Query Runtime (ms)`
+- `phase2_speedup_vs_threads_borough_manhattan_speed_15`: `results/graphs/phase2_dev/speedup_vs_threads_borough_manhattan_speed_15.svg`
+  - what: Speedup scaling by thread count.
+  - axes: x=`Thread Count`, y=`Speedup (serial/parallel)`
+- `phase2_runtime_vs_threads_speed_below_15`: `results/graphs/phase2_dev/runtime_vs_threads_speed_below_15.svg`
+  - what: Parallel runtime scaling by thread count.
+  - axes: x=`Thread Count`, y=`Mean Query Runtime (ms)`
+- `phase2_speedup_vs_threads_speed_below_15`: `results/graphs/phase2_dev/speedup_vs_threads_speed_below_15.svg`
+  - what: Speedup scaling by thread count.
+  - axes: x=`Thread Count`, y=`Speedup (serial/parallel)`
+- `phase2_runtime_vs_threads_summary`: `results/graphs/phase2_dev/runtime_vs_threads_summary.svg`
+  - what: Parallel runtime scaling by thread count.
+  - axes: x=`Thread Count`, y=`Mean Query Runtime (ms)`
+- `phase2_speedup_vs_threads_summary`: `results/graphs/phase2_dev/speedup_vs_threads_summary.svg`
+  - what: Speedup scaling by thread count.
+  - axes: x=`Thread Count`, y=`Speedup (serial/parallel)`
+- `phase2_runtime_vs_threads_time_window_all`: `results/graphs/phase2_dev/runtime_vs_threads_time_window_all.svg`
+  - what: Parallel runtime scaling by thread count.
+  - axes: x=`Thread Count`, y=`Mean Query Runtime (ms)`
+- `phase2_speedup_vs_threads_time_window_all`: `results/graphs/phase2_dev/speedup_vs_threads_time_window_all.svg`
+  - what: Speedup scaling by thread count.
+  - axes: x=`Thread Count`, y=`Speedup (serial/parallel)`
+- `phase2_serial_vs_parallel_subset_borough_manhattan_speed_15`: `results/graphs/phase2_dev/serial_vs_parallel_by_subset_borough_manhattan_speed_15.svg`
+  - what: Serial vs parallel runtime by subset.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase2_serial_vs_parallel_subset_speed_below_15`: `results/graphs/phase2_dev/serial_vs_parallel_by_subset_speed_below_15.svg`
+  - what: Serial vs parallel runtime by subset.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase2_serial_vs_parallel_subset_summary`: `results/graphs/phase2_dev/serial_vs_parallel_by_subset_summary.svg`
+  - what: Serial vs parallel runtime by subset.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase2_serial_vs_parallel_subset_time_window_all`: `results/graphs/phase2_dev/serial_vs_parallel_by_subset_time_window_all.svg`
+  - what: Serial vs parallel runtime by subset.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase2_all_threads_subset_borough_manhattan_speed_15`: `results/graphs/phase2_dev/serial_vs_parallel_all_threads_by_subset_borough_manhattan_speed_15.svg`
+  - what: All-thread serial vs parallel subset comparison.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase2_all_threads_subset_speed_below_15`: `results/graphs/phase2_dev/serial_vs_parallel_all_threads_by_subset_speed_below_15.svg`
+  - what: All-thread serial vs parallel subset comparison.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase2_all_threads_subset_summary`: `results/graphs/phase2_dev/serial_vs_parallel_all_threads_by_subset_summary.svg`
+  - what: All-thread serial vs parallel subset comparison.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase2_all_threads_subset_time_window_all`: `results/graphs/phase2_dev/serial_vs_parallel_all_threads_by_subset_time_window_all.svg`
+  - what: All-thread serial vs parallel subset comparison.
+  - axes: x=`Subset Size`, y=`Mean Query Runtime (ms)`
+- `phase2_runtime_by_scenario_small`: `results/graphs/phase2_dev/runtime_by_scenario_small.svg`
+  - what: Scenario-level serial vs parallel runtime by subset.
+  - axes: x=`Scenario`, y=`Mean Query Runtime (ms)`
+- `phase2_runtime_by_scenario_medium`: `results/graphs/phase2_dev/runtime_by_scenario_medium.svg`
+  - what: Scenario-level serial vs parallel runtime by subset.
+  - axes: x=`Scenario`, y=`Mean Query Runtime (ms)`
+- `phase2_runtime_by_scenario_large_dev`: `results/graphs/phase2_dev/runtime_by_scenario_large_dev.svg`
+  - what: Scenario-level serial vs parallel runtime by subset.
+  - axes: x=`Scenario`, y=`Mean Query Runtime (ms)`
