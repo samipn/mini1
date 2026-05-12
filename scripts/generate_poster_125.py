@@ -12,6 +12,31 @@ from matplotlib.patches import FancyBboxPatch
 import numpy as np
 from pathlib import Path
 import glob, pandas as pd, sys
+import textwrap
+import re
+import math
+
+# Global text scale for this variant.
+FONT_SCALE = 1.65
+
+# Findings column text flow tuning so spacing scales with FONT_SCALE.
+FINDINGS_LINE_SPACING = 1.35
+FINDINGS_Y_SCALE = 680.0
+
+
+def fs(size: float) -> float:
+    return size * FONT_SCALE
+
+
+# Reflow findings body text so it better uses card width at different scales.
+def reflow_findings_text(text: str, size: float, family: str | None, bold: bool) -> str:
+    if family == "monospace" or bold:
+        return text
+    flat = " ".join(part.strip() for part in text.splitlines())
+    # Wider wraps for smaller body text; slightly tighter for larger text.
+    target = max(46, int(66 - (size - 7.0) * 3.5))
+    return textwrap.fill(flat, width=target)
+
 
 # ── Colors ──────────────────────────────────────────────────────────────────
 C_DARK   = "#14171f"
@@ -33,16 +58,192 @@ QUERY_LABELS = {
     "summary":             "W5 Summary",
 }
 
+
+def query_label(query_type: str) -> str:
+    return QUERY_LABELS.get(query_type, query_type.replace("_", " ").title())
+
+
+def mean_or_nan(series: pd.Series) -> float:
+    if series is None:
+        return float("nan")
+    values = pd.to_numeric(series, errors="coerce").dropna()
+    if values.empty:
+        return float("nan")
+    return float(values.mean())
+
+
+def metric_mean(df: pd.DataFrame,
+                execution_mode: str | None = None,
+                query_type: str | None = None,
+                thread_count: int | None = None,
+                column: str = "query_ms") -> float:
+    if df.empty or column not in df.columns:
+        return float("nan")
+    sub = df
+    if execution_mode is not None and "execution_mode" in sub.columns:
+        sub = sub[sub["execution_mode"] == execution_mode]
+    if query_type is not None and "query_type" in sub.columns:
+        sub = sub[sub["query_type"] == query_type]
+    if thread_count is not None and "thread_count" in sub.columns:
+        sub = sub[sub["thread_count"] == thread_count]
+    if sub.empty:
+        return float("nan")
+    return mean_or_nan(sub[column])
+
+
+def compute_key_metrics(p1: pd.DataFrame, p2: pd.DataFrame, p3: pd.DataFrame) -> dict:
+    metrics: dict[str, object] = {}
+
+    # Ingest: prefer explicit ingest_only rows; fallback to mode-level ingest mean.
+    serial_ingest_ms = metric_mean(p1, execution_mode="serial", query_type="ingest_only", column="ingest_ms")
+    if math.isnan(serial_ingest_ms):
+        serial_ingest_ms = metric_mean(p1, execution_mode="serial", column="ingest_ms")
+
+    parallel_ingest_8_ms = metric_mean(
+        p2, execution_mode="parallel", query_type="ingest_only", thread_count=8, column="ingest_ms"
+    )
+    if math.isnan(parallel_ingest_8_ms):
+        parallel_ingest_8_ms = metric_mean(p2, execution_mode="parallel", thread_count=8, column="ingest_ms")
+    if math.isnan(parallel_ingest_8_ms):
+        parallel_ingest_8_ms = metric_mean(p2, execution_mode="parallel", column="ingest_ms")
+
+    ingest_speedup_8 = (
+        serial_ingest_ms / parallel_ingest_8_ms
+        if serial_ingest_ms > 0 and parallel_ingest_8_ms > 0
+        else float("nan")
+    )
+
+    # Query speedups.
+    p1_serial = p1[(p1["execution_mode"] == "serial") & (p1["query_type"] != "ingest_only")].copy()
+    p2_parallel = p2[(p2["execution_mode"] == "parallel") & (p2["query_type"] != "ingest_only")].copy()
+    p3_opt_serial = p3[
+        (p3["execution_mode"].isin(["optimized_serial", "optimized"])) &
+        (p3["thread_count"] == 1) &
+        (p3["query_type"] != "ingest_only")
+    ].copy()
+    p3_opt_8 = p3[
+        (p3["execution_mode"].isin(["optimized_parallel", "optimized"])) &
+        (p3["thread_count"] == 8) &
+        (p3["query_type"] != "ingest_only")
+    ].copy()
+
+    layout_speedups: list[float] = []
+    combined_speedups: list[tuple[str, float]] = []
+    p2_best_per_query: list[float] = []
+
+    query_set = sorted(set(p1_serial["query_type"]))
+    for q in query_set:
+        p1_q = mean_or_nan(p1_serial[p1_serial["query_type"] == q]["query_ms"])
+
+        p3s_q = mean_or_nan(p3_opt_serial[p3_opt_serial["query_type"] == q]["query_ms"])
+        if p1_q > 0 and p3s_q > 0:
+            layout_speedups.append(p1_q / p3s_q)
+
+        p3p_q = mean_or_nan(p3_opt_8[p3_opt_8["query_type"] == q]["query_ms"])
+        if p1_q > 0 and p3p_q > 0:
+            combined_speedups.append((q, p1_q / p3p_q))
+
+        p2_q = p2_parallel[p2_parallel["query_type"] == q]
+        if not p2_q.empty and p1_q > 0:
+            best_q = float("nan")
+            for tc in sorted(p2_q["thread_count"].dropna().astype(int).unique()):
+                p2_tc_q = mean_or_nan(p2_q[p2_q["thread_count"] == tc]["query_ms"])
+                if p2_tc_q > 0:
+                    speed = p1_q / p2_tc_q
+                    if math.isnan(best_q) or speed > best_q:
+                        best_q = speed
+            if not math.isnan(best_q):
+                p2_best_per_query.append(best_q)
+
+    best_query = "n/a"
+    best_combined = float("nan")
+    if combined_speedups:
+        best_query, best_combined = max(combined_speedups, key=lambda item: item[1])
+
+    # Memory reduction from peak RSS when available.
+    p1_rss = metric_mean(p1, execution_mode="serial", query_type="summary", column="peak_rss_kb")
+    if math.isnan(p1_rss):
+        p1_rss = metric_mean(p1, execution_mode="serial", column="peak_rss_kb")
+    p3_rss = metric_mean(p3, execution_mode="optimized_parallel", query_type="summary", thread_count=8, column="peak_rss_kb")
+    if math.isnan(p3_rss):
+        p3_rss = metric_mean(p3, execution_mode="optimized_parallel", thread_count=8, column="peak_rss_kb")
+    mem_reduction_pct = (
+        (p1_rss - p3_rss) / p1_rss * 100.0
+        if p1_rss > 0 and p3_rss > 0
+        else float("nan")
+    )
+
+    rows_accepted = metric_mean(p1, execution_mode="serial", query_type="summary", column="rows_accepted")
+    if math.isnan(rows_accepted):
+        rows_accepted = metric_mean(p1, execution_mode="serial", column="rows_accepted")
+
+    metrics["serial_ingest_ms"] = serial_ingest_ms
+    metrics["parallel_ingest_8_ms"] = parallel_ingest_8_ms
+    metrics["ingest_speedup_8"] = ingest_speedup_8
+    metrics["layout_range"] = (min(layout_speedups), max(layout_speedups)) if layout_speedups else (float("nan"), float("nan"))
+    metrics["combined_range"] = (
+        min([s for _, s in combined_speedups]),
+        max([s for _, s in combined_speedups]),
+    ) if combined_speedups else (float("nan"), float("nan"))
+    metrics["p2_best_range"] = (min(p2_best_per_query), max(p2_best_per_query)) if p2_best_per_query else (float("nan"), float("nan"))
+    metrics["best_query"] = best_query
+    metrics["best_combined"] = best_combined
+    metrics["memory_reduction_pct"] = mem_reduction_pct
+    metrics["rows_accepted"] = rows_accepted
+    return metrics
+
+
+def fmt_secs(ms: float) -> str:
+    return "n/a" if math.isnan(ms) else f"{ms / 1000.0:.1f} s"
+
+
+def fmt_x(value: float) -> str:
+    return "n/a" if math.isnan(value) else f"{value:.1f}×"
+
+
+def fmt_pct(value: float) -> str:
+    return "n/a" if math.isnan(value) else f"{value:.0f}%"
+
+
+def fmt_range_x(bounds: tuple[float, float]) -> str:
+    lo, hi = bounds
+    if math.isnan(lo) or math.isnan(hi):
+        return "n/a"
+    return f"{lo:.1f}× – {hi:.1f}×"
+
 # ── Data loading ─────────────────────────────────────────────────────────────
 def load_dir(raw: Path, d: str) -> pd.DataFrame:
-    frames = []
-    for f in glob.glob(str(raw / d / "*.csv")):
+    csv_paths = sorted(glob.glob(str(raw / d / "*.csv")))
+    # Ignore metadata/manifest CSVs; keep only benchmark row CSVs.
+    data_paths = []
+    for f in csv_paths:
         p = Path(f)
         if p.stem.startswith("batch_") or p.stem.startswith("subset_"):
             continue
+        data_paths.append(f)
+
+    # Use only the newest timestamped batch present in this phase directory.
+    # This avoids mixing old and new full runs in one poster.
+    ts_re = re.compile(r"(\d{8}T\d{6}Z)")
+    by_ts = {}
+    no_ts = []
+    for f in data_paths:
+        m = ts_re.search(Path(f).name)
+        if m:
+            by_ts.setdefault(m.group(1), []).append(f)
+        else:
+            no_ts.append(f)
+    if by_ts:
+        latest_ts = max(by_ts.keys())
+        candidate_paths = by_ts[latest_ts] + no_ts
+    else:
+        candidate_paths = data_paths
+
+    frames = []
+    for f in candidate_paths:
         try:
             df = pd.read_csv(f)
-            if "execution_mode" in df.columns:
+            if "execution_mode" in df.columns and "dataset_label" in df.columns:
                 frames.append(df)
         except Exception:
             pass
@@ -52,7 +253,14 @@ def load_dir(raw: Path, d: str) -> pd.DataFrame:
     for c in ["query_ms", "ingest_ms", "thread_count", "rows_accepted"]:
         df[c] = pd.to_numeric(df.get(c), errors="coerce")
     df["thread_count"] = df["thread_count"].fillna(1).astype(int)
-    return df[df["dataset_label"] == "large_dev"].copy()
+
+    # Full-run convention has historically used "large_dev" as the full dataset label.
+    # Keep that preference, but fall back if a different label naming was used.
+    for label in ("large_dev", "full", "full_dataset", "46M rows"):
+        filtered = df[df["dataset_label"] == label].copy()
+        if not filtered.empty:
+            return filtered
+    return df.copy()
 
 
 # ── Style helpers ─────────────────────────────────────────────────────────────
@@ -60,18 +268,18 @@ def sax(ax, title="", xlabel="", ylabel="", title_size=7.5):
     ax.set_facecolor(C_CARD)
     ax.spines[["top", "right"]].set_visible(False)
     ax.spines[["left", "bottom"]].set_color(C_GRID)
-    ax.tick_params(colors=C_MUTED, labelsize=6.5)
+    ax.tick_params(colors=C_MUTED, labelsize=fs(6.5))
     ax.yaxis.label.set_color(C_MUTED)
     ax.xaxis.label.set_color(C_MUTED)
     ax.grid(axis="y", color=C_GRID, linewidth=0.6, zorder=0)
     ax.set_axisbelow(True)
     if title:
-        ax.set_title(title, fontsize=title_size, color=C_TEXT,
+        ax.set_title(title, fontsize=fs(title_size), color=C_TEXT,
                      pad=5, fontweight="bold")
     if xlabel:
-        ax.set_xlabel(xlabel, fontsize=6.5, color=C_MUTED)
+        ax.set_xlabel(xlabel, fontsize=fs(6.5), color=C_MUTED)
     if ylabel:
-        ax.set_ylabel(ylabel, fontsize=6.5, color=C_MUTED)
+        ax.set_ylabel(ylabel, fontsize=fs(6.5), color=C_MUTED)
 
 
 def bar_val(ax, bars, fmt="{:.1f}", offset_frac=0.04, fontsize=5.5, rotation=0):
@@ -82,7 +290,7 @@ def bar_val(ax, bars, fmt="{:.1f}", offset_frac=0.04, fontsize=5.5, rotation=0):
             ax.text(bar.get_x() + bar.get_width() / 2,
                     h + ymax * offset_frac,
                     fmt.format(h),
-                    ha="center", va="bottom", fontsize=fontsize,
+                    ha="center", va="bottom", fontsize=fs(fontsize),
                     color=C_TEXT, rotation=rotation)
 
 
@@ -107,10 +315,10 @@ def chart_ingest(ax, p2):
             linestyle="--", zorder=5, label="Ideal linear")
     bar_val(ax, bars, fmt="{:.1f}×")
     ax.set_xticks(range(len(threads)))
-    ax.set_xticklabels([f"{t}T" for t in threads], fontsize=6.5)
+    ax.set_xticklabels([f"{t}T" for t in threads], fontsize=fs(6.5))
     sax(ax, title="Ingest Speedup vs Serial (46M rows)",
         xlabel="Threads", ylabel="Speedup (×)")
-    ax.legend(fontsize=5.5, framealpha=0.5)
+    ax.legend(fontsize=fs(5.5), framealpha=0.5)
 
 
 # ── Chart 2: Query speedup Phase 2 vs Phase 1 ────────────────────────────────
@@ -135,15 +343,15 @@ def chart_p2_speedup(ax, p1q, p2q):
                 ax.text(bar.get_x() + bar.get_width() / 2,
                         bar.get_height() + 0.03,
                         f"{s:.1f}×", ha="center", va="bottom",
-                        fontsize=5, color=C_TEXT)
+                        fontsize=fs(5), color=C_TEXT)
 
     ax.axhline(1.0, color=C_RED, linewidth=1.2, linestyle="--",
                zorder=5, label="Phase 1 baseline")
     ax.set_xticks(x)
-    ax.set_xticklabels([QUERY_LABELS[q] for q in queries], fontsize=6)
+    ax.set_xticklabels([QUERY_LABELS[q] for q in queries], fontsize=fs(6))
     sax(ax, title="Phase 2 — Query Speedup vs Phase 1 Serial (AoS)",
         ylabel="Speedup (×)")
-    ax.legend(fontsize=5.5, framealpha=0.5, ncol=4)
+    ax.legend(fontsize=fs(5.5), framealpha=0.5, ncol=4)
 
 
 # ── Chart 3: SoA layout gain ─────────────────────────────────────────────────
@@ -178,10 +386,10 @@ def chart_soa_gain(ax, p1q, p3q):
         bar_val(ax, bars, fmt="{:.0f}", fontsize=5, offset_frac=0.02)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, fontsize=6)
+    ax.set_xticklabels(labels, fontsize=fs(6))
     sax(ax, title="Phase 3 — Query Latency: AoS vs SoA (46M rows)",
         ylabel="Query time (ms)")
-    ax.legend(fontsize=5.5, framealpha=0.5, ncol=3)
+    ax.legend(fontsize=fs(5.5), framealpha=0.5, ncol=3)
 
 
 # ── Chart 4: Total speedup bars ───────────────────────────────────────────────
@@ -206,15 +414,15 @@ def chart_total_speedup(ax, p1q, p3q):
                   color=[C_DPURP, C_PURPLE, C_LPURP, C_GREEN],
                   alpha=0.9, zorder=3)
     for bar, s in zip(bars, speedups_p3):
-        ax.text(bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 0.2,
-                f"{s:.1f}×", ha="center", va="bottom",
-                fontsize=8, color=C_TEXT, fontweight="bold")
+                ax.text(bar.get_x() + bar.get_width() / 2,
+                        bar.get_height() + 0.2,
+                        f"{s:.1f}×", ha="center", va="bottom",
+                        fontsize=fs(8), color=C_TEXT, fontweight="bold")
 
     ax.axhline(1.0, color=C_RED, linewidth=1.2, linestyle="--",
                zorder=5)
     ax.set_xticks(x)
-    ax.set_xticklabels([QUERY_LABELS[q] for q in queries], fontsize=7)
+    ax.set_xticklabels([QUERY_LABELS[q] for q in queries], fontsize=fs(7))
     sax(ax, title="Total Speedup: Phase 3 (SoA + 8T) vs Phase 1 Serial",
         ylabel="Speedup vs Phase 1 (×)", title_size=8)
 
@@ -230,9 +438,9 @@ def draw_kpi(fig, rect, val, label, color=C_RED):
                                 facecolor=C_CARD, edgecolor=C_GRID,
                                 linewidth=0.6, zorder=1))
     ax.text(0.5, 0.62, val,  ha="center", va="center",
-            fontsize=14, fontweight="bold", color=color, zorder=2)
+            fontsize=fs(14), fontweight="bold", color=color, zorder=2)
     ax.text(0.5, 0.22, label, ha="center", va="center",
-            fontsize=6, color=C_MUTED, zorder=2)
+            fontsize=fs(6), color=C_MUTED, zorder=2)
 
 
 # ── Main poster layout ────────────────────────────────────────────────────────
@@ -248,6 +456,7 @@ def make_poster(raw_dir: Path, out_path: Path):
     p1q = p1[p1["query_type"] != "ingest_only"].copy()
     p2q = p2[p2["query_type"] != "ingest_only"].copy()
     p3q = p3[p3["query_type"] != "ingest_only"].copy()
+    metrics = compute_key_metrics(p1, p2, p3)
 
     # ── Canvas ────────────────────────────────────────────────────────────────
     fig = plt.figure(figsize=(22, 13), facecolor=C_BG)
@@ -259,26 +468,27 @@ def make_poster(raw_dir: Path, out_path: Path):
     header.add_patch(plt.Rectangle((0, 0), 1, 1, facecolor=C_DARK, zorder=0))
     header.text(0.012, 0.60,
                 "Memory Overload: Data Layout & Parallel Processing in Large-Scale Traffic Analysis",
-                ha="left", va="center", fontsize=14, fontweight="bold",
+                ha="left", va="center", fontsize=fs(14), fontweight="bold",
                 color="white", zorder=1)
     header.text(0.012, 0.18,
                 "NYC DOT Real-Time Traffic Speed Feed  ·  46.2M records  ·  "
                 "C++17 + OpenMP  ·  3-Phase AoS → SoA Benchmark  ·  CMPE 275 Mini 1A",
-                ha="left", va="center", fontsize=8, color="#94a3b8", zorder=1)
+                ha="left", va="center", fontsize=fs(8), color="#94a3b8", zorder=1)
     header.add_patch(plt.Rectangle((0.88, 0.1), 0.11, 0.8,
                                    facecolor=C_RED, zorder=1, alpha=0.9))
     header.text(0.935, 0.55, "System 1",
-                ha="center", va="center", fontsize=9,
+                ha="center", va="center", fontsize=fs(9),
                 fontweight="bold", color="white", zorder=2)
 
     # ── KPI strip ─────────────────────────────────────────────────────────────
     kpis = [
-        ("46.2M",   "Records\nProcessed",      C_RED),
-        ("79.5 s",  "Serial Ingest\n(Phase 1)", C_MUTED),
-        ("18.2 s",  "Parallel Ingest\n(8T)",    C_GREEN),
-        ("4.4×",    "Ingest\nSpeedup",          C_GREEN),
-        ("13.5×",   "Best Query\nSpeedup (W1)", C_DPURP),
-        ("~46%",    "Memory\nReduction (SoA)",  C_PURPLE),
+        (f"{int(metrics['rows_accepted'])/1_000_000:.1f}M" if not math.isnan(metrics["rows_accepted"]) else "n/a",
+         "Records\nProcessed", C_RED),
+        (fmt_secs(metrics["serial_ingest_ms"]), "Serial Ingest\n(Phase 1)", C_MUTED),
+        (fmt_secs(metrics["parallel_ingest_8_ms"]), "Parallel Ingest\n(8T)", C_GREEN),
+        (fmt_x(metrics["ingest_speedup_8"]), "Ingest\nSpeedup", C_GREEN),
+        (fmt_x(metrics["best_combined"]), f"Best Query\nSpeedup ({query_label(str(metrics['best_query']))})", C_DPURP),
+        (fmt_pct(metrics["memory_reduction_pct"]), "Memory\nReduction (SoA)", C_PURPLE),
     ]
     kpi_w, kpi_h = 0.138, 0.077
     kpi_y = 0.815
@@ -293,9 +503,9 @@ def make_poster(raw_dir: Path, out_path: Path):
     gs = gridspec.GridSpec(
         2, 3,
         left=0.012, right=0.99,
-        top=0.800, bottom=0.085,
-        wspace=0.28, hspace=0.42,
-        width_ratios=[1, 1, 1],
+        top=0.785, bottom=0.085,
+        wspace=0.16, hspace=0.20,
+        width_ratios=[1.0, 1.0, 1.0],
     )
 
     ax_ingest  = fig.add_subplot(gs[0, 0])
@@ -325,39 +535,31 @@ def make_poster(raw_dir: Path, out_path: Path):
         ("", None, 4, False, C_TEXT),
 
         ("① Ingest Parallelism Critical at Scale", None, 9, True, C_DARK),
-        ("Serial CSV parsing dominates total runtime at\n"
-         "46M rows: 79.5 s vs 160–376 ms per query.\n"
-         "Parallel mmap loader (8 threads) cuts this to\n"
-         "18.2 s — a 4.4× speedup — by memory-mapping\n"
-         "the file and parsing N chunks in parallel.\n"
-         "Speedup plateaus at 8T due to I/O bandwidth.", None, 8.5, False, C_MUTED),
+        (f"Serial CSV parsing dominates total runtime at full scale: "
+         f"{fmt_secs(metrics['serial_ingest_ms'])} ingest time versus sub-second queries. "
+         f"Parallel ingest at 8 threads reduces this to {fmt_secs(metrics['parallel_ingest_8_ms'])}, "
+         f"which is a {fmt_x(metrics['ingest_speedup_8'])} speedup.", None, 8.5, False, C_MUTED),
         ("", None, 4, False, C_TEXT),
 
         ("② SoA Layout Dominates Query Performance", None, 9, True, C_DARK),
-        ("AoS (Array-of-Structs) loads 104 bytes per\n"
-         "record for every scan — including 64 bytes\n"
-         "of std::string metadata. SoA stores one\n"
-         "contiguous array per field, delivering\n"
-         "100% DRAM utilization. Layout alone yields\n"
-         "1.7× – 4.9× speedup before adding threads.", None, 8.5, False, C_MUTED),
+        (f"AoS scans full records, while SoA streams only required columns. "
+         f"From the current raw batch, layout-only speedup (Phase 3 serial vs Phase 1 serial) is "
+         f"{fmt_range_x(metrics['layout_range'])}.", None, 8.5, False, C_MUTED),
         ("", None, 4, False, C_TEXT),
 
-        ("③ Combined: Up to 13.5× Total Speedup", None, 9, True, C_DARK),
-        ("SoA layout + 8 OpenMP threads achieves\n"
-         "5.4× – 13.5× over Phase 1 serial AoS.\n"
-         "W1 (speed threshold) benefits most:\n"
-         "its hot loop reads only 8 bytes/record.\n"
-         "W4 (top-N, hash-map) gains least — the\n"
-         "merge step serializes under contention.", None, 8.5, False, C_MUTED),
+        (f"③ Combined: Up to {fmt_x(metrics['best_combined'])} Total Speedup", None, 9, True, C_DARK),
+        (f"SoA + 8-thread parallelism achieves {fmt_range_x(metrics['combined_range'])} over the serial AoS baseline. "
+         f"Best query in this run is {query_label(str(metrics['best_query']))} at {fmt_x(metrics['best_combined'])}.",
+         None, 8.5, False, C_MUTED),
         ("", None, 4, False, C_TEXT),
 
         ("④ Phase Comparison Summary", None, 9, True, C_DARK),
         (
             "Phase 1  Serial AoS        1.0×  baseline\n"
-            "Phase 2  Parallel AoS      1.1–3.3×  query\n"
-            "          Parallel ingest   4.4×\n"
-            "Phase 3  SoA serial        1.5–4.9×  layout\n"
-            "          SoA + 8T          5.4–13.5×  total",
+            f"Phase 2  Parallel AoS      {fmt_range_x(metrics['p2_best_range'])}  query\n"
+            f"          Parallel ingest   {fmt_x(metrics['ingest_speedup_8'])}\n"
+            f"Phase 3  SoA serial        {fmt_range_x(metrics['layout_range'])}  layout\n"
+            f"          SoA + 8T          {fmt_range_x(metrics['combined_range'])}  total",
             "monospace", 6.8, False, C_DARK
         ),
         ("", None, 4, False, C_TEXT),
@@ -372,19 +574,20 @@ def make_poster(raw_dir: Path, out_path: Path):
     y = 0.97
     for (text, family, size, bold, color) in findings:
         if text == "":
-            y -= size / 200
+            y -= fs(size) / 260
             continue
+        render_text = reflow_findings_text(text, size, family, bold)
         weight = "bold" if bold else "normal"
         ff = family if family else "sans-serif"
-        ax_text.text(0.05, y, text,
+        ax_text.text(0.03, y, render_text,
                      transform=ax_text.transAxes,
                      ha="left", va="top",
-                     fontsize=size, fontweight=weight,
+                     fontsize=fs(size), fontweight=weight,
                      color=color, fontfamily=ff,
-                     linespacing=1.4)
+                     linespacing=FINDINGS_LINE_SPACING)
         # rough line height estimate
-        n_lines = text.count("\n") + 1
-        y -= (size * n_lines * 1.55 + 2) / 550
+        n_lines = render_text.count("\n") + 1
+        y -= (fs(size) * n_lines * FINDINGS_LINE_SPACING + fs(2)) / FINDINGS_Y_SCALE
 
     # ── Footer ────────────────────────────────────────────────────────────────
     footer = fig.add_axes([0, 0, 1, 0.055])
@@ -398,7 +601,7 @@ def make_poster(raw_dir: Path, out_path: Path):
         "Phase 2 — OpenMP Parallel AoS (run_parallel)  ·  parallel mmap ingestion   ·   "
         "Phase 3 — SoA + OpenMP (run_optimized)   ·   "
         "5 runs/scenario  ·  threads: 1,2,4,8,16   ·   dataset: i4gi-tjb9",
-        ha="left", va="center", fontsize=6.5, color=C_MUTED)
+        ha="left", va="center", fontsize=fs(6.5), color=C_MUTED)
 
     # ── Save ──────────────────────────────────────────────────────────────────
     out_path.parent.mkdir(parents=True, exist_ok=True)

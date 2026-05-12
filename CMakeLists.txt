@@ -40,6 +40,8 @@ if(ENABLE_OPENMP)
       "OpenMP not found. Building without OpenMP acceleration.\n"
       "Parallel code paths will still build, but run without OpenMP speedups.")
   endif()
+elseif(REQUIRE_OPENMP)
+  message(FATAL_ERROR "REQUIRE_OPENMP=ON but ENABLE_OPENMP=OFF. Please enable OpenMP or set REQUIRE_OPENMP=OFF.")
 endif()
 
 add_library(congestion_core
